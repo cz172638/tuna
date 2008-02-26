@@ -18,8 +18,8 @@ DND_TARGETS = [ ('STRING', 0, DND_TARGET_STRING),
 		('text/plain', 0, DND_TARGET_STRING),
 		('application/x-rootwin-drop', 0, DND_TARGET_ROOTWIN) ]
 
-#tuna_glade = "/usr/share/tuna/tuna_gui.glade"
-tuna_glade = "./tuna_gui.glade"
+tuna_glade = "/usr/share/tuna/tuna_gui.glade"
+#tuna_glade = "./tuna_gui.glade"
 
 # Zombies also doesn't have smaps entries, but it should be good enough
 def iskthread(pid):
