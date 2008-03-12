@@ -24,10 +24,14 @@ tuna_glade = "/usr/share/tuna/tuna_gui.glade"
 # Zombies also doesn't have smaps entries, but it should be good enough
 def iskthread(pid):
 	try:
-		return procfs.smaps(pid).nr_entries == 0
+		f = file("/proc/%d/smaps" % pid)
 	except IOError:
 		# Thread has vanished
 		return True
+
+	line = f.readline()
+	f.close()
+	return not line
 
 def set_irq_affinity(irq, bitmasklist):
 	text = reduce(lambda a, b: a + ",%x" % b, bitmasklist)
