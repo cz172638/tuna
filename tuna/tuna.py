@@ -910,6 +910,9 @@ class procview:
 			column.set_sort_column_id(col)
 			self.treeview.append_column(column)
 
+		self.show_kthreads = True
+		self.show_uthreads = True
+
 	def foreach_selected_cb(self, model, path, iter, pid_list):
 		pid = model.get_value(iter, self.COL_PID)
 		pid_list.append(str(pid))
@@ -970,22 +973,32 @@ class procview:
 				# removed and its the last one
 				break
 			else:
-				try:
+				kthread = iskthread(tid)
+				if ((not self.show_kthreads) and kthread) or \
+				   ((not self.show_uthreads) and not kthread):
 					new_tids.remove(tid)
-				except:
-					# FIXME: understand in what situation this
-					# can happen, seems harmless from visual
-					# inspection.
-					pass
-				self.set_thread_columns(row, tid, threads[tid])
-
-				if threads[tid].has_key("threads"):
-					children = threads[tid]["threads"]
+					if self.tree_store.remove(row):
+						# removed and now row is the next one
+						continue
+					# removed and its the last one
+					break
 				else:
-					children = {}
-				
-				child_row = self.tree_store.iter_children(row)
-				self.update_rows(children, child_row, row)
+					try:
+						new_tids.remove(tid)
+					except:
+						# FIXME: understand in what situation this
+						# can happen, seems harmless from visual
+						# inspection.
+						pass
+					self.set_thread_columns(row, tid, threads[tid])
+
+					if threads[tid].has_key("threads"):
+						children = threads[tid]["threads"]
+					else:
+						children = {}
+					
+					child_row = self.tree_store.iter_children(row)
+					self.update_rows(children, child_row, row)
 			
 			row = self.tree_store.iter_next(row)
 
@@ -994,6 +1007,10 @@ class procview:
 
 	def append_new_tids(self, parent_row, threads, tid_list):
 		for tid in tid_list:
+			kthread = iskthread(tid)
+			if ((not self.show_kthreads) and kthread) or \
+			   ((not self.show_uthreads) and not kthread):
+				continue
 			row = self.tree_store.append(parent_row)
 			
 			if self.set_thread_columns(row, tid, threads[tid]):
@@ -1037,6 +1054,14 @@ class procview:
 		if dialog.run():
 			self.refresh()
 
+	def kthreads_view_toggled(self, a):
+		self.show_kthreads = not self.show_kthreads
+		self.show(self.ps)
+
+	def uthreads_view_toggled(self, a):
+		self.show_uthreads = not self.show_uthreads
+		self.show(self.ps)
+
 	def on_processlist_button_press_event(self, treeview, event):
 		if event.type != gtk.gdk.BUTTON_PRESS or event.button != 3:
 			return
@@ -1048,15 +1073,31 @@ class procview:
 
 		setattr = gtk.MenuItem("_Set process attributes")
 		refresh = gtk.MenuItem("_Refresh process list")
+		if self.show_kthreads:
+			kthreads_prefix = "_Hide"
+		else:
+			kthreads_prefix = "_Show"
+		kthreads = gtk.MenuItem(kthreads_prefix + " kernel threads")
+		if self.show_uthreads:
+			uthreads_prefix = "_Hide"
+		else:
+			uthreads_prefix = "_Show"
+		uthreads = gtk.MenuItem(uthreads_prefix + " user threads")
 
 		menu.add(setattr)
 		menu.add(refresh)
+		menu.add(kthreads)
+		menu.add(uthreads)
 
 		setattr.connect_object('activate', self.edit_attributes, event)
 		refresh.connect_object('activate', self.refresh, event)
+		kthreads.connect_object('activate', self.kthreads_view_toggled, event)
+		uthreads.connect_object('activate', self.uthreads_view_toggled, event)
 
 		setattr.show()
 		refresh.show()
+		kthreads.show()
+		uthreads.show()
 
 		menu.popup(None, None, None, event.button, event.time)
 
