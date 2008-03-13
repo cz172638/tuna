@@ -100,7 +100,10 @@ def list_to_cpustring(l):
 					break;
 				i = j
 			t = strings.pop()
-			strings.append("%s-%u" % (t, i))
+			if int(t) + 1 == i:
+				strings.append("%s,%u" % (t, i))
+			else:
+				strings.append("%s-%u" % (t, i))
 		else:
 			strings.append("%u" % i)
 		prev = i
