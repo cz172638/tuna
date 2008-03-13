@@ -5,7 +5,7 @@
 import pygtk
 pygtk.require("2.0")
 
-import ethtool, gtk, gobject, os, pango, procfs, re, schedutils, sys
+import copy, ethtool, gtk, gobject, os, pango, procfs, re, schedutils, sys
 import gtk.glade
 
 # FIXME: should go to python-schedutils
@@ -155,15 +155,15 @@ def affinity_remove_cpu(affinity, cpu, nr_cpus):
 def isolate_cpu(cpu, nr_cpus):
 	ps = procfs.pidstats()
 	ps.reload_threads()
-	ps_changed = False
+	previous_pid_affinities = {}
 	for pid in ps.keys():
 		if iskthread(pid):
 			continue
 		affinity = schedutils.get_affinity(pid)
 		if cpu in affinity:
+			previous_pid_affinities[pid] = copy.copy(affinity)
 			affinity = affinity_remove_cpu(affinity, cpu, nr_cpus)
 			schedutils.set_affinity(pid, affinity)
-			ps_changed = True
 
 		if not ps[pid].has_key("threads"):
 			continue
@@ -173,29 +173,29 @@ def isolate_cpu(cpu, nr_cpus):
 				continue
 			affinity = schedutils.get_affinity(tid)
 			if cpu in affinity:
+				previous_pid_affinities[tid] = affinity
 				affinity = affinity_remove_cpu(affinity, cpu, nr_cpus)
 				schedutils.set_affinity(tid, affinity)
-				ps_changed = True
 
 	del ps
 	
 	# Now isolate it from IRQs too
-	irqs_changed = False
 	irqs = procfs.interrupts()
+	previous_irq_affinities = {}
 	for irq in irqs.keys():
 		# LOC, NMI, TLB, etc
 		if not irqs[irq].has_key("affinity"):
 			continue
 		affinity = irqs[irq]["affinity"]
 		if cpu in affinity:
+			previous_irq_affinities[irq] = copy.copy(affinity)
 			affinity = affinity_remove_cpu(affinity,
 						       cpu, nr_cpus)
-			if set_irq_affinity(int(irq),
-					    procfs.hexbitmask(affinity,
-							      nr_cpus)):
-				irqs_changed = True
+			set_irq_affinity(int(irq),
+					 procfs.hexbitmask(affinity,
+							   nr_cpus))
 
-	return (ps_changed, irqs_changed)
+	return (previous_pid_affinities, previous_irq_affinities)
 
 def set_store_columns(store, row, new_value):
 	nr_columns = len(new_value)
@@ -258,6 +258,9 @@ class cpuview:
 		self.drop_handlers = { "pid": (move_threads_to_cpu, self.procview),
 				       "irq": (move_irqs_to_cpu, self.irqview), }
 
+		self.previous_pid_affinities = None
+		self.previous_irq_affinities = None
+
 	def isolate_cpu(self, a):
 		ret = self.treeview.get_path_at_pos(self.last_x, self.last_y)
 		if not ret:
@@ -268,22 +271,34 @@ class cpuview:
 		row = self.list_store.get_iter(path)
 		cpu = self.list_store.get_value(row, self.COL_CPU)
 		nr_cpus = len(self.cpustats) - 1
-		safety_counter = 10
-		while True:
-			if safety_counter == 0:
-				print "safety counter warning!"
-				break
-			safety_counter -= 1
-			ps_changed, irqs_changed = isolate_cpu(cpu, nr_cpus)
+		self.previous_pid_affinities, self.previous_irq_affinities = isolate_cpu(cpu, nr_cpus)
 
-			if ps_changed:
-				self.procview.refresh()
+		if self.previous_pid_affinities:
+			self.procview.refresh()
 
-			if irqs_changed:
-				self.irqview.refresh()
+		if self.previous_irq_affinities:
+			self.irqview.refresh()
 
-			if not (ps_changed or irqs_changed):
-				break
+	def restore_cpu(self, a):
+		if not (self.previous_pid_affinities or \
+			self.previous_irq_affinities):
+			return
+		affinities = self.previous_pid_affinities
+		for pid in affinities.keys():
+			try:
+				schedutils.set_affinity(pid, affinities[pid])
+			except:
+				pass
+
+		affinities = self.previous_irq_affinities
+		nr_cpus = len(self.cpustats) - 1
+		for irq in affinities.keys():
+			set_irq_affinity(int(irq),
+					 procfs.hexbitmask(affinities[irq],
+							   nr_cpus))
+			
+		self.previous_pid_affinities = None
+		self.previous_irq_affinities = None
 
 	def on_cpuview_button_press_event(self, treeview, event):
 		if event.type != gtk.gdk.BUTTON_PRESS or event.button != 3:
@@ -301,8 +316,10 @@ class cpuview:
 		menu.add(restore)
 
 		isolate.connect_object('activate', self.isolate_cpu, event)
-		restore.set_sensitive(False)
-		# restore.connect_object('activate', self.restore_cpu, event)
+		if not (self.previous_pid_affinities or \
+			self.previous_irq_affinities):
+			restore.set_sensitive(False)
+		restore.connect_object('activate', self.restore_cpu, event)
 
 		isolate.show()
 		restore.show()
