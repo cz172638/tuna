@@ -8,6 +8,10 @@ pygtk.require("2.0")
 import copy, ethtool, gtk, gobject, os, pango, procfs, re, schedutils, sys
 import gtk.glade
 
+kthread_help = {
+	"ksoftirqd/": "Activated when under <b>heavy</b> networking activity."
+}
+
 # FIXME: should go to python-schedutils
 ( SCHED_OTHER, SCHED_FIFO, SCHED_RR, SCHED_BATCH ) = range(4)
 
@@ -920,6 +924,7 @@ class procview:
 						       DND_TARGETS,
 						       gtk.gdk.ACTION_DEFAULT | gtk.gdk.ACTION_MOVE)
 		self.treeview.connect("drag_data_get", self.on_drag_data_get_data)
+		self.treeview.connect("query-tooltip", self.on_query_tooltip)
 
 		self.renderer = gtk.CellRendererText()
 		for col in range(self.nr_columns):
@@ -928,10 +933,44 @@ class procview:
 			column.add_attribute(self.renderer, "weight",
 					     col + self.nr_columns)
 			column.set_sort_column_id(col)
+			self.treeview.set_tooltip_column(col)
 			self.treeview.append_column(column)
 
 		self.show_kthreads = True
 		self.show_uthreads = True
+
+	def on_query_tooltip(self, treeview, x, y, keyboard_mode, tooltip):
+		# FIXME: Why is that it is off by a row?
+		ret = treeview.get_path_at_pos(x, y - 30)
+		tooltip.set_text(None)
+		if not ret:
+			return True
+		path, col, xpos, ypos = ret
+		if not path:
+			return True
+		col_id = col.get_sort_column_id()
+		if col_id != self.COL_CMDLINE:
+			return True
+		row = self.tree_store.get_iter(path)
+		if not row:
+			return True
+		pid = int(self.tree_store.get_value(row, self.COL_PID))
+		if not iskthread(pid):
+			return True
+		cmdline = self.tree_store.get_value(row, self.COL_CMDLINE).split(' ')[0]
+		try:
+			index = cmdline.index("/")
+			key = cmdline[:index + 1]
+			suffix_help = "\n<i>One per CPU</i>"
+		except:
+			key = cmdline
+			suffix_help = ""
+		if kthread_help.has_key(key):
+			help = kthread_help[key]
+		else:
+			help = "Undocumented"
+		tooltip.set_markup("<b>Kernel Thread %d (%s):</b>\n%s%s" % (pid, cmdline, help, suffix_help))
+		return True
 
 	def foreach_selected_cb(self, model, path, iter, pid_list):
 		pid = model.get_value(iter, self.COL_PID)
