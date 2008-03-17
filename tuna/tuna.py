@@ -287,6 +287,7 @@ class cpuview:
 
 		self.previous_pid_affinities = None
 		self.previous_irq_affinities = None
+		self.cpu_filtered = [ False ] * (len(self.cpustats) - 1)
 
 	def isolate_cpu(self, a):
 		ret = self.treeview.get_path_at_pos(self.last_x, self.last_y)
@@ -376,9 +377,14 @@ class cpuview:
 		# get toggled iter
 		iter = model.get_iter((int(path),))
 		filtered = model.get_value(iter, self.COL_FILTER)
+		cpu = model.get_value(iter, self.COL_CPU)
 
 		# do something with the value
 		filtered = not filtered
+
+		self.cpu_filtered[cpu] = filtered
+		self.procview.toggle_mask_cpu(cpu, filtered)
+		self.irqview.toggle_mask_cpu(cpu, filtered)
 
 		# set new value
 		model.set(iter, self.COL_FILTER, filtered)
@@ -389,7 +395,7 @@ class cpuview:
 		for cpunr in range(len(self.cpustats) - 1):
 			cpu = self.list_store.append()
 			usage = self.cpustats[cpunr + 1].usage
-			self.list_store.set(cpu, self.COL_FILTER, True,
+			self.list_store.set(cpu, self.COL_FILTER, self.cpu_filtered[cpunr],
 						 self.COL_CPU, cpunr,
 						 self.COL_USAGE, int(usage))
 		self.treeview.show_all()
@@ -597,6 +603,7 @@ class irqview:
 		   "Events", "Users" ]
 
 	def __init__(self, treeview, irqs):
+		self.is_root = os.getuid() == 0
 		self.irqs = irqs
 		self.treeview = treeview
 		self.list_store = gtk.ListStore(gobject.TYPE_UINT,   # COL_NUM
@@ -634,6 +641,8 @@ class irqview:
 					     col + self.nr_columns)
 			self.treeview.append_column(column)
 
+		self.cpus_filtered = []
+
 	def foreach_selected_cb(self, model, path, iter, irq_list):
 		irq = model.get_value(iter, self.COL_NUM)
 		irq_list.append(str(irq))
@@ -645,6 +654,13 @@ class irqview:
 		treeselection.selected_foreach(self.foreach_selected_cb, irq_list)
 		selection.set(selection.target, 8, "irq:" + ",".join(irq_list))
 
+	def filtered(self, irq):
+		if self.cpus_filtered and self.is_root:
+			affinity = self.irqs[irq]["affinity"]
+			if set(self.cpus_filtered + affinity) == set(self.cpus_filtered):
+				return True
+
+		return False
 
 	def set_irq_columns(self, iter, irq, irq_info, nics):
 		users = get_irq_users(self.irqs, irq, nics)
@@ -691,6 +707,13 @@ class irqview:
 					continue
 				# Was the last one
 				break
+			elif self.filtered(irq):
+				new_irqs.remove(irq)
+				if self.list_store.remove(row):
+					# removed and row now its the next one
+					continue
+				# Was the last one
+				break
 			else:
 				new_irqs.remove(irq)
 				irq_info = self.irqs[irq]
@@ -700,6 +723,8 @@ class irqview:
 
 		new_irqs.sort()
 		for irq in new_irqs:
+			if self.filtered(irq):
+				continue
 			row = self.list_store.append()
 			irq_info = self.irqs[irq]
 			self.set_irq_columns(row, irq, irq_info, nics)
@@ -749,6 +774,16 @@ class irqview:
 		refresh.show()
 
 		menu.popup(None, None, None, event.button, event.time)
+
+	def toggle_mask_cpu(self, cpu, filtered):
+		if filtered:
+			if cpu not in self.cpus_filtered:
+				self.cpus_filtered.append(cpu)
+				self.show(self.ps)
+		else:
+			if cpu in self.cpus_filtered:
+				self.cpus_filtered.remove(cpu)
+				self.show(self.ps)
 
 class process_druid:
 
@@ -958,6 +993,7 @@ class procview:
 
 		self.show_kthreads = True
 		self.show_uthreads = True
+		self.cpus_filtered = []
 
 	def on_query_tooltip(self, treeview, x, y, keyboard_mode, tooltip):
 		# FIXME: Why is that it is off by a row?
@@ -1037,6 +1073,20 @@ class procview:
 		self.update_rows(self.ps, row, None)
 		self.treeview.show_all()
 		return True
+
+	def filtered(self, pid):
+		if self.cpus_filtered:
+			affinity = schedutils.get_affinity(pid)
+			if set(self.cpus_filtered + affinity) == set(self.cpus_filtered):
+				return True
+
+		if not (self.show_kthreads and self.show_uthreads):
+			kthread = iskthread(pid)
+			if ((not self.show_kthreads) and kthread) or \
+			   ((not self.show_uthreads) and not kthread):
+			   	return True
+
+		return False
 	
 	def update_rows(self, threads, row, parent_row):
 		new_tids = threads.keys()
@@ -1049,9 +1099,7 @@ class procview:
 				# removed and its the last one
 				break
 			else:
-				kthread = iskthread(tid)
-				if ((not self.show_kthreads) and kthread) or \
-				   ((not self.show_uthreads) and not kthread):
+				if self.filtered(tid):
 					new_tids.remove(tid)
 					if self.tree_store.remove(row):
 						# removed and now row is the next one
@@ -1083,10 +1131,9 @@ class procview:
 
 	def append_new_tids(self, parent_row, threads, tid_list):
 		for tid in tid_list:
-			kthread = iskthread(tid)
-			if ((not self.show_kthreads) and kthread) or \
-			   ((not self.show_uthreads) and not kthread):
+			if self.filtered(tid):
 				continue
+
 			row = self.tree_store.append(parent_row)
 			
 			if self.set_thread_columns(row, tid, threads[tid]):
@@ -1176,6 +1223,16 @@ class procview:
 		uthreads.show()
 
 		menu.popup(None, None, None, event.button, event.time)
+
+	def toggle_mask_cpu(self, cpu, filtered):
+		if filtered:
+			if cpu not in self.cpus_filtered:
+				self.cpus_filtered.append(cpu)
+				self.show(self.ps)
+		else:
+			if cpu in self.cpus_filtered:
+				self.cpus_filtered.remove(cpu)
+				self.show(self.ps)
 
 class tuna:
 
