@@ -135,7 +135,11 @@ def list_to_cpustring(l):
 
 def move_threads_to_cpu(cpu, data):
 	pid_list = [ int(pid) for pid in data.split(",") ]
-	new_affinity = [ cpu, ]
+	if cpu >= 0:
+		new_affinity = [ cpu, ]
+	else:
+		new_affinity = range(-cpu)
+		
 	changed = False
 	
 	for pid in pid_list:
@@ -161,7 +165,11 @@ def move_threads_to_cpu(cpu, data):
 
 def move_irqs_to_cpu(cpu, data):
 	irq_list = [ int(irq) for irq in data.split(",") ]
-	new_affinity = [ 1 << cpu, ]
+	if cpu >= 0:
+		new_affinity = [ 1 << cpu, ]
+	else:
+		cpu = -cpu
+		new_affinity = [ (1 << cpu) - 1, ]
 	
 	for irq in irq_list:
 		set_irq_affinity(irq, new_affinity)
@@ -357,16 +365,19 @@ class cpuview:
 	def on_drag_data_received_data(self, treeview, context, x, y,
 				       selection, info, etime):
 		drop_info = treeview.get_dest_row_at_pos(x, y)
-		if not drop_info:
-			return
 
 		# pid list, a irq list, etc
 		source, data = selection.data.split(":")
 
-		model = treeview.get_model()
-		path, position = drop_info
-		iter = model.get_iter(path)
-		cpu = model.get_value(iter, self.COL_CPU)
+		if drop_info:
+			model = treeview.get_model()
+			path, position = drop_info
+			iter = model.get_iter(path)
+			cpu = model.get_value(iter, self.COL_CPU)
+		else:
+			# Move to all CPUs
+			cpu = -(len(self.cpustats) - 1)
+
 		if self.drop_handlers.has_key(source):
 			if self.drop_handlers[source][0](cpu, data):
 				self.drop_handlers[source][1].refresh()
