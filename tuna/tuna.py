@@ -8,9 +8,29 @@ pygtk.require("2.0")
 import copy, ethtool, gtk, gobject, os, pango, procfs, re, schedutils, sys
 import gtk.glade
 
-kthread_help = {
-	"ksoftirqd/": "Activated when under <b>heavy</b> networking activity."
-}
+kthread_help_str = {}
+
+def kthread_help(key):
+	if kthread_help_str.has_key(key):
+		help = kthread_help_str[key]
+	else:
+		orig_key = key
+		if key[-1:] == '/':
+			key = "%s-" % key[:-1]
+		helpfile1 = "/usr/share/tuna/help/kthreads/%s" % key
+		helpfile2 = "help/kthreads/%s" % key
+		try: 
+			f = file(helpfile1)
+		except:
+			try:
+				f = file(helpfile2)
+			except:
+				return "%s not found!" % helpfile1
+
+		help = reduce(lambda a, b: a + b, f.readlines())
+		f.close()
+		kthread_help_str[orig_key] = help
+	return help
 
 # FIXME: should go to python-schedutils
 ( SCHED_OTHER, SCHED_FIFO, SCHED_RR, SCHED_BATCH ) = range(4)
@@ -965,10 +985,7 @@ class procview:
 		except:
 			key = cmdline
 			suffix_help = ""
-		if kthread_help.has_key(key):
-			help = kthread_help[key]
-		else:
-			help = "Undocumented"
+		help = kthread_help(key)
 		tooltip.set_markup("<b>Kernel Thread %d (%s):</b>\n%s%s" % (pid, cmdline, help, suffix_help))
 		return True
 
