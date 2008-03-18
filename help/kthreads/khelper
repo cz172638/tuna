@@ -1,0 +1,1 @@
+Used to call user mode helpers from the kernel, such as /sbin/bridge-stp, ocfs2_hb_ctl, pnpbios, poweroff, request-key, etc."

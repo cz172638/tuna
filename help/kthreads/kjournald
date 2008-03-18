@@ -1,0 +1,4 @@
+Main thread function used to manage a filesystem logging device journal.
+This kernel thread is responsible for two things:
+<b>COMMIT</b>: Every so often we need to commit the current state of the filesystem to disk.  The journal thread is responsible for writing all of the metadata buffers to disk.
+<b>CHECKPOINT</b>: We cannot reuse a used section of the log file until all of the data in that part of the log has been rewritten elsewhere on the disk.  Flushing these old buffers to reclaim space in the log is known as checkpointing, and this thread is responsible for that job.

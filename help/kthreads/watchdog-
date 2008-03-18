@@ -1,0 +1,5 @@
+Run briefly once per second to reset the softlockup timestamp.  If this gets delayed for more than 60 seconds then a message will be printed.
+
+Use /proc/sys/kernel/hung_task_timeout_secs and /proc/sys/kernel/hung_task_check_count to control this behaviour.
+
+Setting /proc/sys/kernel/hung_task_timeout_secs to zero will disable this check.
