@@ -991,7 +991,11 @@ class procview:
 						       DND_TARGETS,
 						       gtk.gdk.ACTION_DEFAULT | gtk.gdk.ACTION_MOVE)
 		self.treeview.connect("drag_data_get", self.on_drag_data_get_data)
-		self.treeview.connect("query-tooltip", self.on_query_tooltip)
+		try:
+			self.treeview.connect("query-tooltip", self.on_query_tooltip)
+		except:
+			# old versions of pygtk2+ doesn't have this signal
+			pass
 
 		self.renderer = gtk.CellRendererText()
 		for col in range(self.nr_columns):
@@ -1000,7 +1004,11 @@ class procview:
 			column.add_attribute(self.renderer, "weight",
 					     col + self.nr_columns)
 			column.set_sort_column_id(col)
-			self.treeview.set_tooltip_column(col)
+			try:
+				self.treeview.set_tooltip_column(col)
+			except:
+				# old versions of pygtk2+ doesn't have this signal
+				pass
 			self.treeview.append_column(column)
 
 		self.show_kthreads = True
