@@ -613,9 +613,11 @@ class irqview:
 	labels = [ "IRQ", "PID", "Policy", "Priority", "Affinity",
 		   "Events", "Users" ]
 
-	def __init__(self, treeview, irqs):
+	def __init__(self, treeview, irqs, ps):
+
 		self.is_root = os.getuid() == 0
 		self.irqs = irqs
+		self.ps = ps
 		self.treeview = treeview
 		self.list_store = gtk.ListStore(gobject.TYPE_UINT,   # COL_NUM
 				      		gobject.TYPE_INT,    # COL_PID
@@ -696,9 +698,7 @@ class irqview:
 
 		set_store_columns(self.list_store, iter, new_value)
 
-	def show(self, ps):
-		self.ps = ps
-
+	def show(self):
 		new_irqs = []
 		for sirq in self.irqs.keys():
 			try:
@@ -744,7 +744,7 @@ class irqview:
 	
 	def refresh(self, ps = None):
 		self.irqs.reload()
-		self.show(self.ps)
+		self.show()
 		return True
 
 	def edit_attributes(self, a):
@@ -790,11 +790,11 @@ class irqview:
 		if filtered:
 			if cpu not in self.cpus_filtered:
 				self.cpus_filtered.append(cpu)
-				self.show(self.ps)
+				self.show()
 		else:
 			if cpu in self.cpus_filtered:
 				self.cpus_filtered.remove(cpu)
-				self.show(self.ps)
+				self.show()
 
 class process_druid:
 
@@ -962,7 +962,8 @@ class procview:
 	labels = [ "PID", "Policy", "Priority", "Affinity",
 		   "VolCtxtSwitch", "NonVolCtxtSwitch", "Command Line" ]
 
-	def __init__(self, treeview):
+	def __init__(self, treeview, ps):
+		self.ps = ps
 		self.treeview = treeview
 		self.nr_cpus = procfs.cpuinfo().nr_cpus
 		self.tree_store = gtk.TreeStore(gobject.TYPE_UINT,
@@ -1073,9 +1074,7 @@ class procview:
 
 		return False
 
-	def show(self, ps):
-		self.ps = ps
-
+	def show(self):
 		# Start with the first row, if there is one, on the
 		# process list. If the first time update_rows will just
 		# have everthing in new_tids and append_new_tids will
@@ -1169,7 +1168,7 @@ class procview:
 		self.ps.reload_threads()
 		self.ps.load_cmdline()
 
-		self.show(self.ps)
+		self.show()
 		return True
 
 	def edit_attributes(self, a):
@@ -1190,11 +1189,11 @@ class procview:
 
 	def kthreads_view_toggled(self, a):
 		self.show_kthreads = not self.show_kthreads
-		self.show(self.ps)
+		self.show()
 
 	def uthreads_view_toggled(self, a):
 		self.show_uthreads = not self.show_uthreads
-		self.show(self.ps)
+		self.show()
 
 	def on_processlist_button_press_event(self, treeview, event):
 		if event.type != gtk.gdk.BUTTON_PRESS or event.button != 3:
@@ -1239,11 +1238,11 @@ class procview:
 		if filtered:
 			if cpu not in self.cpus_filtered:
 				self.cpus_filtered.append(cpu)
-				self.show(self.ps)
+				self.show()
 		else:
 			if cpu in self.cpus_filtered:
 				self.cpus_filtered.remove(cpu)
-				self.show(self.ps)
+				self.show()
 
 class tuna:
 
@@ -1254,8 +1253,10 @@ class tuna:
 		self.irqs = procfs.interrupts()
 		self.wtree = gtk.glade.XML(tuna_glade, "mainbig_window")
 
-		self.procview = procview(self.wtree.get_widget("processlist"))
-		self.irqview = irqview(self.wtree.get_widget("irqlist"), self.irqs)
+		self.procview = procview(self.wtree.get_widget("processlist"),
+					 self.ps)
+		self.irqview = irqview(self.wtree.get_widget("irqlist"),
+				       self.irqs, self.ps)
 		self.cpuview = cpuview(self.wtree.get_widget("cpuview"),
 				       self.procview, self.irqview)
 
@@ -1275,15 +1276,15 @@ class tuna:
 
 	def show(self):
 		self.cpuview.refresh()
-		self.irqview.show(self.ps)
-		self.procview.show(self.ps)
+		self.irqview.show()
+		self.procview.show()
 
 	def refresh(self):
 		self.ps.reload()
 		self.ps.reload_threads()
 		self.irqview.refresh(self.ps)
 		self.ps.load_cmdline()
-		self.procview.show(self.ps)
+		self.procview.show()
 		return True
 
 	def check_root(self):
