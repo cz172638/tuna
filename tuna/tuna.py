@@ -57,6 +57,17 @@ def iskthread(pid):
 	f.close()
 	return not line
 
+# FIXME: Move to python-linux-procfs
+def has_threaded_irqs(irqs, ps):
+	for sirq in irqs.keys():
+		try:
+			irq = int(sirq)
+			if ps.find_by_name("IRQ-%d" % irq):
+				return True
+		except:
+			pass
+	return False
+
 def set_irq_affinity(irq, bitmasklist):
 	text = reduce(lambda a, b: a + ",%x" % b, bitmasklist)
 	f = file("/proc/irq/%d/smp_affinity" % irq, "w")
@@ -619,20 +630,41 @@ class irqview:
 		self.irqs = irqs
 		self.ps = ps
 		self.treeview = treeview
-		self.list_store = gtk.ListStore(gobject.TYPE_UINT,   # COL_NUM
-				      		gobject.TYPE_INT,    # COL_PID
-				      		gobject.TYPE_STRING, # COL_POL
-				      		gobject.TYPE_INT,    # COL_PRI
-				      		gobject.TYPE_STRING, # COL_AFF
-				      		gobject.TYPE_UINT,   # COL_EVENTS
-				      		gobject.TYPE_STRING, # COL_USERS
-						gobject.TYPE_UINT,   # COL_NUM weight
-				      		gobject.TYPE_UINT,   # COL_PID weight
-				      		gobject.TYPE_UINT,   # COL POL weight
-				      		gobject.TYPE_UINT,   # COL_PRI weight
-				      		gobject.TYPE_UINT,   # COL_AFF weight
-				      		gobject.TYPE_UINT,   # COL_EVENTS weight
-				      		gobject.TYPE_UINT)   # COL_USERS weight
+		self.has_threaded_irqs = has_threaded_irqs(irqs, ps)
+		if self.has_threaded_irqs:
+			self.list_store = gtk.ListStore(gobject.TYPE_UINT,   # COL_NUM
+							gobject.TYPE_INT,    # COL_PID
+							gobject.TYPE_STRING, # COL_POL
+							gobject.TYPE_INT,    # COL_PRI
+							gobject.TYPE_STRING, # COL_AFF
+							gobject.TYPE_UINT,   # COL_EVENTS
+							gobject.TYPE_STRING, # COL_USERS
+							gobject.TYPE_UINT,   # COL_NUM weight
+							gobject.TYPE_UINT,   # COL_PID weight
+							gobject.TYPE_UINT,   # COL POL weight
+							gobject.TYPE_UINT,   # COL_PRI weight
+							gobject.TYPE_UINT,   # COL_AFF weight
+							gobject.TYPE_UINT,   # COL_EVENTS weight
+							gobject.TYPE_UINT)   # COL_USERS weight
+		else:
+			self.nr_columns = 4
+			( self.COL_NUM,
+			  self.COL_AFF,
+			  self.COL_EVENTS,
+			  self.COL_USERS ) = range(self.nr_columns)
+			self.labels = [ "IRQ", "Affinity", "Events", "Users" ]
+			self.list_store = gtk.ListStore(gobject.TYPE_UINT,   # COL_NUM
+							gobject.TYPE_STRING, # COL_AFF
+							gobject.TYPE_UINT,   # COL_EVENTS
+							gobject.TYPE_STRING, # COL_USERS
+							gobject.TYPE_UINT,   # COL_NUM weight
+							gobject.TYPE_UINT,   # COL_PID weight
+							gobject.TYPE_UINT,   # COL POL weight
+							gobject.TYPE_UINT,   # COL_PRI weight
+							gobject.TYPE_UINT,   # COL_AFF weight
+							gobject.TYPE_UINT,   # COL_EVENTS weight
+							gobject.TYPE_UINT)   # COL_USERS weight
+
 		self.treeview.set_model(self.list_store)
 
 		# Allow selecting multiple rows
@@ -676,22 +708,23 @@ class irqview:
 		return False
 
 	def set_irq_columns(self, iter, irq, irq_info, nics):
-		users = get_irq_users(self.irqs, irq, nics)
-		pids = self.ps.find_by_name("IRQ-%d" % irq)
-		if pids:
-			pid = pids[0]
-			prio = int(self.ps[pid]["stat"]["rt_priority"])
-			sched = schedutils.schedstr(schedutils.get_scheduler(pid))[6:]
-		else:
-			sched = ""
-			pid = -1
-			prio = -1
-
 		new_value = [ None ] * self.nr_columns
+		users = get_irq_users(self.irqs, irq, nics)
+		if self.has_threaded_irqs:
+			pids = self.ps.find_by_name("IRQ-%d" % irq)
+			if pids:
+				pid = pids[0]
+				prio = int(self.ps[pid]["stat"]["rt_priority"])
+				sched = schedutils.schedstr(schedutils.get_scheduler(pid))[6:]
+			else:
+				sched = ""
+				pid = -1
+				prio = -1
+			new_value[self.COL_PID] = pid
+			new_value[self.COL_POL] = sched
+			new_value[self.COL_PRI] = prio
+
 		new_value[self.COL_NUM] = irq
-		new_value[self.COL_PID] = pid
-		new_value[self.COL_POL] = sched
-		new_value[self.COL_PRI] = prio
 		new_value[self.COL_AFF] = get_irq_affinity_text(self.irqs, irq)
 		new_value[self.COL_EVENTS] = reduce(lambda a, b: a + b, irq_info["cpu"])
 		new_value[self.COL_USERS] = ",".join(users)
