@@ -306,7 +306,7 @@ class cpuview:
 
 		self.previous_pid_affinities = None
 		self.previous_irq_affinities = None
-		self.cpu_filtered = [ False ] * (len(self.cpustats) - 1)
+		self.cpu_enabled = [ True ] * (len(self.cpustats) - 1)
 
 	def isolate_cpu(self, a):
 		ret = self.treeview.get_path_at_pos(self.last_x, self.last_y)
@@ -398,18 +398,17 @@ class cpuview:
 	def filter_toggled(self, cell, path, model):
 		# get toggled iter
 		iter = model.get_iter((int(path),))
-		filtered = model.get_value(iter, self.COL_FILTER)
+		enabled = model.get_value(iter, self.COL_FILTER)
 		cpu = model.get_value(iter, self.COL_CPU)
 
-		# do something with the value
-		filtered = not filtered
+		enabled = not enabled
 
-		self.cpu_filtered[cpu] = filtered
-		self.procview.toggle_mask_cpu(cpu, filtered)
-		self.irqview.toggle_mask_cpu(cpu, filtered)
+		self.cpu_enabled[cpu] = enabled
+		self.procview.toggle_mask_cpu(cpu, enabled)
+		self.irqview.toggle_mask_cpu(cpu, enabled)
 
 		# set new value
-		model.set(iter, self.COL_FILTER, filtered)
+		model.set(iter, self.COL_FILTER, enabled)
 
 	def refresh(self):
 		self.list_store.clear()
@@ -417,7 +416,7 @@ class cpuview:
 		for cpunr in range(len(self.cpustats) - 1):
 			cpu = self.list_store.append()
 			usage = self.cpustats[cpunr + 1].usage
-			self.list_store.set(cpu, self.COL_FILTER, self.cpu_filtered[cpunr],
+			self.list_store.set(cpu, self.COL_FILTER, self.cpu_enabled[cpunr],
 						 self.COL_CPU, cpunr,
 						 self.COL_USAGE, int(usage))
 		self.treeview.show_all()
@@ -819,8 +818,8 @@ class irqview:
 
 		menu.popup(None, None, None, event.button, event.time)
 
-	def toggle_mask_cpu(self, cpu, filtered):
-		if filtered:
+	def toggle_mask_cpu(self, cpu, enabled):
+		if not enabled:
 			if cpu not in self.cpus_filtered:
 				self.cpus_filtered.append(cpu)
 				self.show()
@@ -1275,8 +1274,8 @@ class procview:
 
 		menu.popup(None, None, None, event.button, event.time)
 
-	def toggle_mask_cpu(self, cpu, filtered):
-		if filtered:
+	def toggle_mask_cpu(self, cpu, enabled):
+		if not enabled:
 			if cpu not in self.cpus_filtered:
 				self.cpus_filtered.append(cpu)
 				self.show()
