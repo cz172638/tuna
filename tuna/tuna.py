@@ -1235,6 +1235,40 @@ class procview:
 		self.show_uthreads = not self.show_uthreads
 		self.show()
 
+	def help_dialog(self, a):
+		ret = self.treeview.get_path_at_pos(self.last_x, self.last_y)
+		if not ret:
+			return
+		path, col, xpos, ypos = ret
+		if not path:
+			return
+		row = self.tree_store.get_iter(path)
+		pid = self.tree_store.get_value(row, self.COL_PID)
+		if not self.ps.has_key(pid):
+			return
+
+		if not iskthread(pid):
+			return
+		cmdline = self.tree_store.get_value(row, self.COL_CMDLINE).split(' ')[0]
+		try:
+			index = cmdline.index("/")
+			key = cmdline[:index + 1]
+			suffix_help = "\nOne per CPU"
+		except:
+			key = cmdline
+			suffix_help = ""
+		help = kthread_help(key)
+		title = "Kernel Thread %d (%s):" % (pid, cmdline)
+		help += suffix_help
+
+		dialog = gtk.MessageDialog(None,
+					   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+					   gtk.MESSAGE_INFO,
+					   gtk.BUTTONS_OK, help)
+		dialog.set_title(title)
+		ret = dialog.run()
+		dialog.destroy()
+
 	def on_processlist_button_press_event(self, treeview, event):
 		if event.type != gtk.gdk.BUTTON_PRESS or event.button != 3:
 			return
@@ -1257,20 +1291,25 @@ class procview:
 			uthreads_prefix = "_Show"
 		uthreads = gtk.MenuItem(uthreads_prefix + " user threads")
 
+		help = gtk.MenuItem("_What is this?")
+
 		menu.add(setattr)
 		menu.add(refresh)
 		menu.add(kthreads)
 		menu.add(uthreads)
+		menu.add(help)
 
 		setattr.connect_object('activate', self.edit_attributes, event)
 		refresh.connect_object('activate', self.refresh, event)
 		kthreads.connect_object('activate', self.kthreads_view_toggled, event)
 		uthreads.connect_object('activate', self.uthreads_view_toggled, event)
+		help.connect_object('activate', self.help_dialog, event)
 
 		setattr.show()
 		refresh.show()
 		kthreads.show()
 		uthreads.show()
+		help.show()
 
 		menu.popup(None, None, None, event.button, event.time)
 
