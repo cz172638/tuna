@@ -265,6 +265,17 @@ def set_store_columns(store, row, new_value):
 
 		store.set(row, col, new_value[col], col_weight, new_weight)
 
+class list_store_column:
+	def __init__(self, name, type = gobject.TYPE_UINT):
+		self.name = name
+		self.type = type
+
+def generate_list_store_columns_with_attr(columns):
+	for column in columns:
+		yield column.type
+	for column in columns:
+		yield gobject.TYPE_UINT
+
 class cpuview:
 
 	( COL_FILTER, COL_CPU, COL_USAGE ) = range(3)
@@ -624,8 +635,13 @@ class irqview:
 	nr_columns = 7
 	( COL_NUM, COL_PID, COL_POL, COL_PRI,
 	  COL_AFF, COL_EVENTS, COL_USERS ) = range(nr_columns)
-	labels = [ "IRQ", "PID", "Policy", "Priority", "Affinity",
-		   "Events", "Users" ]
+	columns = (list_store_column("IRQ"),
+		   list_store_column("PID", gobject.TYPE_INT),
+		   list_store_column("Policy", gobject.TYPE_STRING),
+		   list_store_column("Priority", gobject.TYPE_INT),
+		   list_store_column("Affinity", gobject.TYPE_STRING),
+		   list_store_column("Events"),
+		   list_store_column("Users", gobject.TYPE_STRING))
 
 	def __init__(self, treeview, irqs, ps):
 
@@ -634,39 +650,18 @@ class irqview:
 		self.ps = ps
 		self.treeview = treeview
 		self.has_threaded_irqs = has_threaded_irqs(irqs, ps)
-		if self.has_threaded_irqs:
-			self.list_store = gtk.ListStore(gobject.TYPE_UINT,   # COL_NUM
-							gobject.TYPE_INT,    # COL_PID
-							gobject.TYPE_STRING, # COL_POL
-							gobject.TYPE_INT,    # COL_PRI
-							gobject.TYPE_STRING, # COL_AFF
-							gobject.TYPE_UINT,   # COL_EVENTS
-							gobject.TYPE_STRING, # COL_USERS
-							gobject.TYPE_UINT,   # COL_NUM weight
-							gobject.TYPE_UINT,   # COL_PID weight
-							gobject.TYPE_UINT,   # COL POL weight
-							gobject.TYPE_UINT,   # COL_PRI weight
-							gobject.TYPE_UINT,   # COL_AFF weight
-							gobject.TYPE_UINT,   # COL_EVENTS weight
-							gobject.TYPE_UINT)   # COL_USERS weight
-		else:
+		if not self.has_threaded_irqs:
 			self.nr_columns = 4
 			( self.COL_NUM,
 			  self.COL_AFF,
 			  self.COL_EVENTS,
 			  self.COL_USERS ) = range(self.nr_columns)
-			self.labels = [ "IRQ", "Affinity", "Events", "Users" ]
-			self.list_store = gtk.ListStore(gobject.TYPE_UINT,   # COL_NUM
-							gobject.TYPE_STRING, # COL_AFF
-							gobject.TYPE_UINT,   # COL_EVENTS
-							gobject.TYPE_STRING, # COL_USERS
-							gobject.TYPE_UINT,   # COL_NUM weight
-							gobject.TYPE_UINT,   # COL_PID weight
-							gobject.TYPE_UINT,   # COL POL weight
-							gobject.TYPE_UINT,   # COL_PRI weight
-							gobject.TYPE_UINT,   # COL_AFF weight
-							gobject.TYPE_UINT,   # COL_EVENTS weight
-							gobject.TYPE_UINT)   # COL_USERS weight
+			self.columns = (list_store_column("IRQ"),
+					list_store_column("Affinity", gobject.TYPE_STRING),
+					list_store_column("Events"),
+					list_store_column("Users", gobject.TYPE_STRING))
+
+		self.list_store = gtk.ListStore(*generate_list_store_columns_with_attr(self.columns))
 
 		self.treeview.set_model(self.list_store)
 
@@ -682,7 +677,7 @@ class irqview:
 		self.renderer = gtk.CellRendererText()
 
 		for col in range(self.nr_columns):
-			column = gtk.TreeViewColumn(self.labels[col],
+			column = gtk.TreeViewColumn(self.columns[col].name,
 						    self.renderer, text = col)
 			column.set_sort_column_id(col)
 			column.add_attribute(self.renderer, "weight",
@@ -995,27 +990,19 @@ class procview:
 
 	nr_columns = 7
 	( COL_PID, COL_POL, COL_PRI, COL_AFF, COL_VOLCTXT, COL_NONVOLCTXT, COL_CMDLINE ) = range(nr_columns)
-	labels = [ "PID", "Policy", "Priority", "Affinity",
-		   "VolCtxtSwitch", "NonVolCtxtSwitch", "Command Line" ]
+	columns = (list_store_column("PID"),
+		   list_store_column("Policy", gobject.TYPE_STRING),
+		   list_store_column("Priority"),
+		   list_store_column("Affinity", gobject.TYPE_STRING),
+		   list_store_column("VolCtxtSwitch", gobject.TYPE_INT),
+		   list_store_column("NonVolCtxtSwitch", gobject.TYPE_INT),
+		   list_store_column("Command Line", gobject.TYPE_STRING))
 
 	def __init__(self, treeview, ps):
 		self.ps = ps
 		self.treeview = treeview
 		self.nr_cpus = procfs.cpuinfo().nr_cpus
-		self.tree_store = gtk.TreeStore(gobject.TYPE_UINT,
-				      		gobject.TYPE_STRING,
-				      		gobject.TYPE_INT,
-				      		gobject.TYPE_STRING,
-				      		gobject.TYPE_INT,
-				      		gobject.TYPE_INT,
-				      		gobject.TYPE_STRING,
-						gobject.TYPE_UINT,   # text weights (BOLD, etc)
-				      		gobject.TYPE_UINT,
-				      		gobject.TYPE_UINT,
-				      		gobject.TYPE_UINT,
-				      		gobject.TYPE_UINT,
-				      		gobject.TYPE_UINT,
-				      		gobject.TYPE_UINT)
+		self.tree_store = gtk.TreeStore(*generate_list_store_columns_with_attr(self.columns))
 		self.treeview.set_model(self.tree_store)
 
 		# Allow selecting multiple rows
@@ -1035,7 +1022,7 @@ class procview:
 
 		self.renderer = gtk.CellRendererText()
 		for col in range(self.nr_columns):
-			column = gtk.TreeViewColumn(self.labels[col],
+			column = gtk.TreeViewColumn(self.columns[col].name,
 						    self.renderer, text = col)
 			column.add_attribute(self.renderer, "weight",
 					     col + self.nr_columns)
