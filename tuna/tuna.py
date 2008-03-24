@@ -25,7 +25,7 @@ def kthread_help(key):
 			try:
 				f = file(helpfile2)
 			except:
-				return "%s not found!" % helpfile1
+				return ""
 
 		help = reduce(lambda a, b: a + b, f.readlines())
 		f.close()
@@ -1238,19 +1238,21 @@ class procview:
 		if not self.ps.has_key(pid):
 			return
 
-		if not iskthread(pid):
-			return
 		cmdline = self.tree_store.get_value(row, self.COL_CMDLINE).split(' ')[0]
-		try:
-			index = cmdline.index("/")
-			key = cmdline[:index + 1]
-			suffix_help = "\nOne per CPU"
-		except:
-			key = cmdline
-			suffix_help = ""
-		help = kthread_help(key)
-		title = "Kernel Thread %d (%s):" % (pid, cmdline)
-		help += suffix_help
+		if iskthread(pid):
+			try:
+				index = cmdline.index("/")
+				key = cmdline[:index + 1]
+				suffix_help = "\nOne per CPU"
+			except:
+				key = cmdline
+				suffix_help = ""
+			help = kthread_help(key)
+			title = "Kernel Thread %d (%s):" % (pid, cmdline)
+			help += suffix_help
+		else:
+			title = "User Thread %d (%s):" % (pid, cmdline)
+			help = title
 
 		dialog = gtk.MessageDialog(None,
 					   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
