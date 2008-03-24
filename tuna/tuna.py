@@ -154,24 +154,28 @@ def move_threads_to_cpu(cpu, data):
 	changed = False
 	
 	for pid in pid_list:
-		curr_affinity = schedutils.get_affinity(pid)
-		if curr_affinity != new_affinity:
-			schedutils.set_affinity(pid, new_affinity)
+		try:
 			curr_affinity = schedutils.get_affinity(pid)
-			if curr_affinity == new_affinity:
-				changed = True
-			else:
-				set_affinity_warning(pid, new_affinity)
-		threads = procfs.pidstats("/proc/%d/task" % pid)
-		for tid in threads.keys():
-			curr_affinity = schedutils.get_affinity(tid)
 			if curr_affinity != new_affinity:
-				schedutils.set_affinity(tid, new_affinity)
-				curr_affinity = schedutils.get_affinity(tid)
+				schedutils.set_affinity(pid, new_affinity)
+				curr_affinity = schedutils.get_affinity(pid)
 				if curr_affinity == new_affinity:
 					changed = True
 				else:
-					set_affinity_warning(tid, new_affinity)
+					set_affinity_warning(pid, new_affinity)
+			threads = procfs.pidstats("/proc/%d/task" % pid)
+			for tid in threads.keys():
+				curr_affinity = schedutils.get_affinity(tid)
+				if curr_affinity != new_affinity:
+					schedutils.set_affinity(tid, new_affinity)
+					curr_affinity = schedutils.get_affinity(tid)
+					if curr_affinity == new_affinity:
+						changed = True
+					else:
+						set_affinity_warning(tid, new_affinity)
+		except SystemError:
+			# process died
+			continue
 	return changed
 
 def move_irqs_to_cpu(cpu, data):
