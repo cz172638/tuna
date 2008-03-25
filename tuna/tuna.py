@@ -866,6 +866,7 @@ class process_druid:
 		self.regex_edit.set_sensitive(False)
 		if not ps[pid].has_key("threads"):
 			self.all_these_threads.hide()
+		self.on_just_this_thread_clicked(None)
 
 	def refresh_match_pids(self, cmdline_regex):
 		self.process_list_store.clear()
@@ -914,12 +915,31 @@ class process_druid:
 
 	def on_just_this_thread_clicked(self, button):
 		self.regex_edit.set_sensitive(False)
+		self.process_list_store.clear()
+		info = self.process_list_store.append()
+		cmdline = procfs.process_cmdline(self.ps[self.pid])
+		self.process_list_store.set(info,
+					    self.PROCESS_COL_PID, self.pid,
+					    self.PROCESS_COL_NAME, cmdline)
 
 	def on_command_regex_clicked(self, button):
 		self.regex_edit.set_sensitive(True)
+		self.on_cmdline_regex_changed(self.regex_edit)
 
 	def on_all_these_threads_clicked(self, button):
 		self.regex_edit.set_sensitive(False)
+		self.process_list_store.clear()
+		info = self.process_list_store.append()
+		cmdline = procfs.process_cmdline(self.ps[self.pid])
+		self.process_list_store.set(info,
+					    self.PROCESS_COL_PID, self.pid,
+					    self.PROCESS_COL_NAME, cmdline)
+		for tid in self.ps[self.pid]["threads"].keys():
+			child = self.process_list_store.append()
+			self.process_list_store.set(child,
+						    self.PROCESS_COL_PID, tid,
+						    self.PROCESS_COL_NAME, cmdline)
+
 
 	def on_sched_policy_combo_changed(self, button):
 		new_policy = self.sched_policy.get_active()
