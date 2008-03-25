@@ -1344,6 +1344,7 @@ class tuna:
 		self.ps = procfs.pidstats()
 		self.irqs = procfs.interrupts()
 		self.wtree = gtk.glade.XML(tuna_glade, "mainbig_window")
+		self.window = self.wtree.get_widget("mainbig_window")
 
 		self.procview = procview(self.wtree.get_widget("processlist"),
 					 self.ps)
@@ -1362,6 +1363,16 @@ class tuna:
 		self.ps.load_cmdline()
 		self.show()
 		self.timer = gobject.timeout_add(2500, self.refresh)
+    		self.icon = gtk.status_icon_new_from_stock(gtk.STOCK_PREFERENCES)
+		# FIXME: use "popup-menu" (aka right-click) to offer a the
+		# config screen, etc.
+    		self.icon.connect("activate", self.on_status_icon_activate)
+
+	def on_status_icon_activate(self, status_icon):
+		if self.window.is_active():
+			self.window.hide()
+		else:
+			self.window.present()
 
 	def on_mainbig_window_delete_event(self, obj, event):
 		gtk.main_quit()
