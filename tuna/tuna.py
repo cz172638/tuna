@@ -541,6 +541,9 @@ class irq_druid:
 		self.irq = irq
 		self.window = gtk.glade.XML(tuna_glade, "set_irq_attributes")
 		self.dialog = self.window.get_widget("set_irq_attributes")
+		pixbuf = self.dialog.render_icon(gtk.STOCK_PREFERENCES,
+						 gtk.ICON_SIZE_SMALL_TOOLBAR)
+		self.dialog.set_icon(pixbuf)
 		event_handlers = { "on_irq_affinity_text_changed" : self.on_irq_affinity_text_changed,
 				   "on_sched_policy_combo_changed": self.on_sched_policy_combo_changed }
 		self.window.signal_autoconnect(event_handlers)
@@ -838,6 +841,9 @@ class process_druid:
 		pid_info = self.ps[pid]
 		self.window = gtk.glade.XML(tuna_glade, "set_process_attributes")
 		self.dialog = self.window.get_widget("set_process_attributes")
+		pixbuf = self.dialog.render_icon(gtk.STOCK_PREFERENCES,
+						 gtk.ICON_SIZE_SMALL_TOOLBAR)
+		self.dialog.set_icon(pixbuf)
 		event_handlers = { "on_cmdline_regex_changed" : self.on_cmdline_regex_changed,
 				   "on_affinity_text_changed" : self.on_affinity_text_changed,
 				   "on_sched_policy_combo_changed" : self.on_sched_policy_combo_changed,
@@ -1367,6 +1373,9 @@ class tuna:
 		# FIXME: use "popup-menu" (aka right-click) to offer a the
 		# config screen, etc.
     		self.icon.connect("activate", self.on_status_icon_activate)
+		pixbuf = self.window.render_icon(gtk.STOCK_PREFERENCES,
+						 gtk.ICON_SIZE_SMALL_TOOLBAR)
+		self.window.set_icon(pixbuf)
 
 	def on_status_icon_activate(self, status_icon):
 		if self.window.is_active():
