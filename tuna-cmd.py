@@ -19,12 +19,12 @@ nr_cpus = None
 
 def usage():
 	print '''Usage: tuna [OPTIONS]
-	-h, --help              Give this help list
-	-g, --gui               Start the GUI
-	-i, --isolate_cpus=CPU  Move all threads away from CPU
-	-I, --include_cpus=CPU  Allow all threads to run on CPU
-	-K, --no_kthreads	Operations will not affect kernel threads
-	-U, --no_uthreads	Operations will not affect user threads'''
+	-h, --help                   Give this help list
+	-g, --gui                    Start the GUI
+	-i, --isolate_cpus=CPU-LIST  Move all threads away from CPU-LIST
+	-I, --include_cpus=CPU       Allow all threads to run on CPU
+	-K, --no_kthreads	     Operations will not affect kernel threads
+	-U, --no_uthreads	     Operations will not affect user threads'''
 
 def gui(kthreads, uthreads):
 	try:
@@ -67,7 +67,8 @@ def main():
 		elif o in ("-g", "--gui"):
 			run_gui = True
 		elif o in ("-i", "--isolate_cpus"):
-			tuna.isolate_cpu(int(a), get_nr_cpus())
+			tuna.isolate_cpus(map(lambda i: int(i), a.split(",")),
+					  get_nr_cpus())
 		elif o in ("-I", "--include_cpus"):
 			tuna.include_cpu(int(a), get_nr_cpus())
 		elif o in ("-K", "--no_kthreads"):

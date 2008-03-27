@@ -194,15 +194,15 @@ def move_irqs_to_cpu(cpu, data):
 	# in the irqview, now we always refresh.
 	return True
 
-def affinity_remove_cpu(affinity, cpu, nr_cpus):
+def affinity_remove_cpus(affinity, cpus, nr_cpus):
 	# If the cpu being isolated was the only one in the current affinity
-	affinity.remove(cpu)
+	affinity = list(set(affinity) - set(cpus))
 	if not affinity:
 		affinity = range(nr_cpus)
-		affinity.remove(cpu)
+		affinity = list(set(affinity) - set(cpus))
 	return affinity
 
-def isolate_cpu(cpu, nr_cpus):
+def isolate_cpus(cpus, nr_cpus):
 	ps = procfs.pidstats()
 	ps.reload_threads()
 	previous_pid_affinities = {}
@@ -210,9 +210,9 @@ def isolate_cpu(cpu, nr_cpus):
 		if iskthread(pid):
 			continue
 		affinity = schedutils.get_affinity(pid)
-		if cpu in affinity:
+		if set(affinity).intersection(set(cpus)):
 			previous_pid_affinities[pid] = copy.copy(affinity)
-			affinity = affinity_remove_cpu(affinity, cpu, nr_cpus)
+			affinity = affinity_remove_cpus(affinity, cpus, nr_cpus)
 			schedutils.set_affinity(pid, affinity)
 
 		if not ps[pid].has_key("threads"):
@@ -222,9 +222,9 @@ def isolate_cpu(cpu, nr_cpus):
 			if iskthread(tid):
 				continue
 			affinity = schedutils.get_affinity(tid)
-			if cpu in affinity:
+			if set(affinity).intersection(set(cpus)):
 				previous_pid_affinities[tid] = copy.copy(affinity)
-				affinity = affinity_remove_cpu(affinity, cpu, nr_cpus)
+				affinity = affinity_remove_cpus(affinity, cpus, nr_cpus)
 				schedutils.set_affinity(tid, affinity)
 
 	del ps
@@ -237,10 +237,9 @@ def isolate_cpu(cpu, nr_cpus):
 		if not irqs[irq].has_key("affinity"):
 			continue
 		affinity = irqs[irq]["affinity"]
-		if cpu in affinity:
+		if set(affinity).intersection(set(cpus)):
 			previous_irq_affinities[irq] = copy.copy(affinity)
-			affinity = affinity_remove_cpu(affinity,
-						       cpu, nr_cpus)
+			affinity = affinity_remove_cpus(affinity, cpus, nr_cpus)
 			set_irq_affinity(int(irq),
 					 procfs.hexbitmask(affinity,
 							   nr_cpus))
@@ -376,7 +375,7 @@ class cpuview:
 		row = self.list_store.get_iter(path)
 		cpu = self.list_store.get_value(row, self.COL_CPU)
 		nr_cpus = len(self.cpustats) - 1
-		self.previous_pid_affinities, self.previous_irq_affinities = isolate_cpu(cpu, nr_cpus)
+		self.previous_pid_affinities, self.previous_irq_affinities = isolate_cpus([cpu,], nr_cpus)
 
 		if self.previous_pid_affinities:
 			self.procview.refresh()
