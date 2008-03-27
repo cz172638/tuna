@@ -247,6 +247,49 @@ def isolate_cpu(cpu, nr_cpus):
 
 	return (previous_pid_affinities, previous_irq_affinities)
 
+def include_cpu(cpu, nr_cpus):
+	ps = procfs.pidstats()
+	ps.reload_threads()
+	previous_pid_affinities = {}
+	for pid in ps.keys():
+		if iskthread(pid):
+			continue
+		affinity = schedutils.get_affinity(pid)
+		if cpu not in affinity:
+			previous_pid_affinities[pid] = copy.copy(affinity)
+			affinity.append(cpu)
+			schedutils.set_affinity(pid, affinity)
+
+		if not ps[pid].has_key("threads"):
+			continue
+		threads = ps[pid]["threads"]
+		for tid in threads.keys():
+			if iskthread(tid):
+				continue
+			affinity = schedutils.get_affinity(tid)
+			if cpu not in affinity:
+				previous_pid_affinities[tid] = copy.copy(affinity)
+				affinity.append(cpu)
+				schedutils.set_affinity(tid, affinity)
+
+	del ps
+	
+	# Now include it in IRQs too
+	irqs = procfs.interrupts()
+	previous_irq_affinities = {}
+	for irq in irqs.keys():
+		# LOC, NMI, TLB, etc
+		if not irqs[irq].has_key("affinity"):
+			continue
+		affinity = irqs[irq]["affinity"]
+		if cpu in affinity:
+			previous_irq_affinities[irq] = copy.copy(affinity)
+			affinity.append(cpu)
+			set_irq_affinity(int(irq),
+					 procfs.hexbitmask(affinity, nr_cpus))
+
+	return (previous_pid_affinities, previous_irq_affinities)
+
 def set_store_columns(store, row, new_value):
 	nr_columns = len(new_value)
 	for col in range(nr_columns):
@@ -341,6 +384,24 @@ class cpuview:
 		if self.previous_irq_affinities:
 			self.irqview.refresh()
 
+	def include_cpu(self, a):
+		ret = self.treeview.get_path_at_pos(self.last_x, self.last_y)
+		if not ret:
+			return
+		path, col, xpos, ypos = ret
+		if not path:
+			return
+		row = self.list_store.get_iter(path)
+		cpu = self.list_store.get_value(row, self.COL_CPU)
+		nr_cpus = len(self.cpustats) - 1
+		self.previous_pid_affinities, self.previous_irq_affinities = include_cpu(cpu, nr_cpus)
+
+		if self.previous_pid_affinities:
+			self.procview.refresh()
+
+		if self.previous_irq_affinities:
+			self.irqview.refresh()
+
 	def restore_cpu(self, a):
 		if not (self.previous_pid_affinities or \
 			self.previous_irq_affinities):
@@ -371,18 +432,22 @@ class cpuview:
 
 		menu = gtk.Menu()
 
+		include = gtk.MenuItem("I_nclude CPU")
 		isolate = gtk.MenuItem("_Isolate CPU")
 		restore = gtk.MenuItem("_Restore CPU")
 
+		menu.add(include)
 		menu.add(isolate)
 		menu.add(restore)
 
+		include.connect_object('activate', self.include_cpu, event)
 		isolate.connect_object('activate', self.isolate_cpu, event)
 		if not (self.previous_pid_affinities or \
 			self.previous_irq_affinities):
 			restore.set_sensitive(False)
 		restore.connect_object('activate', self.restore_cpu, event)
 
+		include.show()
 		isolate.show()
 		restore.show()
 

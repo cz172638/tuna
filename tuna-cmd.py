@@ -19,9 +19,10 @@ nr_cpus = None
 
 def usage():
 	print '''Usage: tuna [OPTIONS]
-	-h, --help             Give this help list
-	-g, --gui              Start the GUI
-	-i, --isolate_cpu=CPU  Move all threads away from CPU'''
+	-h, --help              Give this help list
+	-g, --gui               Start the GUI
+	-i, --isolate_cpus=CPU  Move all threads away from CPU
+	-I, --include_cpus=CPU  Allow all threads to run on CPU'''
 
 def gui():
 	try:
@@ -40,8 +41,9 @@ def get_nr_cpus():
 def main():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
-					   "i:gh",
-					   ( "isolate_cpus=", "gui", "help", ))
+					   "ghi:I:",
+					   ("gui", "help", "isolate_cpus=",
+					    "include_cpus="))
 	except getopt.GetoptError, err:
 		usage()
 		print str(err)
@@ -60,6 +62,8 @@ def main():
 			return
 		elif o in ("-i", "--isolate_cpus"):
 			tuna.isolate_cpu(int(a), get_nr_cpus())
+		elif o in ("-I", "--include_cpus"):
+			tuna.include_cpu(int(a), get_nr_cpus())
 
 if __name__ == '__main__':
     main()
