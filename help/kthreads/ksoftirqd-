@@ -1,1 +1,1 @@
-Activated when under <b>heavy</b> networking activity.
+Activated when under heavy networking activity. Used to avoid monopolizing the CPUs doing just software interrupt processing.

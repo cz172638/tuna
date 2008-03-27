@@ -1,0 +1,1 @@
+This cpufreq workqueue runs periodically to sample the idleness of the system, increasing or reducing the CPU frequency to save power.

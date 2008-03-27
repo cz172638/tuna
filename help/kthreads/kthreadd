@@ -1,1 +1,1 @@
-Used to create kernel threads via kthread_create().
+Used to create kernel threads via kthread_create(). It is the parent of all the other kernel threads.
