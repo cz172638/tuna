@@ -1089,7 +1089,8 @@ class procview:
 		   list_store_column("NonVolCtxtSwitch", gobject.TYPE_INT),
 		   list_store_column("Command Line", gobject.TYPE_STRING))
 
-	def __init__(self, treeview, ps):
+	def __init__(self, treeview, ps,
+		     show_kthreads = True, show_uthreads = True):
 		self.ps = ps
 		self.treeview = treeview
 		self.nr_cpus = procfs.cpuinfo().nr_cpus
@@ -1125,8 +1126,8 @@ class procview:
 				pass
 			self.treeview.append_column(column)
 
-		self.show_kthreads = True
-		self.show_uthreads = True
+		self.show_kthreads = show_kthreads
+		self.show_uthreads = show_uthreads
 		self.cpus_filtered = []
 
 	def on_query_tooltip(self, treeview, x, y, keyboard_mode, tooltip):
@@ -1409,7 +1410,7 @@ class procview:
 
 class tuna:
 
-	def __init__(self):
+	def __init__(self, show_kthreads = True, show_uthreads = True):
 		if self.check_root():
 			sys.exit(1)
 		self.ps = procfs.pidstats()
@@ -1418,7 +1419,7 @@ class tuna:
 		self.window = self.wtree.get_widget("mainbig_window")
 
 		self.procview = procview(self.wtree.get_widget("processlist"),
-					 self.ps)
+					 self.ps, show_kthreads, show_uthreads)
 		self.irqview = irqview(self.wtree.get_widget("irqlist"),
 				       self.irqs, self.ps)
 		self.cpuview = cpuview(self.wtree.get_widget("cpuview"),

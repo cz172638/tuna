@@ -22,11 +22,13 @@ def usage():
 	-h, --help              Give this help list
 	-g, --gui               Start the GUI
 	-i, --isolate_cpus=CPU  Move all threads away from CPU
-	-I, --include_cpus=CPU  Allow all threads to run on CPU'''
+	-I, --include_cpus=CPU  Allow all threads to run on CPU
+	-K, --no_kthreads	Operations will not affect kernel threads
+	-U, --no_uthreads	Operations will not affect user threads'''
 
-def gui():
+def gui(kthreads, uthreads):
 	try:
-		app = tuna.tuna()
+		app = tuna.tuna(kthreads, uthreads)
 		app.run()
 	except KeyboardInterrupt:
 		pass
@@ -41,9 +43,10 @@ def get_nr_cpus():
 def main():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
-					   "ghi:I:",
+					   "ghi:I:KU",
 					   ("gui", "help", "isolate_cpus=",
-					    "include_cpus="))
+					    "include_cpus=", "no_kthreads",
+					    "no_uthreads"))
 	except getopt.GetoptError, err:
 		usage()
 		print str(err)
@@ -52,18 +55,28 @@ def main():
 	if not opts:
 		gui()
 		return
+	
+	run_gui = False
+	kthreads = True
+	uthreads = True
 
 	for o, a in opts:
 		if o in ("-h", "--help"):
 			usage()
 			return
 		elif o in ("-g", "--gui"):
-			gui()
-			return
+			run_gui = True
 		elif o in ("-i", "--isolate_cpus"):
 			tuna.isolate_cpu(int(a), get_nr_cpus())
 		elif o in ("-I", "--include_cpus"):
 			tuna.include_cpu(int(a), get_nr_cpus())
+		elif o in ("-K", "--no_kthreads"):
+			kthreads = False
+		elif o in ("-U", "--no_uthreads"):
+			uthreads = False
+
+	if run_gui:
+		gui(kthreads, uthreads)
 
 if __name__ == '__main__':
     main()
