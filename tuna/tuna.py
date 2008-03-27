@@ -223,7 +223,7 @@ def isolate_cpu(cpu, nr_cpus):
 				continue
 			affinity = schedutils.get_affinity(tid)
 			if cpu in affinity:
-				previous_pid_affinities[tid] = affinity
+				previous_pid_affinities[tid] = copy.copy(affinity)
 				affinity = affinity_remove_cpu(affinity, cpu, nr_cpus)
 				schedutils.set_affinity(tid, affinity)
 
