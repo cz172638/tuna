@@ -26,7 +26,7 @@ def usage():
 	-K, --no_kthreads	     Operations will not affect kernel threads
 	-U, --no_uthreads	     Operations will not affect user threads'''
 
-def gui(kthreads, uthreads):
+def gui(kthreads = True, uthreads = True):
 	try:
 		app = tuna.tuna(kthreads, uthreads)
 		app.run()
