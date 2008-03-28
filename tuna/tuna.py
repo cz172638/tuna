@@ -1435,9 +1435,8 @@ class tuna:
 		self.show()
 		self.timer = gobject.timeout_add(2500, self.refresh)
     		self.icon = gtk.status_icon_new_from_stock(gtk.STOCK_PREFERENCES)
-		# FIXME: use "popup-menu" (aka right-click) to offer a the
-		# config screen, etc.
     		self.icon.connect("activate", self.on_status_icon_activate)
+    		self.icon.connect("popup-menu", self.on_status_icon_popup_menu)
 		pixbuf = self.window.render_icon(gtk.STOCK_PREFERENCES,
 						 gtk.ICON_SIZE_SMALL_TOOLBAR)
 		self.window.set_icon(pixbuf)
@@ -1448,7 +1447,17 @@ class tuna:
 		else:
 			self.window.present()
 
-	def on_mainbig_window_delete_event(self, obj, event):
+	def on_status_icon_popup_menu(self, icon, event_button, event_time):
+		menu = gtk.Menu()
+
+		quit = gtk.MenuItem("_Quit")
+		menu.add(quit)
+		quit.connect_object('activate', self.on_mainbig_window_delete_event, icon)
+		quit.show()
+
+		menu.popup(None, None, None, event_button, event_time)
+
+	def on_mainbig_window_delete_event(self, obj, event = None):
 		gtk.main_quit()
 
 	def show(self):
