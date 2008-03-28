@@ -1,3 +1,4 @@
+help/kthreads/
 tuna-cmd.py
 tuna/__init__.py
 tuna/tuna.py
