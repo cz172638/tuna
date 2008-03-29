@@ -153,6 +153,7 @@ def move_threads_to_cpu(cpu, data):
 		
 	changed = False
 	
+	ps = procfs.pidstats()
 	for pid in pid_list:
 		try:
 			curr_affinity = schedutils.get_affinity(pid)
@@ -163,6 +164,11 @@ def move_threads_to_cpu(cpu, data):
 					changed = True
 				else:
 					set_affinity_warning(pid, new_affinity)
+
+			# See if this is the thread group leader
+			if not ps.has_key(pid):
+				continue
+
 			threads = procfs.pidstats("/proc/%d/task" % pid)
 			for tid in threads.keys():
 				curr_affinity = schedutils.get_affinity(tid)
