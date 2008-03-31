@@ -30,7 +30,7 @@ def usage():
 	-t, --threads=THREAD-LIST	THREAD-LIST affected by commands
 	-U, --no_uthreads		Operations will not affect user threads'''
 
-def gui(kthreads = True, uthreads = True, cpus_filtered = None):
+def gui(kthreads = True, uthreads = True, cpus_filtered = []):
 	try:
 		app = tuna.tuna(kthreads, uthreads, cpus_filtered)
 		app.run()
