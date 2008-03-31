@@ -144,13 +144,7 @@ def list_to_cpustring(l):
 		prev = i
 	return ",".join(strings)
 
-def move_threads_to_cpu(cpu, data):
-	pid_list = [ int(pid) for pid in data.split(",") ]
-	if cpu >= 0:
-		new_affinity = [ cpu, ]
-	else:
-		new_affinity = range(-cpu)
-		
+def move_threads_to_cpu(new_affinity, pid_list):
 	changed = False
 	
 	ps = procfs.pidstats()
@@ -184,7 +178,16 @@ def move_threads_to_cpu(cpu, data):
 			continue
 	return changed
 
-def move_irqs_to_cpu(cpu, data):
+def drop_handler_move_threads_to_cpu(cpu, data):
+	pid_list = [ int(pid) for pid in data.split(",") ]
+	if cpu >= 0:
+		new_affinity = [ cpu, ]
+	else:
+		new_affinity = range(-cpu)
+
+	move_threads_to_cpu(new_affinity, pid_list)
+
+def drop_handler_move_irqs_to_cpu(cpu, data):
 	irq_list = [ int(irq) for irq in data.split(",") ]
 	if cpu >= 0:
 		new_affinity = [ 1 << cpu, ]
@@ -364,8 +367,8 @@ class cpuview:
 
 		self.timer = gobject.timeout_add(3000, self.refresh)
 
-		self.drop_handlers = { "pid": (move_threads_to_cpu, self.procview),
-				       "irq": (move_irqs_to_cpu, self.irqview), }
+		self.drop_handlers = { "pid": (drop_handler_move_threads_to_cpu, self.procview),
+				       "irq": (drop_handler_move_irqs_to_cpu, self.irqview), }
 
 		self.previous_pid_affinities = None
 		self.previous_irq_affinities = None
