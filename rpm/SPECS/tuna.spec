@@ -7,7 +7,7 @@ Release: 1%{?dist}
 License: GPLv2
 Summary: Application tuning GUI & command line utility
 Group: Application/System
-Source: http://userweb.kernel.org/~acme/python-linux-procfs/%{name}-%{version}.tar.bz2
+Source: http://userweb.kernel.org/~acme/tuna/%{name}-%{version}.tar.bz2
 BuildArch: noarch
 BuildRequires: python-devel
 Requires: python-ethtool
