@@ -331,7 +331,7 @@ class cpuview:
 
 	( COL_FILTER, COL_CPU, COL_USAGE ) = range(3)
 
-	def __init__(self, treeview, procview, irqview):
+	def __init__(self, treeview, procview, irqview, cpus_filtered):
 		self.cpustats = procfs.cpusstats()
 		self.procview = procview
 		self.irqview = irqview
@@ -372,7 +372,7 @@ class cpuview:
 
 		self.previous_pid_affinities = None
 		self.previous_irq_affinities = None
-		self.cpu_enabled = [ True ] * (len(self.cpustats) - 1)
+		self.cpus_filtered = cpus_filtered
 
 	def isolate_cpu(self, a):
 		ret = self.treeview.get_path_at_pos(self.last_x, self.last_y)
@@ -491,7 +491,13 @@ class cpuview:
 
 		enabled = not enabled
 
-		self.cpu_enabled[cpu] = enabled
+		if enabled:
+			if cpu in self.cpus_filtered:
+				self.cpus_filtered.remove(cpu)
+		else:
+			if cpu not in self.cpus_filtered:
+				self.cpus_filtered.append(cpu)
+
 		self.procview.toggle_mask_cpu(cpu, enabled)
 		self.irqview.toggle_mask_cpu(cpu, enabled)
 
@@ -504,7 +510,7 @@ class cpuview:
 		for cpunr in range(len(self.cpustats) - 1):
 			cpu = self.list_store.append()
 			usage = self.cpustats[cpunr + 1].usage
-			self.list_store.set(cpu, self.COL_FILTER, self.cpu_enabled[cpunr],
+			self.list_store.set(cpu, self.COL_FILTER, cpunr not in self.cpus_filtered,
 						 self.COL_CPU, cpunr,
 						 self.COL_USAGE, int(usage))
 		self.treeview.show_all()
@@ -719,7 +725,7 @@ class irqview:
 		   list_store_column("Events"),
 		   list_store_column("Users", gobject.TYPE_STRING))
 
-	def __init__(self, treeview, irqs, ps):
+	def __init__(self, treeview, irqs, ps, cpus_filtered):
 
 		self.is_root = os.getuid() == 0
 		self.irqs = irqs
@@ -760,7 +766,7 @@ class irqview:
 					     col + self.nr_columns)
 			self.treeview.append_column(column)
 
-		self.cpus_filtered = []
+		self.cpus_filtered = cpus_filtered
 
 	def foreach_selected_cb(self, model, path, iter, irq_list):
 		irq = model.get_value(iter, self.COL_NUM)
@@ -1098,7 +1104,8 @@ class procview:
 		   list_store_column("Command Line", gobject.TYPE_STRING))
 
 	def __init__(self, treeview, ps,
-		     show_kthreads = True, show_uthreads = True):
+		     show_kthreads = True, show_uthreads = True,
+		     cpus_filtered = None):
 		self.ps = ps
 		self.treeview = treeview
 		self.nr_cpus = procfs.cpuinfo().nr_cpus
@@ -1136,7 +1143,7 @@ class procview:
 
 		self.show_kthreads = show_kthreads
 		self.show_uthreads = show_uthreads
-		self.cpus_filtered = []
+		self.cpus_filtered = cpus_filtered
 
 	def on_query_tooltip(self, treeview, x, y, keyboard_mode, tooltip):
 		# FIXME: Why is that it is off by a row?
@@ -1418,7 +1425,7 @@ class procview:
 
 class tuna:
 
-	def __init__(self, show_kthreads = True, show_uthreads = True):
+	def __init__(self, show_kthreads = True, show_uthreads = True, cpus_filtered = []):
 		if self.check_root():
 			sys.exit(1)
 		self.ps = procfs.pidstats()
@@ -1427,11 +1434,11 @@ class tuna:
 		self.window = self.wtree.get_widget("mainbig_window")
 
 		self.procview = procview(self.wtree.get_widget("processlist"),
-					 self.ps, show_kthreads, show_uthreads)
+					 self.ps, show_kthreads, show_uthreads, cpus_filtered)
 		self.irqview = irqview(self.wtree.get_widget("irqlist"),
-				       self.irqs, self.ps)
+				       self.irqs, self.ps, cpus_filtered)
 		self.cpuview = cpuview(self.wtree.get_widget("cpuview"),
-				       self.procview, self.irqview)
+				       self.procview, self.irqview, cpus_filtered)
 
 		event_handlers = { "on_mainbig_window_delete_event"    : self.on_mainbig_window_delete_event,
 				   "on_processlist_button_press_event" : self.procview.on_processlist_button_press_event,

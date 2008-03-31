@@ -22,6 +22,7 @@ def usage():
 	-h, --help			Give this help list
 	-g, --gui			Start the GUI
 	-c, --cpus=CPU-LIST		CPU-LIST affected by commands
+	-f, --filter			Display filter the selected entities
 	-i, --isolate			Move all threads away from CPU-LIST
 	-I, --include			Allow all threads to run on CPU-LIST
 	-K, --no_kthreads		Operations will not affect kernel threads
@@ -29,9 +30,9 @@ def usage():
 	-t, --threads=THREAD-LIST	THREAD-LIST affected by commands
 	-U, --no_uthreads		Operations will not affect user threads'''
 
-def gui(kthreads = True, uthreads = True):
+def gui(kthreads = True, uthreads = True, cpus_filtered = None):
 	try:
-		app = tuna.tuna(kthreads, uthreads)
+		app = tuna.tuna(kthreads, uthreads, cpus_filtered)
 		app.run()
 	except KeyboardInterrupt:
 		pass
@@ -46,8 +47,8 @@ def get_nr_cpus():
 def main():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
-					   "c:ghiIKmt:U",
-					   ("cpus=", "gui", "help",
+					   "c:fghiIKmt:U",
+					   ("cpus=", "filter", "gui", "help",
 					    "isolate", "include",
 					    "no_kthreads",
 					    "move", "threads=",
@@ -66,6 +67,7 @@ def main():
 	uthreads = True
 	cpus = None
 	threads = None
+	filter = False
 
 	for o, a in opts:
 		if o in ("-h", "--help"):
@@ -75,6 +77,8 @@ def main():
 			cpus = map(lambda cpu: int(cpu), a.split(","))
 		elif o in ("-t", "--threads"):
 			threads = map(lambda cpu: int(cpu), a.split(","))
+		elif o in ("-f", "--filter"):
+			filter = True
 		elif o in ("-g", "--gui"):
 			run_gui = True
 		elif o in ("-i", "--isolate"):
@@ -102,7 +106,7 @@ def main():
 			uthreads = False
 
 	if run_gui:
-		gui(kthreads, uthreads)
+		gui(kthreads, uthreads, filter and cpus or [])
 
 if __name__ == '__main__':
     main()
