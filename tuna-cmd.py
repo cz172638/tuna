@@ -21,8 +21,9 @@ def usage():
 	print '''Usage: tuna [OPTIONS]
 	-h, --help                   Give this help list
 	-g, --gui                    Start the GUI
-	-i, --isolate_cpus=CPU-LIST  Move all threads away from CPU-LIST
-	-I, --include_cpus=CPU       Allow all threads to run on CPU
+	-c, --cpus=CPU-LIST	     CPU-LIST affected by other commands
+	-i, --isolate		     Move all threads away from CPU-LIST
+	-I, --include		     Allow all threads to run on CPU-LIST
 	-K, --no_kthreads	     Operations will not affect kernel threads
 	-U, --no_uthreads	     Operations will not affect user threads'''
 
@@ -43,10 +44,10 @@ def get_nr_cpus():
 def main():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
-					   "ghi:I:KU",
-					   ("gui", "help", "isolate_cpus=",
-					    "include_cpus=", "no_kthreads",
-					    "no_uthreads"))
+					   "c:ghiIKU",
+					   ("cpus=", "gui", "help",
+					    "isolate", "include",
+					    "no_kthreads", "no_uthreads"))
 	except getopt.GetoptError, err:
 		usage()
 		print str(err)
@@ -59,18 +60,27 @@ def main():
 	run_gui = False
 	kthreads = True
 	uthreads = True
+	cpus = None
 
 	for o, a in opts:
 		if o in ("-h", "--help"):
 			usage()
 			return
+		elif o in ("-c", "--cpus"):
+			cpus = map(lambda cpu: int(cpu), a.split(","))
 		elif o in ("-g", "--gui"):
 			run_gui = True
-		elif o in ("-i", "--isolate_cpus"):
-			tuna.isolate_cpus(map(lambda i: int(i), a.split(",")),
-					  get_nr_cpus())
-		elif o in ("-I", "--include_cpus"):
-			tuna.include_cpu(int(a), get_nr_cpus())
+		elif o in ("-i", "--isolate"):
+			if not cpus:
+				print "tuna: --isolate requires a cpu list!"
+				sys.exit(2)
+			tuna.isolate_cpus(cpus, get_nr_cpus())
+		elif o in ("-I", "--include"):
+			if not cpus:
+				print "tuna: --include requires a cpu list!"
+				sys.exit(2)
+			for cpu in cpus:
+				tuna.include_cpu(cpu, get_nr_cpus())
 		elif o in ("-K", "--no_kthreads"):
 			kthreads = False
 		elif o in ("-U", "--no_uthreads"):
