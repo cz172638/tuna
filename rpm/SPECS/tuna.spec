@@ -1,4 +1,5 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
+%{!?python_ver: %define python_ver %(%{__python} -c "import sys ; print sys.version[:3]")}
 
 Name: tuna
 Version: 0.2
@@ -48,7 +49,9 @@ rm -rf %{buildroot}
 %dir %{_datadir}/tuna/help/kthreads/
 %{_datadir}/tuna/help/kthreads/*
 %{python_sitelib}/tuna/
+%if "%{python_ver}" >= "2.5"
 %{python_sitelib}/*.egg-info
+%endif
 
 %changelog
 * Thu Mar 27 2008 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.2-1
