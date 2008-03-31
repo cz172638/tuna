@@ -19,13 +19,15 @@ nr_cpus = None
 
 def usage():
 	print '''Usage: tuna [OPTIONS]
-	-h, --help                   Give this help list
-	-g, --gui                    Start the GUI
-	-c, --cpus=CPU-LIST	     CPU-LIST affected by other commands
-	-i, --isolate		     Move all threads away from CPU-LIST
-	-I, --include		     Allow all threads to run on CPU-LIST
-	-K, --no_kthreads	     Operations will not affect kernel threads
-	-U, --no_uthreads	     Operations will not affect user threads'''
+	-h, --help			Give this help list
+	-g, --gui			Start the GUI
+	-c, --cpus=CPU-LIST		CPU-LIST affected by commands
+	-i, --isolate			Move all threads away from CPU-LIST
+	-I, --include			Allow all threads to run on CPU-LIST
+	-K, --no_kthreads		Operations will not affect kernel threads
+	-m, --move			move selected entities to CPU-LIST
+	-t, --threads=THREAD-LIST	THREAD-LIST affected by commands
+	-U, --no_uthreads		Operations will not affect user threads'''
 
 def gui(kthreads = True, uthreads = True):
 	try:
@@ -44,10 +46,12 @@ def get_nr_cpus():
 def main():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
-					   "c:ghiIKU",
+					   "c:ghiIKmt:U",
 					   ("cpus=", "gui", "help",
 					    "isolate", "include",
-					    "no_kthreads", "no_uthreads"))
+					    "no_kthreads",
+					    "move", "threads=",
+					    "no_uthreads"))
 	except getopt.GetoptError, err:
 		usage()
 		print str(err)
@@ -61,6 +65,7 @@ def main():
 	kthreads = True
 	uthreads = True
 	cpus = None
+	threads = None
 
 	for o, a in opts:
 		if o in ("-h", "--help"):
@@ -68,6 +73,8 @@ def main():
 			return
 		elif o in ("-c", "--cpus"):
 			cpus = map(lambda cpu: int(cpu), a.split(","))
+		elif o in ("-t", "--threads"):
+			threads = map(lambda cpu: int(cpu), a.split(","))
 		elif o in ("-g", "--gui"):
 			run_gui = True
 		elif o in ("-i", "--isolate"):
@@ -81,6 +88,14 @@ def main():
 				sys.exit(2)
 			for cpu in cpus:
 				tuna.include_cpu(cpu, get_nr_cpus())
+		elif o in ("-m", "--move"):
+			if not cpus:
+				print "tuna: --move requires a cpu list!"
+				sys.exit(2)
+			if not threads:
+				print "tuna: --move requires a thread list!"
+				sys.exit(2)
+			tuna.move_threads_to_cpu(cpus, threads)
 		elif o in ("-K", "--no_kthreads"):
 			kthreads = False
 		elif o in ("-U", "--no_uthreads"):
