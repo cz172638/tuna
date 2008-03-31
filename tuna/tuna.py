@@ -360,7 +360,7 @@ class cpuview:
 						gobject.TYPE_UINT,
 						gobject.TYPE_UINT)
 		self.treeview.set_model(self.list_store)
-		self.isolcpus = [ False, ] * (len(self.cpustats) - 1)
+		self.nr_cpus = len(self.cpustats) - 1
 		
 		model = self.treeview.get_model()
 
@@ -403,8 +403,9 @@ class cpuview:
 			return
 		row = self.list_store.get_iter(path)
 		cpu = self.list_store.get_value(row, self.COL_CPU)
-		nr_cpus = len(self.cpustats) - 1
-		self.previous_pid_affinities, self.previous_irq_affinities = isolate_cpus([cpu,], nr_cpus)
+		self.previous_pid_affinities, \
+		  self.previous_irq_affinities = isolate_cpus([cpu,],
+							      self.nr_cpus)
 
 		if self.previous_pid_affinities:
 			self.procview.refresh()
@@ -421,8 +422,8 @@ class cpuview:
 			return
 		row = self.list_store.get_iter(path)
 		cpu = self.list_store.get_value(row, self.COL_CPU)
-		nr_cpus = len(self.cpustats) - 1
-		self.previous_pid_affinities, self.previous_irq_affinities = include_cpu(cpu, nr_cpus)
+		self.previous_pid_affinities, \
+		  self.previous_irq_affinities = include_cpu(cpu, self.nr_cpus)
 
 		if self.previous_pid_affinities:
 			self.procview.refresh()
@@ -442,11 +443,10 @@ class cpuview:
 				pass
 
 		affinities = self.previous_irq_affinities
-		nr_cpus = len(self.cpustats) - 1
 		for irq in affinities.keys():
 			set_irq_affinity(int(irq),
 					 procfs.hexbitmask(affinities[irq],
-							   nr_cpus))
+							   self.nr_cpus))
 			
 		self.previous_pid_affinities = None
 		self.previous_irq_affinities = None
@@ -495,7 +495,7 @@ class cpuview:
 			cpu = model.get_value(iter, self.COL_CPU)
 		else:
 			# Move to all CPUs
-			cpu = -(len(self.cpustats) - 1)
+			cpu = -self.nr_cpus
 
 		if self.drop_handlers.has_key(source):
 			if self.drop_handlers[source][0](cpu, data):
@@ -527,7 +527,7 @@ class cpuview:
 	def refresh(self):
 		self.list_store.clear()
 		self.cpustats.reload()
-		for cpunr in range(len(self.cpustats) - 1):
+		for cpunr in range(self.nr_cpus):
 			cpu = self.list_store.append()
 			usage = self.cpustats[cpunr + 1].usage
 			self.list_store.set(cpu, self.COL_FILTER, cpunr not in self.cpus_filtered,
