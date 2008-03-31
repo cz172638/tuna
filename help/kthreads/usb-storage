@@ -1,0 +1,5 @@
+Per USB storage device virtual SCSI controller.
+
+Persistant across device insertion/removal, as is the SCSI node. This is done so that a device which is removed can be re-attached and be granted the same /dev node as before, creating persistance between connections of the target unit.
+
+Gets commands from the SCSI mid-layer and, after sanity checking several things, sends the command to the 'protocol' handler. This handler is responsible for re-writing the command (if necessary) into a form which the device will accept. For example, ATAPI devices do not support 6-byte commands. Thus, they must be re-written into 10-byte variants.
