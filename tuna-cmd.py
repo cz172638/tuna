@@ -15,7 +15,10 @@
 
 import getopt, procfs, sys, tuna
 
+# FIXME: ETOOMANYGLOBALS, we need a class!
+
 nr_cpus = None
+ps = None
 
 def usage():
 	print '''Usage: tuna [OPTIONS]
@@ -28,7 +31,8 @@ def usage():
 	-K, --no_kthreads		Operations will not affect kernel threads
 	-m, --move			move selected entities to CPU-LIST
 	-t, --threads=THREAD-LIST	THREAD-LIST affected by commands
-	-U, --no_uthreads		Operations will not affect user threads'''
+	-U, --no_uthreads		Operations will not affect user threads
+	-W, --what_is			Provides help about selected entities'''
 
 def gui(kthreads = True, uthreads = True, cpus_filtered = []):
 	try:
@@ -44,15 +48,29 @@ def get_nr_cpus():
 	nr_cpus = procfs.cpuinfo().nr_cpus
 	return nr_cpus
 
+def thread_help(tid):
+	global ps
+	if not ps:
+		ps = procfs.pidstats()
+
+	if not ps.has_key(tid):
+		print "tuna: thread %d doesn't exists!" % tid
+		return
+
+	pinfo = ps[tid]
+	cmdline = procfs.process_cmdline(pinfo)
+	help, title = tuna.kthread_help_plain_text(tid, cmdline)
+	print "%s\n\n%s" % (title, help)
+	
 def main():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
-					   "c:fghiIKmt:U",
+					   "c:fghiIKmt:UW",
 					   ("cpus=", "filter", "gui", "help",
 					    "isolate", "include",
 					    "no_kthreads",
 					    "move", "threads=",
-					    "no_uthreads"))
+					    "no_uthreads", "what_is"))
 	except getopt.GetoptError, err:
 		usage()
 		print str(err)
@@ -104,6 +122,12 @@ def main():
 			kthreads = False
 		elif o in ("-U", "--no_uthreads"):
 			uthreads = False
+		elif o in ("-W", "--what_is"):
+			if not threads:
+				print "tuna: --what_is requires a thread list!"
+				sys.exit(2)
+			for tid in threads:
+				thread_help(tid)
 
 	if run_gui:
 		gui(kthreads, uthreads, filter and cpus or [])

@@ -32,6 +32,26 @@ def kthread_help(key):
 		kthread_help_str[orig_key] = help
 	return help
 
+
+def kthread_help_plain_text(pid, cmdline):
+	cmdline = cmdline.split(' ')[0]
+	if iskthread(pid):
+		try:
+			index = cmdline.index("/")
+			key = cmdline[:index + 1]
+			suffix_help = "\nOne per CPU"
+		except:
+			key = cmdline
+			suffix_help = ""
+		help = kthread_help(key)
+		title = "Kernel Thread %d (%s):" % (pid, cmdline)
+		help += suffix_help
+	else:
+		title = "User Thread %d (%s):" % (pid, cmdline)
+		help = title
+
+	return help, title
+
 # FIXME: should go to python-schedutils
 ( SCHED_OTHER, SCHED_FIFO, SCHED_RR, SCHED_BATCH ) = range(4)
 
@@ -1345,21 +1365,8 @@ class procview:
 		if not self.ps.has_key(pid):
 			return
 
-		cmdline = self.tree_store.get_value(row, self.COL_CMDLINE).split(' ')[0]
-		if iskthread(pid):
-			try:
-				index = cmdline.index("/")
-				key = cmdline[:index + 1]
-				suffix_help = "\nOne per CPU"
-			except:
-				key = cmdline
-				suffix_help = ""
-			help = kthread_help(key)
-			title = "Kernel Thread %d (%s):" % (pid, cmdline)
-			help += suffix_help
-		else:
-			title = "User Thread %d (%s):" % (pid, cmdline)
-			help = title
+		cmdline = self.tree_store.get_value(row, self.COL_CMDLINE)
+		help, title = kthread_help_plain_text(pid, cmdline)
 
 		dialog = gtk.MessageDialog(None,
 					   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
