@@ -89,7 +89,7 @@ def has_threaded_irqs(irqs, ps):
 	return False
 
 def set_irq_affinity(irq, bitmasklist):
-	text = reduce(lambda a, b: a + ",%x" % b, bitmasklist)
+	text = ",".join(map(lambda a: "%x" % a, bitmasklist))
 	f = file("/proc/irq/%d/smp_affinity" % irq, "w")
 	f.write("%s\n" % text)
 	try:
