@@ -1267,21 +1267,20 @@ class procview:
 				# removed and its the last one
 				break
 			else:
-				if self.filtered(tid):
+				try:
 					new_tids.remove(tid)
+				except:
+					# FIXME: understand in what situation this
+					# can happen, seems harmless from visual
+					# inspection.
+					pass
+				if self.filtered(tid):
 					if self.tree_store.remove(row):
 						# removed and now row is the next one
 						continue
 					# removed and its the last one
 					break
 				else:
-					try:
-						new_tids.remove(tid)
-					except:
-						# FIXME: understand in what situation this
-						# can happen, seems harmless from visual
-						# inspection.
-						pass
 					self.set_thread_columns(row, tid, threads[tid])
 
 					if threads[tid].has_key("threads"):
