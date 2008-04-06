@@ -121,6 +121,7 @@ class oscilloscope_frame(gtk.Frame):
 		figure = matplotlib.figure.Figure(figsize = (10, 4), dpi = 100,
 						  facecolor = facecolor)
 		ax = figure.add_subplot(111)
+		self.ax = ax
 		ax.set_axis_bgcolor(bg_color)
 
 		self.on_screen_samples = ax.plot(self.ind, self.samples, graph_type,
@@ -256,6 +257,9 @@ class oscilloscope(gtk.Window):
 		self.hist.add_sample(sample)
 
 	def refresh(self):
+		if self.max > self.scope.max_value:
+			self.scope.max_value *= 2
+			self.scope.ax.set_ylim(0, self.scope.max_value)
 		self.scope.refresh()
 		self.hist.refresh()
 
@@ -290,6 +294,8 @@ class oscilloscope(gtk.Window):
 		self.refreshing_screen = False
 
 	def reset(self):
+		self.scope.max_value = self.max_value
+		self.scope.ax.set_ylim(0, self.scope.max_value)
 		self.scope.reset()
 		self.hist.reset()
 		self.min = self.max_value
