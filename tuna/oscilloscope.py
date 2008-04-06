@@ -304,10 +304,10 @@ class oscilloscope(gtk.Window):
 		elif event.keyval in (ord('q'), ord('Q')):
 			gtk.main_quit()
 
-class cyclictetoscope(oscilloscope):
+class cyclictestoscope(oscilloscope):
 	def __init__(self, max_value):
 		oscilloscope.__init__(self, self.get_sample,
-				      title = "CyclictetoSCOPE",
+				      title = "CyclictestoSCOPE",
 				      samples_formatter = millisecond_fmt,
 				      nr_samples_on_screen = 500, width = 900,
 				      max_value = max_value)
@@ -326,7 +326,7 @@ def main():
 	except:
 		max_value = 250
 
-	o = cyclictetoscope(max_value)
+	o = cyclictestoscope(max_value)
 	o.run()
 	gtk.main()
 
