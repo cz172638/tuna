@@ -230,7 +230,8 @@ class oscilloscope(gtk.Window):
 						int(height * 0.64),
 						nr_samples_on_screen,
 						max_value = max_value,
-						samples_formatter = samples_formatter)
+						samples_formatter = samples_formatter,
+						graph_type = graph_type)
 
 		self.hist = histogram_frame("Histogram", 0, 0, nr_entries = 5,
 					    max_value = max_value,
