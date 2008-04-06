@@ -36,6 +36,22 @@ def millisecond_fmt(x, pos = 0):
 
 	return s
 
+def microsecond_fmt(x, pos = 0):
+	ms = x / 1000
+	us = x % 1000
+	if int(ms) > 0:
+		s = "%d.%03d" % (ms, us)
+		s = s.rstrip('0')
+		s = s.rstrip('.')
+		s += "ms"
+	else:
+		s = "%dus" % us
+
+	return s
+
+def null_fmt(x, pos = 0):
+	return "%d" % x
+
 class histogram_frame(gtk.Frame):
 	def __init__(self, title = "Statistics", width = 780, height = 100,
 		     max_value = 500, nr_entries = 10, samples_formatter = None,
@@ -234,6 +250,7 @@ class oscilloscope(gtk.Window):
 		self.refreshing_screen = False
 		self.max = self.min = None
 		self.avg = 0
+		self.samples_formatter = samples_formatter or null_fmt
 
 	def __add_table_row(self, table, row, label_text, label_value = "0"):
 		label = gtk.Label(label_text)
@@ -271,11 +288,11 @@ class oscilloscope(gtk.Window):
 
 		if self.refreshing_screen:
 			if self.min != prev_min:
-				self.min_label.set_text(millisecond_fmt(self.min))
+				self.min_label.set_text(self.samples_formatter(self.min))
 			if self.avg != prev_avg:
-				self.avg_label.set_text(millisecond_fmt(self.avg))
+				self.avg_label.set_text(self.samples_formatter(self.avg))
 			if self.max != prev_max:
-				self.max_label.set_text(millisecond_fmt(self.max))
+				self.max_label.set_text(self.samples_formatter(self.max))
 
 			self.refresh()
 		return self.getting_samples
@@ -314,7 +331,7 @@ class cyclictestoscope(oscilloscope):
 	def __init__(self, max_value):
 		oscilloscope.__init__(self, self.get_sample,
 				      title = "CyclictestoSCOPE",
-				      samples_formatter = millisecond_fmt,
+				      samples_formatter = microsecond_fmt,
 				      nr_samples_on_screen = 500, width = 900,
 				      max_value = max_value)
 
