@@ -787,6 +787,7 @@ class irqview:
 			self.treeview.append_column(column)
 
 		self.cpus_filtered = cpus_filtered
+		self.refreshing = True
 
 	def foreach_selected_cb(self, model, path, iter, irq_list):
 		irq = model.get_value(iter, self.COL_NUM)
@@ -875,10 +876,14 @@ class irqview:
 
 		self.treeview.show_all()
 	
-	def refresh(self, ps = None):
+	def refresh(self):
+		if not self.refreshing:
+			return
 		self.irqs.reload()
 		self.show()
-		return True
+
+	def refresh_toggle(self, unused):
+		self.refreshing = not self.refreshing
 
 	def edit_attributes(self, a):
 		ret = self.treeview.get_path_at_pos(self.last_x, self.last_y)
@@ -906,13 +911,17 @@ class irqview:
 		menu = gtk.Menu()
 
 		setattr = gtk.MenuItem("_Set IRQ attributes")
-		refresh = gtk.MenuItem("_Refresh IRQ list")
+		if self.refreshing:
+			refresh_prefix = "Sto_p refreshing the"
+		else:
+			refresh_prefix = "_Refresh"
+		refresh = gtk.MenuItem(refresh_prefix + " IRQ list")
 
 		menu.add(setattr)
 		menu.add(refresh)
 
 		setattr.connect_object('activate', self.edit_attributes, event)
-		refresh.connect_object('activate', self.refresh, event)
+		refresh.connect_object('activate', self.refresh_toggle, event)
 
 		setattr.show()
 		refresh.show()
@@ -1164,6 +1173,7 @@ class procview:
 		self.show_kthreads = show_kthreads
 		self.show_uthreads = show_uthreads
 		self.cpus_filtered = cpus_filtered
+		self.refreshing = True
 
 	def on_query_tooltip(self, treeview, x, y, keyboard_mode, tooltip):
 		# FIXME: Why is that it is off by a row?
@@ -1232,15 +1242,16 @@ class procview:
 
 		return False
 
-	def show(self):
+	def show(self, force_refresh = False):
 		# Start with the first row, if there is one, on the
 		# process list. If the first time update_rows will just
 		# have everthing in new_tids and append_new_tids will
 		# create the rows.
+		if not self.refreshing and not force_refresh:
+			return
 		row = self.tree_store.get_iter_first()
 		self.update_rows(self.ps, row, None)
 		self.treeview.show_all()
-		return True
 
 	def filtered(self, pid):
 		if self.cpus_filtered:
@@ -1320,13 +1331,12 @@ class procview:
 						# Thread doesn't exists anymore
 						self.tree_store.remove(child_row)
 
-	def refresh(self, a = None):
+	def refresh(self):
 		self.ps.reload()
 		self.ps.reload_threads()
 		self.ps.load_cmdline()
 
-		self.show()
-		return True
+		self.show(True)
 
 	def edit_attributes(self, a):
 		ret = self.treeview.get_path_at_pos(self.last_x, self.last_y)
@@ -1346,11 +1356,11 @@ class procview:
 
 	def kthreads_view_toggled(self, a):
 		self.show_kthreads = not self.show_kthreads
-		self.show()
+		self.show(True)
 
 	def uthreads_view_toggled(self, a):
 		self.show_uthreads = not self.show_uthreads
-		self.show()
+		self.show(True)
 
 	def help_dialog(self, a):
 		ret = self.treeview.get_path_at_pos(self.last_x, self.last_y)
@@ -1375,6 +1385,9 @@ class procview:
 		ret = dialog.run()
 		dialog.destroy()
 
+	def refresh_toggle(self, a):
+		self.refreshing = not self.refreshing
+
 	def on_processlist_button_press_event(self, treeview, event):
 		if event.type != gtk.gdk.BUTTON_PRESS or event.button != 3:
 			return
@@ -1385,7 +1398,11 @@ class procview:
 		menu = gtk.Menu()
 
 		setattr = gtk.MenuItem("_Set process attributes")
-		refresh = gtk.MenuItem("_Refresh process list")
+		if self.refreshing:
+			refresh_prefix = "Sto_p refreshing the"
+		else:
+			refresh_prefix = "_Refresh the "
+		refresh = gtk.MenuItem(refresh_prefix + " process list")
 		if self.show_kthreads:
 			kthreads_prefix = "_Hide"
 		else:
@@ -1406,7 +1423,7 @@ class procview:
 		menu.add(help)
 
 		setattr.connect_object('activate', self.edit_attributes, event)
-		refresh.connect_object('activate', self.refresh, event)
+		refresh.connect_object('activate', self.refresh_toggle, event)
 		kthreads.connect_object('activate', self.kthreads_view_toggled, event)
 		uthreads.connect_object('activate', self.uthreads_view_toggled, event)
 		help.connect_object('activate', self.help_dialog, event)
@@ -1423,11 +1440,11 @@ class procview:
 		if not enabled:
 			if cpu not in self.cpus_filtered:
 				self.cpus_filtered.append(cpu)
-				self.show()
+				self.show(True)
 		else:
 			if cpu in self.cpus_filtered:
 				self.cpus_filtered.remove(cpu)
-				self.show()
+				self.show(True)
 
 class tuna:
 
@@ -1490,7 +1507,7 @@ class tuna:
 	def refresh(self):
 		self.ps.reload()
 		self.ps.reload_threads()
-		self.irqview.refresh(self.ps)
+		self.irqview.refresh()
 		self.ps.load_cmdline()
 		self.procview.show()
 		return True
