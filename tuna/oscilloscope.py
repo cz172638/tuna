@@ -120,7 +120,8 @@ class oscilloscope_frame(gtk.Frame):
 		     nr_samples_on_screen = 250, graph_type = '-',
 		     max_value = 500, plot_color = "lightgreen",
 		     bg_color = "darkgreen", facecolor = "white",
-		     ylabel = "Latency", samples_formatter = None):
+		     ylabel = "Latency", samples_formatter = None,
+		     picker = None):
 
 		gtk.Frame.__init__(self, title)
 
@@ -141,7 +142,8 @@ class oscilloscope_frame(gtk.Frame):
 		ax.set_axis_bgcolor(bg_color)
 
 		self.on_screen_samples = ax.plot(self.ind, self.samples, graph_type,
-						 color = plot_color)
+						 color = plot_color,
+						 picker = picker)
 
 		ax.set_ylim(0, max_value)
 		ax.set_ylabel(ylabel, font)
@@ -185,7 +187,8 @@ class oscilloscope(gtk.Window):
 		     max_value = 500, plot_color = "lightgreen",
 		     bg_color = "darkgreen", facecolor = "white",
 		     ylabel = "Latency",
-		     samples_formatter = None):
+		     samples_formatter = None,
+		     picker = None):
 
 		gtk.Window.__init__(self)
 
@@ -231,7 +234,8 @@ class oscilloscope(gtk.Window):
 						nr_samples_on_screen,
 						max_value = max_value,
 						samples_formatter = samples_formatter,
-						graph_type = graph_type)
+						graph_type = graph_type,
+						picker = picker)
 
 		self.hist = histogram_frame("Histogram", 0, 0, nr_entries = 5,
 					    max_value = max_value,
@@ -328,18 +332,87 @@ class oscilloscope(gtk.Window):
 		elif event.keyval in (ord('q'), ord('Q')):
 			gtk.main_quit()
 
+class ftrace_window(gtk.Window):
+
+	(COL_FUNCTION, ) = range(1)
+
+	def __init__(self, trace, parent = None):
+		gtk.Window.__init__(self)
+		try:
+			self.set_screen(parent.get_screen())
+		except AttributeError:
+			self.connect('destroy', lambda *w: gtk.main_quit())
+
+        	self.set_border_width(8)
+		self.set_default_size(350, 500)
+		self.set_title("ftrace")
+
+		vbox = gtk.VBox(False, 8)
+		self.add(vbox)
+
+		sw = gtk.ScrolledWindow()
+		sw.set_shadow_type(gtk.SHADOW_ETCHED_IN)
+		sw.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
+		vbox.pack_start(sw, True, True)
+
+		store = gtk.ListStore(gobject.TYPE_STRING)
+
+		for entry in trace:
+			if entry[0] in [ "#", "\n" ] or entry[:4] == "vim:":
+				continue
+			iter = store.append()
+			store.set(iter, self.COL_FUNCTION, entry.strip())
+
+		treeview = gtk.TreeView(store)
+		treeview.set_rules_hint(True)
+
+		column = gtk.TreeViewColumn("Function", gtk.CellRendererText(),
+					    text = self.COL_FUNCTION)
+		treeview.append_column(column)
+
+		sw.add(treeview)
+		self.show_all()
+
 class cyclictestoscope(oscilloscope):
-	def __init__(self, max_value):
+	def __init__(self, max_value, nr_samples_on_screen = 500):
 		oscilloscope.__init__(self, self.get_sample,
 				      title = "CyclictestoSCOPE",
 				      samples_formatter = microsecond_fmt,
-				      nr_samples_on_screen = 500, width = 900,
-				      max_value = max_value)
+				      nr_samples_on_screen = nr_samples_on_screen,
+				      width = 900, max_value = max_value,
+				      picker = self.scope_picker)
 
 		self.connect("destroy", self.quit)
+		self.traces = [ None, ] * nr_samples_on_screen
+
+	def scope_picker(self, line, mouseevent):
+		if mouseevent.xdata is None:
+			return False, dict()
+
+		x = int(mouseevent.xdata)
+		if self.traces[x]:
+			fw = ftrace_window(self.traces[x], self)
+		return False, dict()
 
 	def get_sample(self):
-		return float(sys.stdin.readline().split(':')[2])
+		del self.traces[0]
+		
+		sample = float(sys.stdin.readline().split(':')[2])
+		if sample > self.avg:
+			try:
+				f = file("/sys/kernel/debug/tracing/trace")
+				trace = f.readlines()
+				f.close()
+				f = file("/sys/kernel/debug/tracing/tracing_max_latency", "w")
+				f.write("0\n")
+				f.close()
+			except:
+				trace = None
+		else:
+			trace = None
+
+		self.traces.append(trace)
+		return sample
 
 	def quit(self, x):
 		gtk.main_quit()
