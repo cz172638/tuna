@@ -332,13 +332,7 @@ def set_store_columns(store, row, new_value):
 		if cur_value == new_value[col]:
 			new_weight = pango.WEIGHT_NORMAL
 		else:
-			cur_weight = store.get_value(row, col_weight)
-			if cur_weight == pango.WEIGHT_NORMAL:
-				new_weight = pango.WEIGHT_SEMIBOLD
-			elif cur_weight == pango.WEIGHT_SEMIBOLD:
-				new_weight = pango.WEIGHT_BOLD
-			else:
-				new_weight = pango.WEIGHT_ULTRABOLD
+			new_weight = pango.WEIGHT_BOLD
 
 		store.set(row, col, new_value[col], col_weight, new_weight)
 
