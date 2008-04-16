@@ -542,7 +542,11 @@ def get_irq_users(irqs, irq, nics = None):
 	users = irqs[irq]["users"]
 	for u in users:
 		if u in nics:
-			users[users.index(u)] = "%s(%s)" % (u, ethtool.get_module(u))
+			try:
+				users[users.index(u)] = "%s(%s)" % (u, ethtool.get_module(u))
+			except IOError:
+				# Old kernel, doesn't implement ETHTOOL_GDRVINFO
+				pass
 	return users
 			
 def get_irq_affinity_text(irqs, irq):
