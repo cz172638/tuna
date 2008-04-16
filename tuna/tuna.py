@@ -1477,9 +1477,13 @@ class tuna:
 		self.ps.load_cmdline()
 		self.show()
 		self.timer = gobject.timeout_add(2500, self.refresh)
-    		self.icon = gtk.status_icon_new_from_stock(gtk.STOCK_PREFERENCES)
-    		self.icon.connect("activate", self.on_status_icon_activate)
-    		self.icon.connect("popup-menu", self.on_status_icon_popup_menu)
+		try:
+			self.icon = gtk.status_icon_new_from_stock(gtk.STOCK_PREFERENCES)
+			self.icon.connect("activate", self.on_status_icon_activate)
+			self.icon.connect("popup-menu", self.on_status_icon_popup_menu)
+		except AttributeError:
+			# Old pygtk2
+			pass
 		pixbuf = self.window.render_icon(gtk.STOCK_PREFERENCES,
 						 gtk.ICON_SIZE_SMALL_TOOLBAR)
 		self.window.set_icon(pixbuf)
