@@ -376,8 +376,13 @@ class cpuview:
 		self.treeview.append_column(column)
 
 		# CPU usage column
-		column = gtk.TreeViewColumn('Usage', gtk.CellRendererProgress(),
-					    text = self.COL_USAGE, value = self.COL_USAGE)
+		try:
+			column = gtk.TreeViewColumn('Usage', gtk.CellRendererProgress(),
+						    text = self.COL_USAGE, value = self.COL_USAGE)
+		except:
+			# CellRendererProgress needs pygtk2 >= 2.6
+			column = gtk.TreeViewColumn('Usage', gtk.CellRendererText(),
+						    text = self.COL_USAGE)
 		self.treeview.append_column(column)
 
 		self.treeview.enable_model_drag_dest(DND_TARGETS,
