@@ -34,13 +34,6 @@ def usage():
 	-U, --no_uthreads		Operations will not affect user threads
 	-W, --what_is			Provides help about selected entities'''
 
-def gui(kthreads = True, uthreads = True, cpus_filtered = []):
-	try:
-		app = tuna.tuna(kthreads, uthreads, cpus_filtered)
-		app.run()
-	except KeyboardInterrupt:
-		pass
-
 def get_nr_cpus():
 	global nr_cpus
 	if nr_cpus:
@@ -76,11 +69,7 @@ def main():
 		print str(err)
 		sys.exit(2)
 
-	if not opts:
-		gui()
-		return
-	
-	run_gui = False
+	run_gui = not opts
 	kthreads = True
 	uthreads = True
 	cpus = None
@@ -130,7 +119,18 @@ def main():
 				thread_help(tid)
 
 	if run_gui:
-		gui(kthreads, uthreads, filter and cpus or [])
+		try:
+			import tuna_gui
+		except ImportError:
+			# gui packages not installed
+			usage()
+			return
+		try:
+			cpus_filtered = filter and cpus or []
+			app = tuna_gui.gui(kthreads, uthreads, cpus_filtered)
+			app.run()
+		except KeyboardInterrupt:
+			pass
 
 if __name__ == '__main__':
     main()
