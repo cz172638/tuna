@@ -1147,6 +1147,17 @@ class procview:
 		self.ps = ps
 		self.treeview = treeview
 		self.nr_cpus = procfs.cpuinfo().nr_cpus
+
+		if not ps[1]["status"].has_key("voluntary_ctxt_switches"):
+			self.nr_columns = 5
+			( self.COL_PID, self.COL_POL, self.COL_PRI,
+			  self.COL_AFF, self.COL_CMDLINE ) = range(self.nr_columns)
+			self.columns = (list_store_column("PID"),
+					list_store_column("Policy", gobject.TYPE_STRING),
+					list_store_column("Priority"),
+					list_store_column("Affinity", gobject.TYPE_STRING),
+					list_store_column("Command Line", gobject.TYPE_STRING))
+
 		self.tree_store = gtk.TreeStore(*generate_list_store_columns_with_attr(self.columns))
 		self.treeview.set_model(self.tree_store)
 
@@ -1242,8 +1253,7 @@ class procview:
 			new_value[self.COL_VOLCTXT] = int(thread_info["status"]["voluntary_ctxt_switches"])
 			new_value[self.COL_NONVOLCTXT] = int(thread_info["status"]["nonvoluntary_ctxt_switches"])
 		except:
-			new_value[self.COL_VOLCTXT] = -1
-			new_value[self.COL_NONVOLCTXT] = -1
+			pass
 
 		new_value[self.COL_CMDLINE] = procfs.process_cmdline(thread_info)
 
