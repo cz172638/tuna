@@ -24,8 +24,8 @@ DND_TARGETS = [ ('STRING', 0, DND_TARGET_STRING),
 		('text/plain', 0, DND_TARGET_STRING),
 		('application/x-rootwin-drop', 0, DND_TARGET_ROOTWIN) ]
 
-tuna_glade = "/usr/share/tuna/tuna_gui.glade"
-#tuna_glade = "tuna/tuna_gui.glade"
+tuna_glade_dirs = [ ".", "tuna", "/usr/share/tuna" ]
+tuna_glade = None
 
 def set_affinity_warning(tid, affinity):
 	dialog = gtk.MessageDialog(None,
@@ -1185,11 +1185,17 @@ class procview:
 class gui:
 
 	def __init__(self, show_kthreads = True, show_uthreads = True, cpus_filtered = []):
+		global tuna_glade
+
 		if self.check_root():
 			sys.exit(1)
+		for dir in tuna_glade_dirs:
+			tuna_glade = "%s/tuna_gui.glade" % dir
+			if os.access(tuna_glade, os.F_OK):
+				break
+		self.wtree = gtk.glade.XML(tuna_glade, "mainbig_window")
 		self.ps = procfs.pidstats()
 		self.irqs = procfs.interrupts()
-		self.wtree = gtk.glade.XML(tuna_glade, "mainbig_window")
 		self.window = self.wtree.get_widget("mainbig_window")
 
 		self.procview = procview(self.wtree.get_widget("processlist"),
