@@ -13,7 +13,8 @@
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 #   General Public License for more details.
 
-import getopt, procfs, sys, tuna
+import getopt, procfs, sys
+from tuna import tuna
 
 # FIXME: ETOOMANYGLOBALS, we need a class!
 
@@ -120,7 +121,7 @@ def main():
 
 	if run_gui:
 		try:
-			import tuna_gui
+			from tuna import tuna_gui
 		except ImportError:
 			# gui packages not installed
 			usage()
