@@ -20,7 +20,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
 # USA
 
-import gobject, gtk, sys
+import getopt, gobject, gtk, sys
 from matplotlib.backends.backend_gtkagg import \
 	FigureCanvasGTKAgg as figure_canvas
 import matplotlib.figure, matplotlib.ticker, Numeric
@@ -188,12 +188,15 @@ class oscilloscope(gtk.Window):
 		     bg_color = "darkgreen", facecolor = "white",
 		     ylabel = "Latency",
 		     samples_formatter = None,
-		     picker = None):
+		     picker = None,
+		     snapshot_samples = 0):
 
 		gtk.Window.__init__(self)
 
+		self.nr_samples = 0
 		self.get_sample = get_sample
 		self.max_value = max_value
+		self.snapshot_samples = snapshot_samples
 
 		self.set_default_size(width, height)
 		self.set_title(title)
@@ -301,6 +304,10 @@ class oscilloscope(gtk.Window):
 				self.max_label.set_text(self.samples_formatter(self.max))
 
 			self.refresh()
+		self.nr_samples += 1
+		if self.snapshot_samples == self.nr_samples:
+			self.snapshot()
+			gtk.main_quit()
 		return self.getting_samples
 
 	def run(self, interval = 10):
@@ -380,13 +387,14 @@ class ftrace_window(gtk.Window):
 		self.show_all()
 
 class cyclictestoscope(oscilloscope):
-	def __init__(self, max_value, nr_samples_on_screen = 500):
+	def __init__(self, max_value, snapshot_samples = 0, nr_samples_on_screen = 500):
 		oscilloscope.__init__(self, self.get_sample,
 				      title = "CyclictestoSCOPE",
 				      samples_formatter = microsecond_fmt,
 				      nr_samples_on_screen = nr_samples_on_screen,
 				      width = 900, max_value = max_value,
-				      picker = self.scope_picker)
+				      picker = self.scope_picker,
+				      snapshot_samples = snapshot_samples)
 
 		self.connect("destroy", self.quit)
 		self.traces = [ None, ] * nr_samples_on_screen
@@ -423,13 +431,37 @@ class cyclictestoscope(oscilloscope):
 	def quit(self, x):
 		gtk.main_quit()
 
+def usage():
+	print '''Usage: oscilloscope [OPTIONS]
+	-h, --help			Give this help list
+	-m, --max_value=MAX_VALUE	MAX_VALUE for the scale
+	-S, --snapshot_samples=NR	Take NR samples, a snapshot and exit
+'''
+
 def main():
 	try:
-		max_value = int(sys.argv[1])
-	except:
-		max_value = 250
+		opts, args = getopt.getopt(sys.argv[1:],
+					   "hm:S:",
+					   ("help", "max_value=",
+					    "snapshot_samples="))
+	except getopt.GetoptError, err:
+		usage()
+		print str(err)
+		sys.exit(2)
 
-	o = cyclictestoscope(max_value)
+	max_value = 250
+	snapshot_samples = 0
+
+	for o, a in opts:
+		if o in ("-h", "--help"):
+			usage()
+			return
+		elif o in ("-m", "--max_value"):
+			max_value = int(a)
+		elif o in ("-S", "--snapshot_samples"):
+			snapshot_samples = int(a)
+
+	o = cyclictestoscope(max_value, snapshot_samples)
 	o.run()
 	gtk.main()
 
