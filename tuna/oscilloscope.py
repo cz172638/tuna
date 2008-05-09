@@ -218,15 +218,16 @@ class oscilloscope(gtk.Window):
 		help_frame = gtk.Frame("Help")
 		help_frame.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse(facecolor))
 
-		table = gtk.Table(3, 2, False)
+		table = gtk.Table(4, 2, False)
 		table.set_border_width(5)
 		table.set_row_spacings(5)
 		table.set_col_spacings(10)
 		help_frame.add(table)
 
 		self.__add_table_row(table, 0, "Space", "Pause")
-		self.__add_table_row(table, 1, "R", "Reset")
-		self.__add_table_row(table, 2, "Q", "Quit")
+		self.__add_table_row(table, 1, "S", "Snapshot")
+		self.__add_table_row(table, 2, "R", "Reset")
+		self.__add_table_row(table, 3, "Q", "Quit")
 
 		self.scope = oscilloscope_frame("Scope",
 						int(width * 0.94),
@@ -315,6 +316,9 @@ class oscilloscope(gtk.Window):
 		self.getting_samples = False
 		self.refreshing_screen = False
 
+	def snapshot(self):
+		self.scope.canvas.print_figure("scope_snapshot.svg")
+
 	def reset(self):
 		self.scope.max_value = self.max_value
 		self.scope.ax.set_ylim(0, self.scope.max_value)
@@ -327,6 +331,8 @@ class oscilloscope(gtk.Window):
 	def key_press_event(self, widget, event):
 		if event.keyval == ord(' '):
 			self.freeze_screen(not self.refreshing_screen)
+		elif event.keyval in (ord('s'), ord('S')):
+			self.snapshot()
 		elif event.keyval in (ord('r'), ord('R')):
 			self.reset()
 		elif event.keyval in (ord('q'), ord('Q')):
