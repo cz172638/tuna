@@ -125,10 +125,10 @@ class oscilloscope_frame(gtk.Frame):
 
 		gtk.Frame.__init__(self, title)
 
-		font = { 'fontname'   : 'Bitstream Vera Sans',
-			 'color'      : 'b',
-			 'fontweight' : 'bold',
-			 'fontsize'   : 10 }
+		self.font = { 'fontname'   : 'Bitstream Vera Sans',
+			      'color'      : 'b',
+			      'fontweight' : 'bold',
+			      'fontsize'   : 10 }
 	
 		self.max_value = max_value
 		self.nr_samples_on_screen = nr_samples_on_screen
@@ -146,8 +146,8 @@ class oscilloscope_frame(gtk.Frame):
 						 picker = picker)
 
 		ax.set_ylim(0, max_value)
-		ax.set_ylabel(ylabel, font)
-		ax.set_xlabel("%d samples" % nr_samples_on_screen, font)
+		ax.set_ylabel(ylabel, self.font)
+		ax.set_xlabel("%d samples" % nr_samples_on_screen, self.font)
 		ax.set_xticklabels([])
 		if samples_formatter:
 			ax.yaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(samples_formatter))
@@ -161,14 +161,19 @@ class oscilloscope_frame(gtk.Frame):
 		
 		self.add(self.canvas)
 		self.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse(facecolor))
+		self.nr_samples = 0
 
 	def add_sample(self, sample):
 		del self.samples[0]
 		self.samples.append(sample)
 		self.on_screen_samples[0].set_data(self.ind, self.samples)
+		self.nr_samples += 1
+		if self.nr_samples <= self.nr_samples_on_screen:
+			self.ax.set_xlabel("%d samples" % self.nr_samples, self.font)
 
 	def reset(self):
 		self.samples = [ 0.0 ] * self.nr_samples_on_screen
+		self.nr_samples = 0
 		self.on_screen_samples[0].set_data(self.ind, self.samples)
 
 	def refresh(self):
@@ -193,7 +198,6 @@ class oscilloscope(gtk.Window):
 
 		gtk.Window.__init__(self)
 
-		self.nr_samples = 0
 		self.get_sample = get_sample
 		self.max_value = max_value
 		self.snapshot_samples = snapshot_samples
@@ -304,8 +308,8 @@ class oscilloscope(gtk.Window):
 				self.max_label.set_text(self.samples_formatter(self.max))
 
 			self.refresh()
-		self.nr_samples += 1
-		if self.snapshot_samples == self.nr_samples:
+
+		if self.snapshot_samples == self.scope.nr_samples:
 			self.snapshot()
 			gtk.main_quit()
 		return self.getting_samples
