@@ -264,7 +264,7 @@ def include_cpu(cpu, nr_cpus):
 		if not irqs[irq].has_key("affinity"):
 			continue
 		affinity = irqs[irq]["affinity"]
-		if cpu in affinity:
+		if cpu not in affinity:
 			previous_irq_affinities[irq] = copy.copy(affinity)
 			affinity.append(cpu)
 			set_irq_affinity(int(irq),
