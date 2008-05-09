@@ -292,3 +292,25 @@ def get_irq_affinity_text(irqs, irq):
 	except:
 		# needs root prio to read /proc/irq/<NUM>/smp_affinity
 		return ""
+
+def thread_filtered(tid, cpus_filtered, show_kthreads, show_uthreads):
+	if cpus_filtered:
+		affinity = schedutils.get_affinity(tid)
+		if set(cpus_filtered + affinity) == set(cpus_filtered):
+			return True
+
+	if not (show_kthreads and show_uthreads):
+		kthread = iskthread(tid)
+		if ((not show_kthreads) and kthread) or \
+		   ((not show_uthreads) and not kthread):
+			return True
+
+	return False
+
+def irq_filtered(irq, irqs, cpus_filtered, is_root):
+	if cpus_filtered and is_root:
+		affinity = irqs[irq]["affinity"]
+		if set(cpus_filtered + affinity) == set(cpus_filtered):
+			return True
+
+	return False

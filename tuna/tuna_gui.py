@@ -526,14 +526,6 @@ class irqview:
 		treeselection.selected_foreach(self.foreach_selected_cb, irq_list)
 		selection.set(selection.target, 8, "irq:" + ",".join(irq_list))
 
-	def filtered(self, irq):
-		if self.cpus_filtered and self.is_root:
-			affinity = self.irqs[irq]["affinity"]
-			if set(self.cpus_filtered + affinity) == set(self.cpus_filtered):
-				return True
-
-		return False
-
 	def set_irq_columns(self, iter, irq, irq_info, nics):
 		new_value = [ None ] * self.nr_columns
 		users = tuna.get_irq_users(self.irqs, irq, nics)
@@ -578,7 +570,9 @@ class irqview:
 					continue
 				# Was the last one
 				break
-			elif self.filtered(irq):
+			elif tuna.irq_filtered(irq, self.irqs,
+					       self.cpus_filtered,
+					       self.is_root):
 				new_irqs.remove(irq)
 				if self.list_store.remove(row):
 					# removed and row now its the next one
@@ -594,7 +588,8 @@ class irqview:
 
 		new_irqs.sort()
 		for irq in new_irqs:
-			if self.filtered(irq):
+			if tuna.irq_filtered(irq, self.irqs, self.cpus_filtered,
+					     self.is_root):
 				continue
 			row = self.list_store.append()
 			irq_info = self.irqs[irq]
@@ -988,20 +983,6 @@ class procview:
 		row = self.tree_store.get_iter_first()
 		self.update_rows(self.ps, row, None)
 		self.treeview.show_all()
-
-	def filtered(self, pid):
-		if self.cpus_filtered:
-			affinity = schedutils.get_affinity(pid)
-			if set(self.cpus_filtered + affinity) == set(self.cpus_filtered):
-				return True
-
-		if not (self.show_kthreads and self.show_uthreads):
-			kthread = tuna.iskthread(pid)
-			if ((not self.show_kthreads) and kthread) or \
-			   ((not self.show_uthreads) and not kthread):
-			   	return True
-
-		return False
 	
 	def update_rows(self, threads, row, parent_row):
 		new_tids = threads.keys()
@@ -1021,7 +1002,9 @@ class procview:
 					# can happen, seems harmless from visual
 					# inspection.
 					pass
-				if self.filtered(tid):
+				if tuna.thread_filtered(tid, self.cpus_filtered,
+						        self.show_kthreads,
+							self.show_uthreads):
 					if self.tree_store.remove(row):
 						# removed and now row is the next one
 						continue
@@ -1045,7 +1028,9 @@ class procview:
 
 	def append_new_tids(self, parent_row, threads, tid_list):
 		for tid in tid_list:
-			if self.filtered(tid):
+			if tuna.thread_filtered(tid, self.cpus_filtered,
+						self.show_kthreads,
+						self.show_uthreads):
 				continue
 
 			row = self.tree_store.append(parent_row)
