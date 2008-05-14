@@ -391,7 +391,8 @@ class ftrace_window(gtk.Window):
 		self.show_all()
 
 class cyclictestoscope(oscilloscope):
-	def __init__(self, max_value, snapshot_samples = 0, nr_samples_on_screen = 500):
+	def __init__(self, max_value, snapshot_samples = 0, nr_samples_on_screen = 500,
+		     delimiter = ':', field = 2):
 		oscilloscope.__init__(self, self.get_sample,
 				      title = "CyclictestoSCOPE",
 				      samples_formatter = microsecond_fmt,
@@ -402,6 +403,8 @@ class cyclictestoscope(oscilloscope):
 
 		self.connect("destroy", self.quit)
 		self.traces = [ None, ] * nr_samples_on_screen
+		self.delimiter = delimiter
+		self.field = field
 
 	def scope_picker(self, line, mouseevent):
 		if mouseevent.xdata is None:
@@ -415,7 +418,9 @@ class cyclictestoscope(oscilloscope):
 	def get_sample(self):
 		del self.traces[0]
 		
-		sample = float(sys.stdin.readline().split(':')[2])
+		fields = sys.stdin.readline().split(self.delimiter)
+		sample = float(fields[self.field])
+
 		if sample > self.avg:
 			try:
 				f = file("/sys/kernel/debug/tracing/trace")
@@ -438,6 +443,8 @@ class cyclictestoscope(oscilloscope):
 def usage():
 	print '''Usage: oscilloscope [OPTIONS]
 	-h, --help			Give this help list
+	-d, --delimiter=CHARACTER	CHARACTER used as a delimiter [Default: :]
+	-f, --field=FIELD		FIELD to plot [Default: 2]
 	-m, --max_value=MAX_VALUE	MAX_VALUE for the scale
 	-S, --snapshot_samples=NR	Take NR samples, a snapshot and exit
 '''
@@ -445,7 +452,7 @@ def usage():
 def main():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
-					   "hm:S:",
+					   "d:f:hm:S:",
 					   ("help", "max_value=",
 					    "snapshot_samples="))
 	except getopt.GetoptError, err:
@@ -455,9 +462,15 @@ def main():
 
 	max_value = 250
 	snapshot_samples = 0
+	delimiter = ':'
+	field = 2
 
 	for o, a in opts:
-		if o in ("-h", "--help"):
+		if o in ("-d", "--delimiter"):
+			delimiter = a
+		elif o in ("-f", "--field"):
+			field = int(a)
+		elif o in ("-h", "--help"):
 			usage()
 			return
 		elif o in ("-m", "--max_value"):
@@ -465,7 +478,8 @@ def main():
 		elif o in ("-S", "--snapshot_samples"):
 			snapshot_samples = int(a)
 
-	o = cyclictestoscope(max_value, snapshot_samples)
+	o = cyclictestoscope(max_value, snapshot_samples,
+			     delimiter = delimiter, field = field)
 	o.run()
 	gtk.main()
 
