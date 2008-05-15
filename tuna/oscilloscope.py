@@ -25,36 +25,9 @@ from matplotlib.backends.backend_gtkagg import \
 	FigureCanvasGTKAgg as figure_canvas
 import matplotlib.figure, matplotlib.ticker, Numeric
 
-def millisecond_fmt(x, pos = 0):
-	ms = x / 1000
-	us = x % 1000
-	s = "%d" % ms
-	if us > 0:
-		s += ".%03d" % us
-		s = s.rstrip('0')
-	s += "ms"
-
-	return s
-
-def microsecond_fmt(x, pos = 0):
-	ms = x / 1000
-	us = x % 1000
-	if int(ms) > 0:
-		s = "%d.%03d" % (ms, us)
-		s = s.rstrip('0')
-		s = s.rstrip('.')
-		s += "ms"
-	else:
-		s = "%dus" % us
-
-	return s
-
-def null_fmt(x, pos = 0):
-	return "%d" % x
-
 class histogram_frame(gtk.Frame):
 	def __init__(self, title = "Statistics", width = 780, height = 100,
-		     max_value = 500, nr_entries = 10, samples_formatter = None,
+		     max_value = 500, nr_entries = 10,
 		     facecolor = "white"):
 		gtk.Frame.__init__(self, title)
 		self.max_value = max_value
@@ -78,12 +51,7 @@ class histogram_frame(gtk.Frame):
 				prefix = ">"
 				bucket_range = self.max_value
 				
-			if samples_formatter:
-				text = samples_formatter(bucket_range)
-			else:
-				text = str(bucket_range)
-
-			label = gtk.Label("%s %s" % (prefix, text))
+			label = gtk.Label("%s %d" % (prefix, bucket_range))
 			label.set_alignment(0, 1)
 			table.attach(label, 0, 1, bucket, bucket + 1, 0, 0, 0, 0)
 
@@ -120,8 +88,7 @@ class oscilloscope_frame(gtk.Frame):
 		     nr_samples_on_screen = 250, graph_type = '-',
 		     max_value = 500, plot_color = "lightgreen",
 		     bg_color = "darkgreen", facecolor = "white",
-		     ylabel = "Latency", samples_formatter = None,
-		     picker = None):
+		     ylabel = "Latency", picker = None):
 
 		gtk.Frame.__init__(self, title)
 
@@ -149,8 +116,6 @@ class oscilloscope_frame(gtk.Frame):
 		ax.set_ylabel(ylabel, self.font)
 		ax.set_xlabel("%d samples" % nr_samples_on_screen, self.font)
 		ax.set_xticklabels([])
-		if samples_formatter:
-			ax.yaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(samples_formatter))
 		ax.grid(True)
 
 		for label in ax.get_yticklabels():
@@ -192,7 +157,6 @@ class oscilloscope(gtk.Window):
 		     max_value = 500, plot_color = "lightgreen",
 		     bg_color = "darkgreen", facecolor = "white",
 		     ylabel = "Latency",
-		     samples_formatter = None,
 		     picker = None,
 		     snapshot_samples = 0):
 
@@ -241,13 +205,12 @@ class oscilloscope(gtk.Window):
 						int(height * 0.64),
 						nr_samples_on_screen,
 						max_value = max_value,
-						samples_formatter = samples_formatter,
 						graph_type = graph_type,
-						picker = picker)
+						picker = picker,
+						ylabel = ylabel)
 
 		self.hist = histogram_frame("Histogram", 0, 0, nr_entries = 5,
-					    max_value = max_value,
-					    samples_formatter = samples_formatter)
+					    max_value = max_value)
 
 		hbox = gtk.HBox()
 		hbox.pack_start(stats_frame, False, False)
@@ -263,7 +226,6 @@ class oscilloscope(gtk.Window):
 		self.refreshing_screen = False
 		self.max = self.min = None
 		self.avg = 0
-		self.samples_formatter = samples_formatter or null_fmt
 
 	def __add_table_row(self, table, row, label_text, label_value = "0"):
 		label = gtk.Label(label_text)
@@ -301,11 +263,11 @@ class oscilloscope(gtk.Window):
 
 		if self.refreshing_screen:
 			if self.min != prev_min:
-				self.min_label.set_text(self.samples_formatter(self.min))
+				self.min_label.set_text("%-6.3f" % self.min)
 			if self.avg != prev_avg:
-				self.avg_label.set_text(self.samples_formatter(self.avg))
+				self.avg_label.set_text("%-6.3f" % self.avg)
 			if self.max != prev_max:
-				self.max_label.set_text(self.samples_formatter(self.max))
+				self.max_label.set_text("%-6.3f" % self.max)
 
 			self.refresh()
 
@@ -392,14 +354,14 @@ class ftrace_window(gtk.Window):
 
 class cyclictestoscope(oscilloscope):
 	def __init__(self, max_value, snapshot_samples = 0, nr_samples_on_screen = 500,
-		     delimiter = ':', field = 2):
+		     delimiter = ':', field = 2, ylabel = "Latency"):
 		oscilloscope.__init__(self, self.get_sample,
 				      title = "CyclictestoSCOPE",
-				      samples_formatter = microsecond_fmt,
 				      nr_samples_on_screen = nr_samples_on_screen,
 				      width = 900, max_value = max_value,
 				      picker = self.scope_picker,
-				      snapshot_samples = snapshot_samples)
+				      snapshot_samples = snapshot_samples,
+				      ylabel = ylabel)
 
 		self.connect("destroy", self.quit)
 		self.traces = [ None, ] * nr_samples_on_screen
@@ -447,14 +409,16 @@ def usage():
 	-f, --field=FIELD		FIELD to plot [Default: 2]
 	-m, --max_value=MAX_VALUE	MAX_VALUE for the scale
 	-S, --snapshot_samples=NR	Take NR samples, a snapshot and exit
+	-u, --unit=TYPE			Unit TYPE [Default: us]
 '''
 
 def main():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
-					   "d:f:hm:S:",
+					   "d:f:hm:S:u:",
 					   ("help", "max_value=",
-					    "snapshot_samples="))
+					    "snapshot_samples=",
+					    "unit="))
 	except getopt.GetoptError, err:
 		usage()
 		print str(err)
@@ -464,6 +428,8 @@ def main():
 	snapshot_samples = 0
 	delimiter = ':'
 	field = 2
+	ylabel = "Latency"
+	unitlabel = "us"
 
 	for o, a in opts:
 		if o in ("-d", "--delimiter"):
@@ -477,9 +443,12 @@ def main():
 			max_value = int(a)
 		elif o in ("-S", "--snapshot_samples"):
 			snapshot_samples = int(a)
-
+		elif o in ("-u", "--unit"):
+			unitlabel = a
+		
 	o = cyclictestoscope(max_value, snapshot_samples,
-			     delimiter = delimiter, field = field)
+			     delimiter = delimiter, field = field,
+			     ylabel = "%s (%s)" % (ylabel, unitlabel))
 	o.run()
 	gtk.main()
 
