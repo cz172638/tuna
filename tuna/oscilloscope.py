@@ -20,7 +20,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
 # USA
 
-import gobject, gtk, sys
+import gobject, gtk, os, sys
 from matplotlib.backends.backend_gtkagg import \
 	FigureCanvasGTKAgg as figure_canvas
 import matplotlib.figure, matplotlib.ticker, Numeric
@@ -159,6 +159,23 @@ def add_table_row(table, row, label_text, label_value = "0"):
 	table.attach(label, 1, 2, row, row + 1, 0, 0, 0, 0)
 	return label
 
+class system_info_frame(gtk.Frame):
+	def __init__(self, title = "System", facecolor = "white"):
+		gtk.Frame.__init__(self, title)
+
+		self.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse(facecolor))
+
+		table = gtk.Table(3, 2, False)
+		table.set_border_width(5)
+		table.set_row_spacings(5)
+		table.set_col_spacings(10)
+		self.add(table)
+
+		u = os.uname()
+		add_table_row(table, 0, "Kernel Release", u[2])
+		add_table_row(table, 1, "Architecture", u[4])
+		add_table_row(table, 2, "Machine", u[1])
+
 class oscilloscope(gtk.Window):
 
 	def __init__(self, get_sample = None, width = 800, height = 500,
@@ -222,7 +239,9 @@ class oscilloscope(gtk.Window):
 		self.hist = histogram_frame("Histogram", 0, 0, nr_entries = 5,
 					    max_value = max_value)
 
+		info_frame = system_info_frame()
 		hbox = gtk.HBox()
+		hbox.pack_start(info_frame, False, False)
 		hbox.pack_start(stats_frame, False, False)
 		hbox.pack_start(self.hist, True, True)
 		hbox.pack_end(help_frame, False, False)
