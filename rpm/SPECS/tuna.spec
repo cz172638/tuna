@@ -2,7 +2,7 @@
 %{!?python_ver: %define python_ver %(%{__python} -c "import sys ; print sys.version[:3]")}
 
 Name: tuna
-Version: 0.2.3
+Version: 0.3
 Release: 1%{?dist}
 License: GPLv2
 Summary: Application tuning GUI & command line utility
@@ -35,6 +35,7 @@ rm -rf %{buildroot}
 mkdir -p %{buildroot}/{%{_bindir},%{_datadir}/tuna/help/kthreads}
 install -m644 tuna/tuna_gui.glade %{buildroot}/%{_datadir}/tuna/
 install -m755 tuna-cmd.py %{buildroot}/%{_bindir}/tuna
+install -m755 oscilloscope-cmd.py %{buildroot}/%{_bindir}/oscilloscope
 install -m644 help/kthreads/* %{buildroot}/%{_datadir}/tuna/help/kthreads/
 
 %clean
@@ -43,6 +44,7 @@ rm -rf %{buildroot}
 %files
 %defattr(0755,root,root,0755)
 %{_bindir}/tuna
+%{_bindir}/oscilloscope
 %dir %{_datadir}/tuna/
 %{_datadir}/tuna/tuna_gui.glade
 %dir %{_datadir}/tuna/help
@@ -54,6 +56,19 @@ rm -rf %{buildroot}
 %endif
 
 %changelog
+* Fri May 16 2008 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.3-1
+- Add oscilloscope command, initially useful with signaltest and cyclictest,
+  but will also be used with the latencytest utility in the qpid project and
+  with any other source of signals. Requires python-matplotlib, that will
+  be added to the MRG repo soon. 
+- Allow toggling auto-refresh from the irq and threads views
+- Changes to make tuna work on older RHEL versions, helpful when evaluating
+  RHEL-RT components.
+- Allow using tuna without GUI libraries installed, please see:
+  tuna --help
+  For available commands.
+- Several fixes
+
 * Thu Mar 27 2008 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.2-1
 - Command line interface
 - Remove the requirement of a GUI packages
