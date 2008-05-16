@@ -21,7 +21,7 @@
 # USA
 
 import getopt, sys, gtk
-from oscilloscope import cyclictestoscope
+from tuna import oscilloscope
 
 def usage():
 	print '''Usage: oscilloscope [OPTIONS]
@@ -67,9 +67,9 @@ def main():
 		elif o in ("-u", "--unit"):
 			unitlabel = a
 		
-	o = cyclictestoscope(max_value, snapshot_samples,
-			     delimiter = delimiter, field = field,
-			     ylabel = "%s (%s)" % (ylabel, unitlabel))
+	o = oscilloscope.cyclictestoscope(max_value, snapshot_samples,
+					  delimiter = delimiter, field = field,
+					  ylabel = "%s (%s)" % (ylabel, unitlabel))
 	o.run()
 	gtk.main()
 
