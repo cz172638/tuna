@@ -149,6 +149,16 @@ class oscilloscope_frame(gtk.Frame):
 		self.canvas.show()
 		return
 
+def add_table_row(table, row, label_text, label_value = "0"):
+	label = gtk.Label(label_text)
+	label.set_use_underline(True)
+	label.set_alignment(0, 1)
+	table.attach(label, 0, 1, row, row + 1, 0, 0, 0, 0)
+
+	label = gtk.Label(label_value)
+	table.attach(label, 1, 2, row, row + 1, 0, 0, 0, 0)
+	return label
+
 class oscilloscope(gtk.Window):
 
 	def __init__(self, get_sample = None, width = 800, height = 500,
@@ -182,9 +192,9 @@ class oscilloscope(gtk.Window):
 		table.set_col_spacings(10)
 		stats_frame.add(table)
 
-		self.min_label = self.__add_table_row(table, 0, "Min")
-		self.avg_label = self.__add_table_row(table, 1, "Avg")
-		self.max_label = self.__add_table_row(table, 2, "Max")
+		self.min_label = add_table_row(table, 0, "Min")
+		self.avg_label = add_table_row(table, 1, "Avg")
+		self.max_label = add_table_row(table, 2, "Max")
 
 		help_frame = gtk.Frame("Help")
 		help_frame.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse(facecolor))
@@ -195,10 +205,10 @@ class oscilloscope(gtk.Window):
 		table.set_col_spacings(10)
 		help_frame.add(table)
 
-		self.__add_table_row(table, 0, "Space", "Pause")
-		self.__add_table_row(table, 1, "S", "Snapshot")
-		self.__add_table_row(table, 2, "R", "Reset")
-		self.__add_table_row(table, 3, "Q", "Quit")
+		add_table_row(table, 0, "Space", "Pause")
+		add_table_row(table, 1, "S", "Snapshot")
+		add_table_row(table, 2, "R", "Reset")
+		add_table_row(table, 3, "Q", "Quit")
 
 		self.scope = oscilloscope_frame("Scope",
 						int(width * 0.94),
@@ -226,16 +236,6 @@ class oscilloscope(gtk.Window):
 		self.refreshing_screen = False
 		self.max = self.min = None
 		self.avg = 0
-
-	def __add_table_row(self, table, row, label_text, label_value = "0"):
-		label = gtk.Label(label_text)
-		label.set_use_underline(True)
-		label.set_alignment(0, 1)
-		table.attach(label, 0, 1, row, row + 1, 0, 0, 0, 0)
-
-		label = gtk.Label(label_value)
-		table.attach(label, 1, 2, row, row + 1, 0, 0, 0, 0)
-		return label
 
 	def add_sample(self, sample):
 		if not self.max or self.max < sample:
