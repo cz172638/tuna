@@ -2,7 +2,7 @@
 # -*- python -*-
 # -*- coding: utf-8 -*-
 
-import copy, ethtool, procfs, schedutils
+import copy, ethtool, os, procfs, schedutils
 
 try:
 	from sets import Set as set
@@ -33,7 +33,6 @@ def kthread_help(key):
 		f.close()
 		kthread_help_str[orig_key] = help
 	return help
-
 
 def kthread_help_plain_text(pid, cmdline):
 	cmdline = cmdline.split(' ')[0]
@@ -314,3 +313,24 @@ def irq_filtered(irq, irqs, cpus_filtered, is_root):
 			return True
 
 	return False
+
+def thread_set_priority(tid, policy, rtprio):
+	if not policy and policy != 0:
+		policy = schedutils.get_scheduler(tid)
+	schedutils.set_scheduler(tid, policy, rtprio)
+
+def threads_set_priority(tids, parm, affect_children = False):
+	parms = parm.split(":")
+	policy = None
+	if len(parms) != 1:
+		policy = schedutils.schedfromstr("SCHED_%s" % parms[0].upper())
+		rtprio = int(parms[1])
+	else:
+		rtprio = int(parms[0])
+
+	for tid in tids:
+		thread_set_priority(tid, policy, rtprio)
+		if affect_children:
+			for child in [int (a) for a in os.listdir("/proc/%d/task" % tid)]:
+				if child != tid:
+					thread_set_priority(child, policy, rtprio)

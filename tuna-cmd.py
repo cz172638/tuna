@@ -26,11 +26,13 @@ def usage():
 	-h, --help			Give this help list
 	-g, --gui			Start the GUI
 	-c, --cpus=CPU-LIST		CPU-LIST affected by commands
+	-C, --affect_children		Operation will affect children threads
 	-f, --filter			Display filter the selected entities
 	-i, --isolate			Move all threads away from CPU-LIST
 	-I, --include			Allow all threads to run on CPU-LIST
 	-K, --no_kthreads		Operations will not affect kernel threads
 	-m, --move			move selected entities to CPU-LIST
+	-p, --priority=[POLICY]:RTPRIO	set thread scheduler POLICY and RTPRIO
 	-t, --threads=THREAD-LIST	THREAD-LIST affected by commands
 	-U, --no_uthreads		Operations will not affect user threads
 	-W, --what_is			Provides help about selected entities'''
@@ -59,11 +61,12 @@ def thread_help(tid):
 def main():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
-					   "c:fghiIKmt:UW",
-					   ("cpus=", "filter", "gui", "help",
+					   "c:CfghiIKmp:t:UW",
+					   ("cpus=", "affect_children",
+					    "filter", "gui", "help",
 					    "isolate", "include",
 					    "no_kthreads",
-					    "move", "threads=",
+					    "move", "priority", "threads=",
 					    "no_uthreads", "what_is"))
 	except getopt.GetoptError, err:
 		usage()
@@ -76,6 +79,7 @@ def main():
 	cpus = None
 	threads = None
 	filter = False
+	affect_children = False
 
 	for o, a in opts:
 		if o in ("-h", "--help"):
@@ -83,6 +87,8 @@ def main():
 			return
 		elif o in ("-c", "--cpus"):
 			cpus = map(lambda cpu: int(cpu), a.split(","))
+		elif o in ("-C", "--affect_children"):
+			affect_children = True
 		elif o in ("-t", "--threads"):
 			threads = map(lambda cpu: int(cpu), a.split(","))
 		elif o in ("-f", "--filter"):
@@ -100,6 +106,8 @@ def main():
 				sys.exit(2)
 			for cpu in cpus:
 				tuna.include_cpu(cpu, get_nr_cpus())
+		elif o in ("-p", "--priority"):
+			tuna.threads_set_priority(threads, a, affect_children)
 		elif o in ("-m", "--move"):
 			if not cpus:
 				print "tuna: --move requires a cpu list!"
