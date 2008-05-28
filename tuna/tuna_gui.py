@@ -908,8 +908,8 @@ class procview:
 		self.refreshing = True
 
 	def on_query_tooltip(self, treeview, x, y, keyboard_mode, tooltip):
-		# FIXME: Why is that it is off by a row?
-		ret = treeview.get_path_at_pos(x, y - 30)
+		x, y = treeview.convert_widget_to_bin_window_coords(x, y)
+		ret = treeview.get_path_at_pos(x, y)
 		tooltip.set_text(None)
 		if not ret:
 			return True
