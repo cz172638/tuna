@@ -28,6 +28,7 @@ def usage():
 	-h, --help			Give this help list
 	-d, --delimiter=CHARACTER	CHARACTER used as a delimiter [Default: :]
 	-f, --field=FIELD		FIELD to plot [Default: 2]
+	-g, --geometry=GEOMETRY         X geometry specification (see "X" man page)
 	-m, --max_value=MAX_VALUE	MAX_VALUE for the scale
 	-S, --snapshot_samples=NR	Take NR samples, a snapshot and exit
 	-u, --unit=TYPE			Unit TYPE [Default: us]
@@ -36,8 +37,9 @@ def usage():
 def main():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
-					   "d:f:hm:S:u:",
-					   ("help", "max_value=",
+					   "d:f:g:hm:S:u:",
+					   ("geometry=",
+					    "help", "max_value=",
 					    "snapshot_samples=",
 					    "unit="))
 	except getopt.GetoptError, err:
@@ -51,12 +53,15 @@ def main():
 	field = 2
 	ylabel = "Latency"
 	unitlabel = "us"
+	geometry = None
 
 	for o, a in opts:
 		if o in ("-d", "--delimiter"):
 			delimiter = a
 		elif o in ("-f", "--field"):
 			field = int(a)
+		elif o in ("-g", "--geometry"):
+			geometry = a
 		elif o in ("-h", "--help"):
 			usage()
 			return
@@ -69,7 +74,8 @@ def main():
 		
 	o = oscilloscope.cyclictestoscope(max_value, snapshot_samples,
 					  delimiter = delimiter, field = field,
-					  ylabel = "%s (%s)" % (ylabel, unitlabel))
+					  ylabel = "%s (%s)" % (ylabel, unitlabel),
+					  geometry = geometry)
 	o.run()
 	gtk.main()
 

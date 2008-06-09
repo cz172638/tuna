@@ -185,15 +185,20 @@ class oscilloscope(gtk.Window):
 		     bg_color = "darkgreen", facecolor = "white",
 		     ylabel = "Latency",
 		     picker = None,
-		     snapshot_samples = 0):
+		     snapshot_samples = 0,
+		     geometry = None):
 
 		gtk.Window.__init__(self)
+		if geometry:
+			self.parse_geometry(geometry)
+			width, height = self.get_size()
+		else:
+			self.set_default_size(width, height)
 
 		self.get_sample = get_sample
 		self.max_value = max_value
 		self.snapshot_samples = snapshot_samples
 
-		self.set_default_size(width, height)
 		self.set_title(title)
 		
 		vbox = gtk.VBox()
@@ -373,14 +378,15 @@ class ftrace_window(gtk.Window):
 
 class cyclictestoscope(oscilloscope):
 	def __init__(self, max_value, snapshot_samples = 0, nr_samples_on_screen = 500,
-		     delimiter = ':', field = 2, ylabel = "Latency"):
+		     delimiter = ':', field = 2, ylabel = "Latency",
+		     geometry = None):
 		oscilloscope.__init__(self, self.get_sample,
 				      title = "CyclictestoSCOPE",
 				      nr_samples_on_screen = nr_samples_on_screen,
 				      width = 900, max_value = max_value,
 				      picker = self.scope_picker,
 				      snapshot_samples = snapshot_samples,
-				      ylabel = ylabel)
+				      ylabel = ylabel, geometry = geometry)
 
 		self.connect("destroy", self.quit)
 		self.traces = [ None, ] * nr_samples_on_screen
