@@ -245,11 +245,14 @@ class oscilloscope(gtk.Window):
 					    max_value = max_value)
 
 		info_frame = system_info_frame()
+
+		vbox_help_info = gtk.VBox()
+		vbox_help_info.pack_start(info_frame, False, False)
+		vbox_help_info.pack_end(help_frame, False, False)
 		hbox = gtk.HBox()
-		hbox.pack_start(info_frame, False, False)
+		hbox.pack_start(vbox_help_info, False, False)
 		hbox.pack_start(stats_frame, False, False)
-		hbox.pack_start(self.hist, True, True)
-		hbox.pack_end(help_frame, False, False)
+		hbox.pack_end(self.hist, True, True)
 
 		vbox.pack_start(self.scope, True, True)
 		vbox.pack_end(hbox, True, False)
