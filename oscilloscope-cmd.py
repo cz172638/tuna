@@ -30,6 +30,7 @@ def usage():
 	-f, --field=FIELD		FIELD to plot [Default: 2]
 	-g, --geometry=GEOMETRY         X geometry specification (see "X" man page)
 	-m, --max_value=MAX_VALUE	MAX_VALUE for the scale
+	-n, --noscale			Do not scale when a sample is > MAX_SCALE
 	-S, --snapshot_samples=NR	Take NR samples, a snapshot and exit
 	-u, --unit=TYPE			Unit TYPE [Default: us]
 '''
@@ -37,9 +38,10 @@ def usage():
 def main():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
-					   "d:f:g:hm:S:u:",
+					   "d:f:g:hm:nS:u:",
 					   ("geometry=",
 					    "help", "max_value=",
+					    "noscale",
 					    "snapshot_samples=",
 					    "unit="))
 	except getopt.GetoptError, err:
@@ -54,6 +56,7 @@ def main():
 	ylabel = "Latency"
 	unitlabel = "us"
 	geometry = None
+	scale = True
 
 	for o, a in opts:
 		if o in ("-d", "--delimiter"):
@@ -67,6 +70,8 @@ def main():
 			return
 		elif o in ("-m", "--max_value"):
 			max_value = int(a)
+		elif o in ("-n", "--noscale"):
+			scale = False
 		elif o in ("-S", "--snapshot_samples"):
 			snapshot_samples = int(a)
 		elif o in ("-u", "--unit"):
@@ -75,7 +80,7 @@ def main():
 	o = oscilloscope.cyclictestoscope(max_value, snapshot_samples,
 					  delimiter = delimiter, field = field,
 					  ylabel = "%s (%s)" % (ylabel, unitlabel),
-					  geometry = geometry)
+					  geometry = geometry, scale = scale)
 	o.run()
 	gtk.main()
 

@@ -186,7 +186,7 @@ class oscilloscope(gtk.Window):
 		     ylabel = "Latency",
 		     picker = None,
 		     snapshot_samples = 0,
-		     geometry = None):
+		     geometry = None, scale = True):
 
 		gtk.Window.__init__(self)
 		if geometry:
@@ -198,6 +198,7 @@ class oscilloscope(gtk.Window):
 		self.get_sample = get_sample
 		self.max_value = max_value
 		self.snapshot_samples = snapshot_samples
+		self.scale = scale
 
 		self.set_title(title)
 		
@@ -276,7 +277,7 @@ class oscilloscope(gtk.Window):
 		self.hist.add_sample(sample)
 
 	def refresh(self):
-		if self.max > self.scope.max_value:
+		if self.scale and self.max > self.scope.max_value:
 			self.scope.max_value *= 2
 			self.scope.ax.set_ylim(0, self.scope.max_value)
 		self.scope.refresh()
@@ -382,14 +383,15 @@ class ftrace_window(gtk.Window):
 class cyclictestoscope(oscilloscope):
 	def __init__(self, max_value, snapshot_samples = 0, nr_samples_on_screen = 500,
 		     delimiter = ':', field = 2, ylabel = "Latency",
-		     geometry = None):
+		     geometry = None, scale = True):
 		oscilloscope.__init__(self, self.get_sample,
 				      title = "CyclictestoSCOPE",
 				      nr_samples_on_screen = nr_samples_on_screen,
 				      width = 900, max_value = max_value,
 				      picker = self.scope_picker,
 				      snapshot_samples = snapshot_samples,
-				      ylabel = ylabel, geometry = geometry)
+				      ylabel = ylabel, geometry = geometry,
+				      scale = scale)
 
 		self.connect("destroy", self.quit)
 		self.traces = [ None, ] * nr_samples_on_screen
