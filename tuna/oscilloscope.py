@@ -394,12 +394,14 @@ class cyclictestoscope(oscilloscope):
 				      scale = scale)
 
 		self.connect("destroy", self.quit)
-		self.traces = [ None, ] * nr_samples_on_screen
 		self.delimiter = delimiter
 		self.field = field
+		self.latency_tracer = os.access("/sys/kernel/debug/tracing/trace", os.R_OK)
+		if self.latency_tracer:
+			self.traces = [ None, ] * nr_samples_on_screen
 
 	def scope_picker(self, line, mouseevent):
-		if mouseevent.xdata is None:
+		if (not self.latency_tracer) or mouseevent.xdata is None:
 			return False, dict()
 
 		x = int(mouseevent.xdata)
@@ -408,25 +410,28 @@ class cyclictestoscope(oscilloscope):
 		return False, dict()
 
 	def get_sample(self):
-		del self.traces[0]
-		
 		fields = sys.stdin.readline().split(self.delimiter)
 		sample = float(fields[self.field])
 
-		if sample > self.avg:
-			try:
-				f = file("/sys/kernel/debug/tracing/trace")
-				trace = f.readlines()
-				f.close()
-				f = file("/sys/kernel/debug/tracing/tracing_max_latency", "w")
-				f.write("0\n")
-				f.close()
-			except:
+		if self.latency_tracer:
+			del self.traces[0]
+			if sample > self.avg:
+				print sample
+				try:
+					f = file("/sys/kernel/debug/tracing/trace")
+					trace = f.readlines()
+					f.close()
+					f = file("/sys/kernel/debug/tracing/tracing_max_latency", "w")
+					f.write("0\n")
+					f.close()
+				except:
+					trace = None
+			else:
+				print "-"
 				trace = None
-		else:
-			trace = None
 
-		self.traces.append(trace)
+			self.traces.append(trace)
+
 		return sample
 
 	def quit(self, x):
