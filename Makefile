@@ -1,4 +1,4 @@
-VERSION := $(shell rpm -q --qf '%{VERSION}' --specfile rpm/SPECS/tuna.spec)
+VERSION := $(shell rpm -q --qf '%{VERSION} ' --specfile rpm/SPECS/tuna.spec | cut -d' ' -f1)
 
 bz2:
 	git archive --format=tar HEAD | bzip2 -9 > rpm/SOURCES/tuna-$(VERSION).tar.bz2

@@ -2,7 +2,7 @@
 %{!?python_ver: %define python_ver %(%{__python} -c "import sys ; print sys.version[:3]")}
 
 Name: tuna
-Version: 0.3
+Version: 0.4
 Release: 1%{?dist}
 License: GPLv2
 Summary: Application tuning GUI & command line utility
@@ -22,6 +22,22 @@ threads and interrupts to a CPU by just dragging and dropping them.
 
 Can be used as a command line utility without requiring the GUI libraries to be
 installed.
+
+%package -n oscilloscope
+Summary: Generic Oscilloscope
+Group: Application/System
+Requires: python-matplotlib
+Requires: python-numeric
+Requires: pygtk2
+Requires: tuna = %{version}-%{release}
+
+%description -n oscilloscope
+Plots stream of values read from standard input on the screen together with
+statistics and a histogram.
+
+Allows to instantly see how a signal generator, such as cyclictest, signaltest
+or even ping, reacts when, for instance, its scheduling policy or real time
+priority is changed, be it using tuna or plain chrt & taskset.
 
 %prep
 %setup -q -c -n %{name}-%{version}
@@ -44,7 +60,6 @@ rm -rf %{buildroot}
 %files
 %defattr(0755,root,root,0755)
 %{_bindir}/tuna
-%{_bindir}/oscilloscope
 %dir %{_datadir}/tuna/
 %{_datadir}/tuna/tuna_gui.glade
 %dir %{_datadir}/tuna/help
@@ -55,7 +70,22 @@ rm -rf %{buildroot}
 %{python_sitelib}/*.egg-info
 %endif
 
+%files -n oscilloscope
+%defattr(0755,root,root,0755)
+%{_bindir}/oscilloscope
+
 %changelog
+* Tue Jun 17 2008 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.4-1
+- oscilloscope subpackage
+- oscilloscope: Allow passing the number of samples to appear on screen
+- oscilloscope: use io_add_watch instead of timeout_add
+- oscilloscope: check if the latency tracer is available
+- oscilloscope: Allow disabling auto-scaling
+- oscilloscope: group the system info and help frames in a vbox
+- oscilloscope: parse X geometry parameter
+- tuna: Convert widget coords to bin_window coords
+- tuna: Implement --affect_children and --priority
+
 * Fri May 16 2008 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.3-1
 - Add oscilloscope command, initially useful with signaltest and cyclictest,
   but will also be used with the latencytest utility in the qpid project and
