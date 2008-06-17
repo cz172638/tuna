@@ -283,7 +283,7 @@ class oscilloscope(gtk.Window):
 		self.scope.refresh()
 		self.hist.refresh()
 
-	def get_samples(self):
+	def get_samples(self, fd, condition):
 		sample = self.get_sample()
 		prev_min, prev_avg, prev_max = self.min, self.avg, self.max
 
@@ -304,11 +304,12 @@ class oscilloscope(gtk.Window):
 			gtk.main_quit()
 		return self.getting_samples
 
-	def run(self, interval = 10):
+	def run(self, fd):
 		self.connect("key_press_event", self.key_press_event)
 		self.getting_samples = True
 		self.refreshing_screen = True
-		gobject.timeout_add(interval, self.get_samples)
+		gobject.io_add_watch(fd, gobject.IO_IN | gobject.IO_PRI,
+				     self.get_samples)
 
 	def freeze_screen(self, state = False):
 		self.refreshing_screen = state
@@ -433,6 +434,9 @@ class cyclictestoscope(oscilloscope):
 			self.traces.append(trace)
 
 		return sample
+
+	def run(self):
+		oscilloscope.run(self, sys.stdin.fileno())
 
 	def quit(self, x):
 		gtk.main_quit()
