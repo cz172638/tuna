@@ -31,6 +31,7 @@ def usage():
 	-g, --geometry=GEOMETRY         X geometry specification (see "X" man page)
 	-m, --max_value=MAX_VALUE	MAX_VALUE for the scale
 	-n, --noscale			Do not scale when a sample is > MAX_SCALE
+	-s, --nr_samples_on_screen=NR	Show NR samples on screen
 	-S, --snapshot_samples=NR	Take NR samples, a snapshot and exit
 	-u, --unit=TYPE			Unit TYPE [Default: us]
 '''
@@ -38,10 +39,11 @@ def usage():
 def main():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
-					   "d:f:g:hm:nS:u:",
+					   "d:f:g:hm:ns:S:u:",
 					   ("geometry=",
 					    "help", "max_value=",
 					    "noscale",
+					    "nr_samples_on_screen=",
 					    "snapshot_samples=",
 					    "unit="))
 	except getopt.GetoptError, err:
@@ -57,6 +59,7 @@ def main():
 	unitlabel = "us"
 	geometry = None
 	scale = True
+	nr_samples_on_screen = 250
 
 	for o, a in opts:
 		if o in ("-d", "--delimiter"):
@@ -72,12 +75,15 @@ def main():
 			max_value = int(a)
 		elif o in ("-n", "--noscale"):
 			scale = False
+		elif o in ("-s", "--nr_samples_on_screen"):
+			nr_samples_on_screen = int(a)
 		elif o in ("-S", "--snapshot_samples"):
 			snapshot_samples = int(a)
 		elif o in ("-u", "--unit"):
 			unitlabel = a
 		
 	o = oscilloscope.cyclictestoscope(max_value, snapshot_samples,
+					  nr_samples_on_screen = nr_samples_on_screen,
 					  delimiter = delimiter, field = field,
 					  ylabel = "%s (%s)" % (ylabel, unitlabel),
 					  geometry = geometry, scale = scale)
