@@ -50,7 +50,7 @@ class histogram_frame(gtk.Frame):
 			if bucket_range > self.max_value:
 				prefix = ">"
 				bucket_range = self.max_value
-				
+
 			label = gtk.Label("%s %d" % (prefix, bucket_range))
 			label.set_alignment(0, 1)
 			table.attach(label, 0, 1, bucket, bucket + 1, 0, 0, 0, 0)
@@ -96,7 +96,7 @@ class oscilloscope_frame(gtk.Frame):
 			      'color'      : 'b',
 			      'fontweight' : 'bold',
 			      'fontsize'   : 10 }
-	
+
 		self.max_value = max_value
 		self.nr_samples_on_screen = nr_samples_on_screen
 		self.ind = Numeric.arange(nr_samples_on_screen)
@@ -123,7 +123,7 @@ class oscilloscope_frame(gtk.Frame):
 
 		self.canvas = figure_canvas(figure)  # a gtk.DrawingArea
 		self.canvas.set_size_request(width, height)
-		
+
 		self.add(self.canvas)
 		self.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse(facecolor))
 		self.nr_samples = 0
@@ -201,7 +201,7 @@ class oscilloscope(gtk.Window):
 		self.scale = scale
 
 		self.set_title(title)
-		
+
 		vbox = gtk.VBox()
 		vbox.set_border_width(8)
 		self.add(vbox)

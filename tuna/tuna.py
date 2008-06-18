@@ -144,7 +144,7 @@ def list_to_cpustring(l):
 
 def move_threads_to_cpu(new_affinity, pid_list):
 	changed = False
-	
+
 	ps = procfs.pidstats()
 	for pid in pid_list:
 		try:
@@ -210,7 +210,7 @@ def isolate_cpus(cpus, nr_cpus):
 				schedutils.set_affinity(tid, affinity)
 
 	del ps
-	
+
 	# Now isolate it from IRQs too
 	irqs = procfs.interrupts()
 	previous_irq_affinities = {}
@@ -254,7 +254,7 @@ def include_cpu(cpu, nr_cpus):
 				schedutils.set_affinity(tid, affinity)
 
 	del ps
-	
+
 	# Now include it in IRQs too
 	irqs = procfs.interrupts()
 	previous_irq_affinities = {}
@@ -283,7 +283,7 @@ def get_irq_users(irqs, irq, nics = None):
 				# Old kernel, doesn't implement ETHTOOL_GDRVINFO
 				pass
 	return users
-			
+
 def get_irq_affinity_text(irqs, irq):
 	affinity_list = irqs[irq]["affinity"]
 	try:

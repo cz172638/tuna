@@ -81,7 +81,7 @@ def main():
 			snapshot_samples = int(a)
 		elif o in ("-u", "--unit"):
 			unitlabel = a
-		
+
 	o = oscilloscope.cyclictestoscope(max_value, snapshot_samples,
 					  nr_samples_on_screen = nr_samples_on_screen,
 					  delimiter = delimiter, field = field,

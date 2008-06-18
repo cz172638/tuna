@@ -57,7 +57,7 @@ def thread_help(tid):
 	cmdline = procfs.process_cmdline(pinfo)
 	help, title = tuna.kthread_help_plain_text(tid, cmdline)
 	print "%s\n\n%s" % (title, help)
-	
+
 def main():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],

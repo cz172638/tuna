@@ -53,7 +53,7 @@ def drop_handler_move_irqs_to_cpu(cpu, data):
 	else:
 		cpu = -cpu
 		new_affinity = [ (1 << cpu) - 1, ]
-	
+
 	for irq in irq_list:
 		tuna.set_irq_affinity(irq, new_affinity)
 
@@ -99,7 +99,7 @@ class cpuview:
 						gobject.TYPE_UINT)
 		self.treeview.set_model(self.list_store)
 		self.nr_cpus = len(self.cpustats) - 1
-		
+
 		model = self.treeview.get_model()
 
 		# Filter column
@@ -189,7 +189,7 @@ class cpuview:
 			tuna.set_irq_affinity(int(irq),
 					      procfs.hexbitmask(affinities[irq],
 								self.nr_cpus))
-			
+
 		self.previous_pid_affinities = None
 		self.previous_irq_affinities = None
 
@@ -339,7 +339,7 @@ def thread_set_attributes(pid, threads, new_policy, new_prio, new_affinity, nr_c
 			new_affinity = tuna.cpustring_to_list(new_affinity)
 		except:
 			new_affinity = procfs.bitmasklist(new_affinity, nr_cpus)
-		
+
 	new_affinity.sort()
 
 	if curr_affinity != new_affinity:
@@ -596,7 +596,7 @@ class irqview:
 			self.set_irq_columns(row, irq, irq_info, nics)
 
 		self.treeview.show_all()
-	
+
 	def refresh(self):
 		if not self.refreshing:
 			return
@@ -715,7 +715,7 @@ class process_druid:
 
 	def create_matching_process_model(self, processes):
 		labels = [ "PID", "Name" ]
-		
+
 		self.process_list_store = gtk.ListStore(gobject.TYPE_UINT,
 							gobject.TYPE_STRING)
 		processes.set_model(self.process_list_store)
@@ -983,7 +983,7 @@ class procview:
 		row = self.tree_store.get_iter_first()
 		self.update_rows(self.ps, row, None)
 		self.treeview.show_all()
-	
+
 	def update_rows(self, threads, row, parent_row):
 		new_tids = threads.keys()
 		while row:
@@ -1017,10 +1017,10 @@ class procview:
 						children = threads[tid]["threads"]
 					else:
 						children = {}
-					
+
 					child_row = self.tree_store.iter_children(row)
 					self.update_rows(children, child_row, row)
-			
+
 			row = self.tree_store.iter_next(row)
 
 		new_tids.sort()
@@ -1034,7 +1034,7 @@ class procview:
 				continue
 
 			row = self.tree_store.append(parent_row)
-			
+
 			if self.set_thread_columns(row, tid, threads[tid]):
 				# Thread doesn't exists anymore
 				self.tree_store.remove(row)
