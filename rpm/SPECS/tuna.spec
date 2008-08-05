@@ -40,7 +40,7 @@ or even ping, reacts when, for instance, its scheduling policy or real time
 priority is changed, be it using tuna or plain chrt & taskset.
 
 %prep
-%setup -q -c -n %{name}-%{version}
+%setup -q
 
 %build
 %{__python} setup.py build

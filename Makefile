@@ -8,7 +8,8 @@ rpmdirs:
 	@[ -d rpm/SOURCES ] || mkdir rpm/SOURCES
 
 bz2: rpmdirs
-	git archive --format=tar HEAD | bzip2 -9 > rpm/SOURCES/$(PACKAGE)-$(VERSION).tar.bz2
+	git archive --format=tar --prefix=$(PACKAGE)-$(VERSION)/ HEAD | \
+	bzip2 -9 > rpm/SOURCES/$(PACKAGE)-$(VERSION).tar.bz2
 
 rpm: bz2 rpmdirs
 	rpmbuild -ba --define "_topdir $(PWD)/rpm" rpm/SPECS/$(PACKAGE).spec
