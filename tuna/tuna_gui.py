@@ -1146,6 +1146,31 @@ class procview:
 		kthreads = tuna.get_kthread_sched_tunings(self.ps)
 		tuna.generate_rtgroups(filename, kthreads)
 
+		if filename != "/etc/rtgroups":
+			dialog = gtk.MessageDialog(None,
+						   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+						   gtk.MESSAGE_INFO,
+						   gtk.BUTTONS_YES_NO,
+						   "Kernel thread tunings saved!\n\n"
+						   "Now you can use it with rtctl:\n\n"
+						   "rtctl --file %s reset\n\n"
+						   "If you want the changes to be in "
+						   "effect everytime you boot the system "
+						   "please move %s to /etc/rtgroups\n\n"
+						   "Do you want do do that now?" % (filename, filename))
+			response = dialog.run()
+			dialog.destroy()
+			if response == gtk.RESPONSE_YES:
+				tuna.generate_rtgroups("/etc/rtgroups", kthreads)
+
+		dialog = gtk.MessageDialog(None,
+					   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+					   gtk.MESSAGE_INFO,
+					   gtk.BUTTONS_OK,
+					   "Kernel thread tunings saved to /etc/rtgroups!")
+		dialog.run()
+		dialog.destroy()
+
 	def on_processlist_button_press_event(self, treeview, event):
 		if event.type != gtk.gdk.BUTTON_PRESS or event.button != 3:
 			return
