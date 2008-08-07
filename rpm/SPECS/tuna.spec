@@ -2,7 +2,7 @@
 %{!?python_ver: %define python_ver %(%{__python} -c "import sys ; print sys.version[:3]")}
 
 Name: tuna
-Version: 0.4
+Version: 0.5
 Release: 1%{?dist}
 License: GPLv2
 Summary: Application tuning GUI & command line utility
@@ -75,6 +75,12 @@ rm -rf %{buildroot}
 %{_bindir}/oscilloscope
 
 %changelog
+* Thu Aug  7 2008 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.5-1
+- tuna_gui: Provide instructions on how to use the generated rtctl file
+- tuna_gui: Add "Save kthreads tunings" menu entry in the process list box
+- tuna: Implement saving current kthread sched policy and rtprio as an rtctl file
+- help: Add more kernel thread help texts, written by the MRG crew
+
 * Tue Jun 17 2008 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.4-1
 - oscilloscope subpackage
 - oscilloscope: Allow passing the number of samples to appear on screen
