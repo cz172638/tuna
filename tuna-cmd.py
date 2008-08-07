@@ -16,6 +16,12 @@
 import getopt, procfs, sys
 from tuna import tuna
 
+try:
+	from sets import Set as set
+except:
+	# OK, we're modern, having sets as first class citizens
+	pass
+
 # FIXME: ETOOMANYGLOBALS, we need a class!
 
 nr_cpus = None
@@ -33,6 +39,7 @@ def usage():
 	-K, --no_kthreads		Operations will not affect kernel threads
 	-m, --move			move selected entities to CPU-LIST
 	-p, --priority=[POLICY]:RTPRIO	set thread scheduler POLICY and RTPRIO
+	-s, --save=FILENAME		save kthreads sched tunables to FILENAME
 	-t, --threads=THREAD-LIST	THREAD-LIST affected by commands
 	-U, --no_uthreads		Operations will not affect user threads
 	-W, --what_is			Provides help about selected entities'''
@@ -58,15 +65,25 @@ def thread_help(tid):
 	help, title = tuna.kthread_help_plain_text(tid, cmdline)
 	print "%s\n\n%s" % (title, help)
 
+def save(cpus, threads, filename):
+	kthreads = tuna.get_kthread_sched_tunings()
+	for name in kthreads.keys():
+		kt = kthreads[name]
+		if (cpus and not set(kt.affinity).intersection(set(cpus))) or \
+		   (threads and kt.pid not in threads) :
+			del kthreads[name]
+	tuna.generate_rtgroups(filename, kthreads)
+
 def main():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
-					   "c:CfghiIKmp:t:UW",
+					   "c:CfghiIKmp:s:t:UW",
 					   ("cpus=", "affect_children",
 					    "filter", "gui", "help",
 					    "isolate", "include",
 					    "no_kthreads",
-					    "move", "priority", "threads=",
+					    "move", "priority",
+					    "save=", "threads=",
 					    "no_uthreads", "what_is"))
 	except getopt.GetoptError, err:
 		usage()
@@ -116,6 +133,8 @@ def main():
 				print "tuna: --move requires a thread list!"
 				sys.exit(2)
 			tuna.move_threads_to_cpu(cpus, threads)
+		elif o in ("-s", "--save"):
+			save(cpus, threads, a)
 		elif o in ("-K", "--no_kthreads"):
 			kthreads = False
 		elif o in ("-U", "--no_uthreads"):
