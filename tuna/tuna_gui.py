@@ -1109,6 +1109,43 @@ class procview:
 	def refresh_toggle(self, a):
 		self.refreshing = not self.refreshing
 
+	def save_kthreads_tunings(self, a):
+		dialog = gtk.FileChooserDialog("Save As",
+					       None,
+					       gtk.FILE_CHOOSER_ACTION_SAVE,
+					       (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+						gtk.STOCK_OK, gtk.RESPONSE_OK))
+		dialog.set_default_response(gtk.RESPONSE_OK)
+
+		try:
+			dialog.set_do_overwrite_confirmation(True)
+		except:
+			pass
+
+		filter = gtk.FileFilter()
+		filter.set_name("rtctl config files")
+		filter.add_pattern("*.rtctl")
+		filter.add_pattern("*.tuna")
+		filter.add_pattern("*rtgroup*")
+		dialog.add_filter(filter)
+
+		filter = gtk.FileFilter()
+		filter.set_name("All files")
+		filter.add_pattern("*")
+		dialog.add_filter(filter)
+
+		response = dialog.run()
+
+		filename = dialog.get_filename()
+		dialog.destroy()
+
+		if response != gtk.RESPONSE_OK:
+			return
+
+		self.refresh()
+		kthreads = tuna.get_kthread_sched_tunings(self.ps)
+		tuna.generate_rtgroups(filename, kthreads)
+
 	def on_processlist_button_press_event(self, treeview, event):
 		if event.type != gtk.gdk.BUTTON_PRESS or event.button != 3:
 			return
@@ -1137,18 +1174,24 @@ class procview:
 
 		help = gtk.MenuItem("_What is this?")
 
+		save_kthreads_tunings = gtk.MenuItem("_Save kthreads tunings")
+
+		menu.add(save_kthreads_tunings)
 		menu.add(setattr)
 		menu.add(refresh)
 		menu.add(kthreads)
 		menu.add(uthreads)
 		menu.add(help)
 
+		save_kthreads_tunings.connect_object('activate',
+						     self.save_kthreads_tunings, event)
 		setattr.connect_object('activate', self.edit_attributes, event)
 		refresh.connect_object('activate', self.refresh_toggle, event)
 		kthreads.connect_object('activate', self.kthreads_view_toggled, event)
 		uthreads.connect_object('activate', self.uthreads_view_toggled, event)
 		help.connect_object('activate', self.help_dialog, event)
 
+		save_kthreads_tunings.show()
 		setattr.show()
 		refresh.show()
 		kthreads.show()
