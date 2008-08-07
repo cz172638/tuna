@@ -1,0 +1,1 @@
+Per-cpu thread that handles POSIX timer callbacks. Timer callbacks are bound to a cpu and are handled by these threads as per-cpu data. 

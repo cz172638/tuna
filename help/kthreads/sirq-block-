@@ -1,0 +1,1 @@
+Called after a completion to a block device is made. Looking further into this call, I only see a couple of users. The SCSI driver uses this as well as cciss.

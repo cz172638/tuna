@@ -1,0 +1,1 @@
+Catch all for those devices that couldn't use softirqs directly and mostly made before work queues were around. The difference between a tasklet and a softirq is that the same tasklet can not run on two different CPUs at the same time. In this regard it acts like a "task" (hence the name "tasklet"). Various devices use tasklets.

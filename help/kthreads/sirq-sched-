@@ -1,0 +1,3 @@
+Triggered when a rebalance of tasks is needed to CPU domains. This handles balancing of SCHED_OTHER tasks across CPUs. RT tasks balancing is done directly in schedule and wakeup paths.
+
+Runs at prio 1 because it needs to schedule above all SCHED_OTHER tasks. If the user has the same issue but doesn't mind having latencies against other kernel threads that run here, then its fine. But it should definitely be documented that PRIO 1 has other threads on it at boot up. 

@@ -1,0 +1,1 @@
+Pushes the RCU grace period along (if possible) and will handle dereferenced RCU callbacks, such as freeing structures after a grace period.

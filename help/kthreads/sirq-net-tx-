@@ -1,0 +1,1 @@
+This is the network transmit queue. Most of the time the network packets will be handled by the task that is sending the packets out, and doing so at the priority of that task. But if the protocol window or the network device queue is full, then the packets will be pushed off to later. The sirq-net-tx softirq is responsible for sending out these packets. 

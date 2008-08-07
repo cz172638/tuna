@@ -1,0 +1,1 @@
+This is from a poor attempt to prioritize tasklets. Some tasklets wanted to run before anything else. Thus there were two tasklet softirqs made. tasklet_vec and tasklet_hi_vec. A driver writer could put their "critical" tasklets into the tasklet_hi_vec and it would run before other softirqs. This never really worked as intended.

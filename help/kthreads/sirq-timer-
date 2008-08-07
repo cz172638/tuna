@@ -1,0 +1,1 @@
+Basically the timer wheel. Things that add itself to the timer wheel timeouts will be handled by this softirq. Parts of the kernel that need timeouts will use this softirq (i.e. network timeouts). The resolution to these timeouts are defined by the HZ value. 

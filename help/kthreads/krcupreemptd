@@ -1,0 +1,5 @@
+This should run at the lowest RT priority. With preemptible RCU, a loaded system may have tasks that hold RCU locks but have a high nice value. These tasks may be pushed off for seconds, and if the system is tight on memory, the RCU deferred freeing may not occur. The result can be drastic.
+
+The krcupreemptd is a daemon that runs just above SCHED_OTHER and wakes up once a second and performs a synchronize RCU. With RCU boosting, all those that hold RCU locks will inherit the priority of the krcupreemptd and wake up and release the RCU locks.
+
+This is only a concern for loaded systems and SCHED_OTHER tasks. If there is an issue of RT tasks starving out SCHED_OTHER tasks and causing problems with freeing memory, then the RT tasks are designed badly. 
