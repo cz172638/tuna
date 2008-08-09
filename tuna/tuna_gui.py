@@ -308,6 +308,8 @@ def thread_set_attributes(pid, threads, new_policy, new_prio, new_affinity, nr_c
 	changed = False
 	curr_policy = schedutils.get_scheduler(pid)
 	curr_prio = int(threads[pid]["stat"]["rt_priority"])
+	if new_policy == SCHED_OTHER:
+		new_prio = 0
 	if curr_policy != new_policy or curr_prio != new_prio:
 		try:
 			schedutils.set_scheduler(pid, new_policy, new_prio)
