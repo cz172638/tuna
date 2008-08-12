@@ -413,8 +413,11 @@ def generate_rtgroups(filename, kthreads, nr_cpus):
 			idx = 0
 			regex = name
 			pass
-		if kt.percpu or idx != 0:
+		if kt.percpu or idx != 0 or name == "posix_cpu_timer":
 			# Don't mess with workqueues, etc
+			# posix_cpu_timer is too long and doesn't
+			# have PF_THREAD_BOUND in its per process
+			# flags...
 			mask = "*"
 		else:
 			mask = ",".join([hex(a) for a in \
