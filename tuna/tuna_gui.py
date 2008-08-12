@@ -1163,14 +1163,14 @@ class procview:
 			response = dialog.run()
 			dialog.destroy()
 			if response == gtk.RESPONSE_YES:
-				tuna.generate_rtgroups("/etc/rtgroups",
-						       kthreads, self.nr_cpus)
+				filename = "/etc/rtgroups"
+				tuna.generate_rtgroups(filename, kthreads, self.nr_cpus)
 
 		dialog = gtk.MessageDialog(None,
 					   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
 					   gtk.MESSAGE_INFO,
 					   gtk.BUTTONS_OK,
-					   "Kernel thread tunings saved to /etc/rtgroups!")
+					   "Kernel thread tunings saved to %s!" % filename)
 		dialog.run()
 		dialog.destroy()
 
