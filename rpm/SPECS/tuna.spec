@@ -2,7 +2,7 @@
 %{!?python_ver: %define python_ver %(%{__python} -c "import sys ; print sys.version[:3]")}
 
 Name: tuna
-Version: 0.5
+Version: 0.6
 Release: 1%{?dist}
 License: GPLv2
 Summary: Application tuning GUI & command line utility
@@ -75,6 +75,12 @@ rm -rf %{buildroot}
 %{_bindir}/oscilloscope
 
 %changelog
+* Tue Aug 12 2008 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.6-1
+- tuna: posix_cpu_timer is percpu but its too long to have '/' in the cmdline
+- tuna: Fixup the message about what filename was really used (rtgroups)
+- tuna: Save the affinity mask for non-percpu kthreads
+- tuna: Ignore rtprio when changing sched policy to SCHED_OTHER
+
 * Thu Aug  7 2008 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.5-1
 - tuna_gui: Provide instructions on how to use the generated rtctl file
 - tuna_gui: Add "Save kthreads tunings" menu entry in the process list box
