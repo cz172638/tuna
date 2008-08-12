@@ -1,4 +1,5 @@
 help/kthreads/
+oscilloscope-cmd.py
 tuna-cmd.py
 tuna/__init__.py
 tuna/tuna.py
