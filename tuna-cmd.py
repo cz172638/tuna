@@ -72,7 +72,7 @@ def save(cpus, threads, filename):
 		if (cpus and not set(kt.affinity).intersection(set(cpus))) or \
 		   (threads and kt.pid not in threads) :
 			del kthreads[name]
-	tuna.generate_rtgroups(filename, kthreads)
+	tuna.generate_rtgroups(filename, kthreads, get_nr_cpus())
 
 def main():
 	try:

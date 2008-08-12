@@ -1146,7 +1146,7 @@ class procview:
 
 		self.refresh()
 		kthreads = tuna.get_kthread_sched_tunings(self.ps)
-		tuna.generate_rtgroups(filename, kthreads)
+		tuna.generate_rtgroups(filename, kthreads, self.nr_cpus)
 
 		if filename != "/etc/rtgroups":
 			dialog = gtk.MessageDialog(None,
@@ -1163,7 +1163,8 @@ class procview:
 			response = dialog.run()
 			dialog.destroy()
 			if response == gtk.RESPONSE_YES:
-				tuna.generate_rtgroups("/etc/rtgroups", kthreads)
+				tuna.generate_rtgroups("/etc/rtgroups",
+						       kthreads, self.nr_cpus)
 
 		dialog = gtk.MessageDialog(None,
 					   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
