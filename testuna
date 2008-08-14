@@ -1,0 +1,180 @@
+#!/bin/bash
+# Regression tests for tuna
+# (c) 2008 Red Hat Inc.
+# Arnaldo Carvalho de Melo <acme@redhat.com>
+# Released under the GPLv2
+
+dprint() {
+	[ -n "$VERBOSE" ] && echo $1
+}
+
+ktpidof() {
+	echo $(ps ax -To pid,cmd | grep "\[$1.*\]" | head -1 | cut -d'[' -f 1)
+}
+
+get_rtprio() {
+	echo $(chrt -p $1 | grep priority | cut -d ':' -f 2)
+}
+
+get_policy() {
+	echo $(chrt -p $1 | grep policy | cut -d ':' -f 2)
+}
+
+get_affinity() {
+	echo $(taskset -p $1 | grep 'current affinity' | cut -d ':' -f 2)
+}
+
+get_nr_processors() {
+	echo $(grep -i "^processor.*: " /proc/cpuinfo | tail -1 | cut -d ':' -f 2)
+}
+
+die() {
+	[ -z "$VERBOSE" ] && echo -n "$2: "
+	echo $1
+	rtctl --file $INITIAL reset
+	taskset -p $INITIAL_INIT_AFFINITY 1 > /dev/null
+	rm -rf $TESTUNA_DIR
+	exit 1
+}
+
+die_with_a_diff() {
+	[ -n "$VERBOSE" ] && diff -u $INITIAL $NEW
+	die "$1"
+}
+
+tuna_save() {
+	tuna --save $TEMPCONF
+	grep -v '^# rtctl --file ' $TEMPCONF > $1
+	rm -f $TEMPCONF
+}
+
+die_if_not_saved() {
+	dprint "$2"
+	tuna_save $NEW
+	(diff -u $INITIAL $NEW | diffstat | \
+	grep -q "[ \t]*1 file changed, $1 insertions*(+), $1 deletions*(-)") ||
+	die_with_a_diff 'FAILED!' "$2"
+}
+
+die_if_conf_changed() {
+	dprint "$1"
+	tuna_save $NEW
+	diff -qu $INITIAL $NEW > /dev/null || die_with_a_diff 'FAILED!' "$1":
+}
+
+die_if_zero() {
+	dprint "$2"
+	[ $1 -eq 0 ] && die 'FAILED!' "$2"
+}
+
+die_if_not_zero() {
+	dprint "$2"
+	[ $1 -ne 0 ] && die 'FAILED!' "$2"
+}
+
+die_if_not_equal() {
+	dprint "$3"
+	[ $1 -ne $2 ] && die 'FAILED!' "$3"
+}
+
+TESTUNA_DIR=$(mktemp -d -t testuna.XXXXXX) || exit 1
+INITIAL=$TESTUNA_DIR/initial.tuna
+INITIAL_INIT_AFFINITY=$(get_affinity 1)
+TEMPCONF=$TESTUNA_DIR/tempnew.tuna
+NEW=$TESTUNA_DIR/new.tuna
+
+[ $# -eq 1 ] && VERBOSE=1
+
+dprint "Saving initial configuration"
+
+tuna_save $INITIAL
+
+rtctl --file $INITIAL reset
+
+die_if_conf_changed "Replaying initial config"
+
+PID=$(ktpidof "migration")
+RTPRIO=$(get_rtprio $PID)
+POLICY=$(get_policy $PID)
+POLICY=$(echo ${POLICY:6:1} | tr 'A-Z' 'a-z')
+chrt -$POLICY -p $((RTPRIO - 1)) $PID 
+
+die_if_not_saved 1 'Saving changes to a kernel thread priority'
+
+chrt -$POLICY -p $RTPRIO $PID 
+
+die_if_conf_changed 'Restoring kernel thread priority'
+
+new_policy=$(echo $POLICY | tr fr rf)
+
+chrt -$new_policy -p $RTPRIO $PID 
+
+die_if_not_saved 1 'Changing kernel thread sched policy'
+
+chrt -$POLICY -p $RTPRIO $PID 
+
+die_if_conf_changed 'Restoring kernel thread sched policy'
+
+PID=$(ktpidof "khelper")
+AFFINITY=$(get_affinity $PID)
+
+taskset -p 0x2 $PID > /dev/null
+
+die_if_not_saved 1 'Changing kernel thread SMP affinity mask'
+
+taskset -p $AFFINITY $PID > /dev/null
+
+die_if_conf_changed 'Restoring kernel thread SMP affinity mask'
+
+NR_PROCESSORS=$(get_nr_processors)
+for PROCESSOR in $(seq 0 $NR_PROCESSORS) ; do
+	taskset -p 0xff 1 > /dev/null
+
+	PROCESSOR_AFFINITY=$(printf "%#x\n" $((1 << PROCESSOR)))
+	tuna --cpu $PROCESSOR --isolate
+
+	AFFINITY=0x$(get_affinity 1)
+
+	die_if_not_zero $((AFFINITY & PROCESSOR_AFFINITY)) "Isolating CPU $PROCESSOR"
+
+	tuna --cpu $PROCESSOR --include
+
+	AFFINITY=0x$(get_affinity 1)
+
+	die_if_zero $((AFFINITY & PROCESSOR_AFFINITY)) "Including CPU $PROCESSOR"
+done
+
+NEW_AFFINITY=$((1 << NR_PROCESSORS | 1))
+
+tuna --cpu=0,$NR_PROCESSORS --isolate
+
+for PID in $(cd /proc; ls -d [0-9]*) ; do
+	[ -n "$(cat /proc/$PID/cmdline 2> /dev/null)" ] || continue
+	AFFINITY=0x$(get_affinity $PID) || continue
+
+	die_if_not_zero $((AFFINITY & NEW_AFFINITY)) \
+		"Verifying isolation of first and last processor for PID $PID"
+done
+
+tuna --cpu=0,$NR_PROCESSORS --include
+
+AFFINITY=0x$(get_affinity 1)
+
+die_if_not_equal $((AFFINITY & NEW_AFFINITY)) $NEW_AFFINITY "Including first and last processor"
+
+taskset -p 0xff 1 > /dev/null
+
+NEW_AFFINITY=$((1 << NR_PROCESSORS | 1))
+
+tuna --cpu=0,$NR_PROCESSORS --thread 1 --move
+
+AFFINITY=0x$(get_affinity 1)
+
+die_if_not_equal $((AFFINITY & NEW_AFFINITY)) $NEW_AFFINITY "Moving init to just first and last processor"
+
+taskset -p $INITIAL_INIT_AFFINITY 1 > /dev/null
+rtctl --file $INITIAL reset
+
+echo 'PASS: Healthy tuna, no lead found, eat!'
+
+exit 0
