@@ -66,7 +66,7 @@ class cpus:
 
 	def reload(self):
 		for name in os.listdir(self.basedir):
-			if name[:3] != "cpu":
+			if name[:3] != "cpu" or not name[3].isdigit():
 				continue
 
 			if name in self.cpus:
