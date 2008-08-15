@@ -65,6 +65,7 @@ class cpus:
 		return self.cpus.has_key(key)
 
 	def reload(self):
+		sockets_to_sort = []
 		for name in os.listdir(self.basedir):
 			if name[:3] != "cpu" or not name[3].isdigit():
 				continue
@@ -79,6 +80,11 @@ class cpus:
 					self.sockets[socket].insert(0, c)
 				else:
 					self.sockets[socket] = [ c, ]
+
+				sockets_to_sort.append(socket)
+
+			for socket in sockets_to_sort:
+				self.sockets[socket].sort()
 
 if __name__ == '__main__':
 	import sys
