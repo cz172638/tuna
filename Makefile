@@ -1,5 +1,5 @@
 PACKAGE := tuna
-VERSION := $(shell rpm -q --qf '%{VERSION} ' --specfile rpm/SPECS/tuna.spec | cut -d' ' -f1)
+VERSION := $(shell rpm -q --qf '%{VERSION} ' --specfile rpm/SPECS/$(PACKAGE).spec | cut -d' ' -f1)
 
 rpmdirs:
 	@[ -d rpm/BUILD ]   || mkdir rpm/BUILD
