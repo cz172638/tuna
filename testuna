@@ -146,15 +146,17 @@ done
 
 NEW_AFFINITY=$((1 << NR_PROCESSORS | 1))
 
-tuna --cpu=0,$NR_PROCESSORS --isolate
+if [ $NR_PROCESSORS -gt 2 ]; then
+	tuna --cpu=0,$NR_PROCESSORS --isolate
 
-for PID in $(cd /proc; ls -d [0-9]*) ; do
-	[ -n "$(cat /proc/$PID/cmdline 2> /dev/null)" ] || continue
-	AFFINITY=0x$(get_affinity $PID) || continue
+	for PID in $(cd /proc; ls -d [0-9]*) ; do
+		[ -n "$(cat /proc/$PID/cmdline 2> /dev/null)" ] || continue
+		AFFINITY=0x$(get_affinity $PID) || continue
 
-	die_if_not_zero $((AFFINITY & NEW_AFFINITY)) \
-		"Verifying isolation of first and last processor for PID $PID"
-done
+		die_if_not_zero $((AFFINITY & NEW_AFFINITY)) \
+			"Verifying isolation of first and last processor for PID $PID"
+	done
+fi
 
 tuna --cpu=0,$NR_PROCESSORS --include
 
