@@ -6,7 +6,7 @@ import pygtk
 pygtk.require("2.0")
 
 import copy, ethtool, gtk, gobject, os, pango, procfs, re, schedutils, sys, tuna
-import sysfs
+import sysfs, math
 import gtk.glade
 
 try:
@@ -257,12 +257,30 @@ class cpuview:
 		vbox = window.get_child().get_child()
 		socket_ids = self.cpus.sockets.keys()
 		socket_ids.sort()
+
+		nr_sockets = len(socket_ids)
+		if nr_sockets > 1:
+			columns = math.ceil(math.sqrt(nr_sockets))
+			rows = math.ceil(nr_sockets / columns)
+			box = gtk.HBox()
+		else:
+			box = vbox
+
+		column = 1
 		for socket_id in socket_ids:
 			frame = cpu_socket_frame(socket_id,
 						 self.cpus.sockets[socket_id],
 						 self)
-			vbox.pack_start(frame, False, False)
+			box.pack_start(frame, False, False)
 			self.socket_frames[socket_id] = frame
+			if nr_sockets > 1:
+				if column == columns:
+					vbox.pack_start(box, True, True)
+					box = gtk.HBox()
+					column = 1
+				else:
+					column += 1
+
 		window.show_all()
 
 		self.cpus_filtered = cpus_filtered
