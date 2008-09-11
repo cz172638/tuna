@@ -246,7 +246,7 @@ class cpu_socket_frame(gtk.Frame):
 
 class cpuview:
 
-	def __init__(self, window, procview, irqview, cpus_filtered):
+	def __init__(self, vpaned, hpaned, window, procview, irqview, cpus_filtered):
 		self.cpus = sysfs.cpus()
 		self.cpustats = procfs.cpusstats()
 		self.socket_frames = {}
@@ -288,6 +288,17 @@ class cpuview:
 
 		self.previous_pid_affinities = None
 		self.previous_irq_affinities = None
+
+		req = frame.size_request()
+		# FIXME: what is the slack we have
+		# to add to every row and column?
+		width = req[0] + 16
+		height = req[1] + 20
+		if nr_sockets > 1:
+			width *= columns
+			height *= rows
+		vpaned.set_position(int(height))
+		hpaned.set_position(int(width))
 
 		self.timer = gobject.timeout_add(3000, self.refresh)
 
@@ -1328,7 +1339,9 @@ class gui:
 					 self.ps, show_kthreads, show_uthreads, cpus_filtered)
 		self.irqview = irqview(self.wtree.get_widget("irqlist"),
 				       self.irqs, self.ps, cpus_filtered)
-		self.cpuview = cpuview(self.wtree.get_widget("cpuview"),
+		self.cpuview = cpuview(self.wtree.get_widget("vpaned1"),
+				       self.wtree.get_widget("hpaned2"),
+				       self.wtree.get_widget("cpuview"),
 				       self.procview, self.irqview, cpus_filtered)
 
 		event_handlers = { "on_mainbig_window_delete_event"    : self.on_mainbig_window_delete_event,
