@@ -142,7 +142,7 @@ def list_to_cpustring(l):
 		prev = i
 	return ",".join(strings)
 
-def move_threads_to_cpu(new_affinity, pid_list):
+def move_threads_to_cpu(new_affinity, pid_list, set_affinity_warning = None):
 	changed = False
 
 	ps = procfs.pidstats()
@@ -154,8 +154,10 @@ def move_threads_to_cpu(new_affinity, pid_list):
 				curr_affinity = schedutils.get_affinity(pid)
 				if set(curr_affinity) == set(new_affinity):
 					changed = True
-				else:
+				elif set_affinity_warning:
 					set_affinity_warning(pid, new_affinity)
+				else:
+					print "move_threads_to_cpu: could not change pid %d affinity to %s" % (pid, new_affinity)
 
 			# See if this is the thread group leader
 			if not ps.has_key(pid):
@@ -169,8 +171,10 @@ def move_threads_to_cpu(new_affinity, pid_list):
 					curr_affinity = schedutils.get_affinity(tid)
 					if set(curr_affinity) == set(new_affinity):
 						changed = True
-					else:
+					elif set_affinity_warning:
 						set_affinity_warning(tid, new_affinity)
+					else:
+						print "move_threads_to_cpu: could not change pid %d affinity to %s" % (pid, new_affinity)
 		except SystemError:
 			# process died
 			continue
