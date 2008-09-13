@@ -41,7 +41,8 @@ def set_affinity_warning(tid, affinity):
 def drop_handler_move_threads_to_cpu(new_affinity, data):
 	pid_list = [ int(pid) for pid in data.split(",") ]
 
-	return tuna.move_threads_to_cpu(new_affinity, pid_list)
+	return tuna.move_threads_to_cpu(new_affinity, pid_list,
+					set_affinity_warning)
 
 def drop_handler_move_irqs_to_cpu(cpus, data):
 	irq_list = [ int(irq) for irq in data.split(",") ]
