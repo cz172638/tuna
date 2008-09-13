@@ -149,10 +149,10 @@ def move_threads_to_cpu(new_affinity, pid_list):
 	for pid in pid_list:
 		try:
 			curr_affinity = schedutils.get_affinity(pid)
-			if curr_affinity != new_affinity:
+			if set(curr_affinity) != set(new_affinity):
 				schedutils.set_affinity(pid, new_affinity)
 				curr_affinity = schedutils.get_affinity(pid)
-				if curr_affinity == new_affinity:
+				if set(curr_affinity) == set(new_affinity):
 					changed = True
 				else:
 					set_affinity_warning(pid, new_affinity)
@@ -164,10 +164,10 @@ def move_threads_to_cpu(new_affinity, pid_list):
 			threads = procfs.pidstats("/proc/%d/task" % pid)
 			for tid in threads.keys():
 				curr_affinity = schedutils.get_affinity(tid)
-				if curr_affinity != new_affinity:
+				if set(curr_affinity) != set(new_affinity):
 					schedutils.set_affinity(tid, new_affinity)
 					curr_affinity = schedutils.get_affinity(tid)
-					if curr_affinity == new_affinity:
+					if set(curr_affinity) == set(new_affinity):
 						changed = True
 					else:
 						set_affinity_warning(tid, new_affinity)
