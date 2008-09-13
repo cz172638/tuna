@@ -38,22 +38,15 @@ def set_affinity_warning(tid, affinity):
 	dialog.run()
 	dialog.destroy()
 
-def drop_handler_move_threads_to_cpu(cpu, data):
+def drop_handler_move_threads_to_cpu(new_affinity, data):
 	pid_list = [ int(pid) for pid in data.split(",") ]
-	if cpu >= 0:
-		new_affinity = [ cpu, ]
-	else:
-		new_affinity = range(-cpu)
 
-	tuna.move_threads_to_cpu(new_affinity, pid_list)
+	return tuna.move_threads_to_cpu(new_affinity, pid_list)
 
-def drop_handler_move_irqs_to_cpu(cpu, data):
+def drop_handler_move_irqs_to_cpu(cpus, data):
 	irq_list = [ int(irq) for irq in data.split(",") ]
-	if cpu >= 0:
-		new_affinity = [ 1 << cpu, ]
-	else:
-		cpu = -cpu
-		new_affinity = [ (1 << cpu) - 1, ]
+	new_affinity = [ reduce(lambda a, b: a | b,
+			      map(lambda cpu: 1 << cpu, cpus)), ]
 
 	for irq in irq_list:
 		tuna.set_irq_affinity(irq, new_affinity)
@@ -149,13 +142,13 @@ class cpu_socket_frame(gtk.Frame):
 			model = treeview.get_model()
 			path, position = drop_info
 			iter = model.get_iter(path)
-			cpu = model.get_value(iter, self.COL_CPU)
+			cpus = [ model.get_value(iter, self.COL_CPU), ]
 		else:
-			# Move to all CPUs
-			cpu = -self.nr_cpus
+			# Move to all CPUs in this socket
+			cpus = [ int(cpu.name[3:]) for cpu in self.cpus ]
 
 		if self.drop_handlers.has_key(source):
-			if self.drop_handlers[source][0](cpu, data):
+			if self.drop_handlers[source][0](cpus, data):
 				self.drop_handlers[source][1].refresh()
 		else:
 			print "cpu_socket_frame: unhandled drag source '%s'" % source
