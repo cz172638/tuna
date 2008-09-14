@@ -132,6 +132,24 @@ class cpu_socket_frame(gtk.Frame):
 		self.drop_handlers = { "pid": (drop_handler_move_threads_to_cpu, self.creator.procview),
 				       "irq": (drop_handler_move_irqs_to_cpu, self.creator.irqview), }
 
+		self.drag_dest_set(gtk.DEST_DEFAULT_ALL, DND_TARGETS,
+				   gtk.gdk.ACTION_DEFAULT | gtk.gdk.ACTION_MOVE)
+		self.connect("drag_data_received",
+			     self.on_frame_drag_data_received_data)
+
+	def on_frame_drag_data_received_data(self, w, context, x, y,
+					     selection, info, etime):
+		# Move to all CPUs in this socket
+		cpus = [ int(cpu.name[3:]) for cpu in self.cpus ]
+		# pid list, a irq list, etc
+		source, data = selection.data.split(":")
+
+		if self.drop_handlers.has_key(source):
+			if self.drop_handlers[source][0](cpus, data):
+				self.drop_handlers[source][1].refresh()
+		else:
+			print "cpu_socket_frame: unhandled drag source '%s'" % source
+
 	def on_drag_data_received_data(self, treeview, context, x, y,
 				       selection, info, etime):
 		drop_info = treeview.get_dest_row_at_pos(x, y)
