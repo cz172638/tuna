@@ -13,7 +13,7 @@
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 #   General Public License for more details.
 
-import getopt, procfs, sys
+import getopt, ethtool, procfs, schedutils, sys
 from tuna import tuna, sysfs
 
 try:
@@ -39,6 +39,7 @@ def usage():
 	-K, --no_kthreads		Operations will not affect kernel threads
 	-m, --move			move selected entities to CPU-LIST
 	-p, --priority=[POLICY]:RTPRIO	set thread scheduler POLICY and RTPRIO
+	-P, --show_threads		show thread list
 	-s, --save=FILENAME		save kthreads sched tunables to FILENAME
 	-S, --sockets=CPU-SOCKET-LIST   CPU-SOCKET-LIST affected by commands
 	-t, --threads=THREAD-LIST	THREAD-LIST affected by commands
@@ -75,15 +76,99 @@ def save(cpus, threads, filename):
 			del kthreads[name]
 	tuna.generate_rtgroups(filename, kthreads, get_nr_cpus())
 
+def ps_show_header(has_ctxt_switch_info):
+	print "%7s %6s %5s %7s       %s" % \
+		(" ", " ", " ", "thread",
+		 has_ctxt_switch_info and "ctxt_switches" or "")
+	print "%7s %6s %5s %7s%s %15s" % \
+		("pid", "SCHED_", "rtpri", "affinity",
+		 has_ctxt_switch_info and " %9s %12s" % ("voluntary", "nonvoluntary") or "",
+		 "cmd")
+
+def ps_show_thread(pid, affect_children, ps, cpuinfo, irqs, nics, has_ctxt_switch_info):
+	affinity = schedutils.get_affinity(pid)
+	if len(affinity) <= 4:
+		affinity = ",".join(str(a) for a in affinity)
+	else:
+		affinity = ",".join(str(hex(a)) for a in procfs.hexbitmask(affinity, cpuinfo.nr_cpus))
+	sched = schedutils.schedstr(schedutils.get_scheduler(pid))[6:]
+	rtprio = int(ps[pid]["stat"]["rt_priority"])
+	cmd = ps[pid]["stat"]["comm"]
+	users = ""
+	if cmd[:4] == "IRQ-":
+		try:
+			users = irqs[cmd[4:]]["users"]
+			for u in users:
+				if u in nics:
+					users[users.index(u)] = "%s(%s)" % (u, ethtool.get_module(u))
+			users = ",".join(users)
+		except:
+			users = "Not found in /proc/interrupts!"
+
+	ctxt_switch_info = ""
+	if has_ctxt_switch_info:
+		voluntary_ctxt_switches = int(ps[pid]["status"]["voluntary_ctxt_switches"])
+		nonvoluntary_ctxt_switches = int(ps[pid]["status"]["nonvoluntary_ctxt_switches"])
+		ctxt_switch_info = " %9d %12s" % (voluntary_ctxt_switches,
+						  nonvoluntary_ctxt_switches)
+	
+	if affect_children:
+		print "%6d " % pid,
+	else:
+		print "  %5d" % pid,
+	print "%6s %5d %8s%s %15s %s" % (sched, rtprio, affinity,
+					 ctxt_switch_info, cmd, users)
+	if affect_children and ps[pid].has_key("threads"):
+		for tid in ps[pid]["threads"].keys():
+			ps_show_thread(tid, False, ps[pid]["threads"],
+				       cpuinfo, irqs, nics,
+				       has_ctxt_switch_info)
+			
+
+def ps_show(ps, affect_children, cpuinfo, irqs, threads, cpus,
+	    show_uthreads, show_kthreads, has_ctxt_switch_info):
+
+	ps_list = []
+	for pid in ps.keys():
+		if threads and pid not in threads:
+			continue
+		iskth = tuna.iskthread(pid)
+		if not show_uthreads and not iskth:
+			continue
+		if not show_kthreads and iskth:
+			continue
+		affinity = schedutils.get_affinity(pid)
+		if cpus and not set(cpus).intersection(set(affinity)):
+			continue
+		ps_list.append(pid)
+
+	ps_list.sort()
+
+	nics = ethtool.get_active_devices()
+
+	for pid in ps_list:
+		ps_show_thread(pid, affect_children, ps, cpuinfo, irqs, nics, has_ctxt_switch_info)
+
+def ps(threads, cpus, show_uthreads, show_kthreads, affect_children):
+	ps = procfs.pidstats()
+	if affect_children:
+		ps.reload_threads()
+	cpuinfo = procfs.cpuinfo()
+	irqs = procfs.interrupts()
+	has_ctxt_switch_info = ps[1]["status"].has_key("voluntary_ctxt_switches")
+	ps_show_header(has_ctxt_switch_info)
+	ps_show(ps, affect_children, cpuinfo, irqs, threads, cpus,
+		show_uthreads, show_kthreads, has_ctxt_switch_info)
+
 def main():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
-					   "c:CfghiIKmp:s:S:t:UW",
+					   "c:CfghiIKmp:Ps:S:t:UW",
 					   ("cpus=", "affect_children",
 					    "filter", "gui", "help",
 					    "isolate", "include",
 					    "no_kthreads",
-					    "move", "priority",
+					    "move", "priority", "show_threads",
 					    "save=", "sockets=", "threads=",
 					    "no_uthreads", "what_is"))
 	except getopt.GetoptError, err:
@@ -125,6 +210,8 @@ def main():
 			tuna.include_cpus(cpus, get_nr_cpus())
 		elif o in ("-p", "--priority"):
 			tuna.threads_set_priority(threads, a, affect_children)
+		elif o in ("-P", "--show_threads"):
+			ps(threads, cpus, uthreads, kthreads, affect_children)
 		elif o in ("-m", "--move"):
 			if not cpus:
 				print "tuna: --move requires a cpu list!"
