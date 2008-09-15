@@ -86,7 +86,10 @@ class cpu_socket_frame(gtk.Frame):
 
 	def __init__(self, socket, cpus, creator):
 
-		gtk.Frame.__init__(self, "Socket %s" % socket)
+		if creator.nr_sockets > 1:
+			gtk.Frame.__init__(self, "Socket %s" % socket)
+		else:
+			gtk.Frame.__init__(self)
 
 		self.socket = socket
 		self.cpus = cpus
