@@ -121,8 +121,7 @@ def main():
 			if not cpus:
 				print "tuna: --include requires a cpu list!"
 				sys.exit(2)
-			for cpu in cpus:
-				tuna.include_cpu(cpu, get_nr_cpus())
+			tuna.include_cpus(cpus, get_nr_cpus())
 		elif o in ("-p", "--priority"):
 			tuna.threads_set_priority(threads, a, affect_children)
 		elif o in ("-m", "--move"):

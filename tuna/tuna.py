@@ -232,7 +232,7 @@ def isolate_cpus(cpus, nr_cpus):
 
 	return (previous_pid_affinities, previous_irq_affinities)
 
-def include_cpu(cpu, nr_cpus):
+def include_cpus(cpus, nr_cpus):
 	ps = procfs.pidstats()
 	ps.reload_threads()
 	previous_pid_affinities = {}
@@ -240,9 +240,9 @@ def include_cpu(cpu, nr_cpus):
 		if iskthread(pid):
 			continue
 		affinity = schedutils.get_affinity(pid)
-		if cpu not in affinity:
+		if set(affinity).intersection(set(cpus)) != set(cpus):
 			previous_pid_affinities[pid] = copy.copy(affinity)
-			affinity.append(cpu)
+			affinity = list(set(affinity + cpus))
 			schedutils.set_affinity(pid, affinity)
 
 		if not ps[pid].has_key("threads"):
@@ -252,9 +252,9 @@ def include_cpu(cpu, nr_cpus):
 			if iskthread(tid):
 				continue
 			affinity = schedutils.get_affinity(tid)
-			if cpu not in affinity:
+			if set(affinity).intersection(set(cpus)) != set(cpus):
 				previous_pid_affinities[tid] = copy.copy(affinity)
-				affinity.append(cpu)
+				affinity = list(set(affinity + cpus))
 				schedutils.set_affinity(tid, affinity)
 
 	del ps
@@ -267,9 +267,9 @@ def include_cpu(cpu, nr_cpus):
 		if not irqs[irq].has_key("affinity"):
 			continue
 		affinity = irqs[irq]["affinity"]
-		if cpu not in affinity:
+		if set(affinity).intersection(set(cpus)) != set(cpus):
 			previous_irq_affinities[irq] = copy.copy(affinity)
-			affinity.append(cpu)
+			affinity = list(set(affinity + cpus))
 			set_irq_affinity(int(irq),
 					 procfs.hexbitmask(affinity, nr_cpus))
 

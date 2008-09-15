@@ -326,7 +326,7 @@ class cpuview:
 
 	def include_cpu(self, cpu):
 		self.previous_pid_affinities, \
-		  self.previous_irq_affinities = tuna.include_cpu(cpu, self.cpus.nr_cpus)
+		  self.previous_irq_affinities = tuna.include_cpus([cpu,], self.cpus.nr_cpus)
 
 		if self.previous_pid_affinities:
 			self.procview.refresh()
