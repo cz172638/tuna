@@ -236,30 +236,34 @@ class cpu_socket_frame(gtk.Frame):
 		menu = gtk.Menu()
 
 		include = gtk.MenuItem("I_nclude CPU")
-		include_socket = gtk.MenuItem("I_nclude CPU Socket")
 		isolate = gtk.MenuItem("_Isolate CPU")
-		isolate_socket = gtk.MenuItem("_Isolate CPU Socket")
+		if self.creator.nr_sockets > 1:
+			include_socket = gtk.MenuItem("I_nclude CPU Socket")
+			isolate_socket = gtk.MenuItem("_Isolate CPU Socket")
 		restore = gtk.MenuItem("_Restore CPU")
 
 		menu.add(include)
-		menu.add(include_socket)
 		menu.add(isolate)
-		menu.add(isolate_socket)
+		if self.creator.nr_sockets > 1:
+			menu.add(include_socket)
+			menu.add(isolate_socket)
 		menu.add(restore)
 
 		include.connect_object('activate', self.include_cpu, event)
-		include_socket.connect_object('activate', self.include_cpu_socket, event)
 		isolate.connect_object('activate', self.isolate_cpu, event)
-		isolate_socket.connect_object('activate', self.isolate_cpu_socket, event)
+		if self.creator.nr_sockets > 1:
+			include_socket.connect_object('activate', self.include_cpu_socket, event)
+			isolate_socket.connect_object('activate', self.isolate_cpu_socket, event)
 		if not (self.creator.previous_pid_affinities or \
 			self.creator.previous_irq_affinities):
 			restore.set_sensitive(False)
 		restore.connect_object('activate', self.restore_cpu, event)
 
 		include.show()
-		include_socket.show()
 		isolate.show()
-		isolate_socket.show()
+		if self.creator.nr_sockets > 1:
+			include_socket.show()
+			isolate_socket.show()
 		restore.show()
 
 		menu.popup(None, None, None, event.button, event.time)
@@ -290,10 +294,10 @@ class cpuview:
 		socket_ids = self.cpus.sockets.keys()
 		socket_ids.sort()
 
-		nr_sockets = len(socket_ids)
-		if nr_sockets > 1:
-			columns = math.ceil(math.sqrt(nr_sockets))
-			rows = math.ceil(nr_sockets / columns)
+		self.nr_sockets = len(socket_ids)
+		if self.nr_sockets > 1:
+			columns = math.ceil(math.sqrt(self.nr_sockets))
+			rows = math.ceil(self.nr_sockets / columns)
 			box = gtk.HBox()
 		else:
 			box = vbox
@@ -305,7 +309,7 @@ class cpuview:
 						 self)
 			box.pack_start(frame, False, False)
 			self.socket_frames[socket_id] = frame
-			if nr_sockets > 1:
+			if self.nr_sockets > 1:
 				if column == columns:
 					vbox.pack_start(box, True, True)
 					box = gtk.HBox()
@@ -326,7 +330,7 @@ class cpuview:
 		# to add to every row and column?
 		width = req[0] + 16
 		height = req[1] + 20
-		if nr_sockets > 1:
+		if self.nr_sockets > 1:
 			width *= columns
 			height *= rows
 		vpaned.set_position(int(height))
