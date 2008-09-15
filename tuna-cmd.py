@@ -14,7 +14,7 @@
 #   General Public License for more details.
 
 import getopt, procfs, sys
-from tuna import tuna
+from tuna import tuna, sysfs
 
 try:
 	from sets import Set as set
@@ -40,6 +40,7 @@ def usage():
 	-m, --move			move selected entities to CPU-LIST
 	-p, --priority=[POLICY]:RTPRIO	set thread scheduler POLICY and RTPRIO
 	-s, --save=FILENAME		save kthreads sched tunables to FILENAME
+	-S, --sockets=CPU-SOCKET-LIST   CPU-SOCKET-LIST affected by commands
 	-t, --threads=THREAD-LIST	THREAD-LIST affected by commands
 	-U, --no_uthreads		Operations will not affect user threads
 	-W, --what_is			Provides help about selected entities'''
@@ -77,13 +78,13 @@ def save(cpus, threads, filename):
 def main():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
-					   "c:CfghiIKmp:s:t:UW",
+					   "c:CfghiIKmp:s:S:t:UW",
 					   ("cpus=", "affect_children",
 					    "filter", "gui", "help",
 					    "isolate", "include",
 					    "no_kthreads",
 					    "move", "priority",
-					    "save=", "threads=",
+					    "save=", "sockets=", "threads=",
 					    "no_uthreads", "what_is"))
 	except getopt.GetoptError, err:
 		usage()
@@ -121,8 +122,7 @@ def main():
 			if not cpus:
 				print "tuna: --include requires a cpu list!"
 				sys.exit(2)
-			for cpu in cpus:
-				tuna.include_cpu(cpu, get_nr_cpus())
+			tuna.include_cpus(cpus, get_nr_cpus())
 		elif o in ("-p", "--priority"):
 			tuna.threads_set_priority(threads, a, affect_children)
 		elif o in ("-m", "--move"):
@@ -135,6 +135,19 @@ def main():
 			tuna.move_threads_to_cpu(cpus, threads)
 		elif o in ("-s", "--save"):
 			save(cpus, threads, a)
+		elif o in ("-S", "--sockets"):
+			sockets = map(lambda socket: socket, a.split(","))
+			if not cpus:
+				cpus = []
+			cpu_info = sysfs.cpus()
+			for socket in sockets:
+				if not cpu_info.sockets.has_key(socket):
+					print "tuna: invalid socket %s, sockets available: %s" % \
+					      (socket,
+					       ", ".join(cpu_info.sockets.keys()))
+					sys.exit(2)
+				cpus += [ int(cpu.name[3:]) for cpu in cpu_info.sockets[socket] ]
+			cpus.sort()
 		elif o in ("-K", "--no_kthreads"):
 			kthreads = False
 		elif o in ("-U", "--no_uthreads"):

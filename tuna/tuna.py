@@ -142,20 +142,22 @@ def list_to_cpustring(l):
 		prev = i
 	return ",".join(strings)
 
-def move_threads_to_cpu(new_affinity, pid_list):
+def move_threads_to_cpu(new_affinity, pid_list, set_affinity_warning = None):
 	changed = False
 
 	ps = procfs.pidstats()
 	for pid in pid_list:
 		try:
 			curr_affinity = schedutils.get_affinity(pid)
-			if curr_affinity != new_affinity:
+			if set(curr_affinity) != set(new_affinity):
 				schedutils.set_affinity(pid, new_affinity)
 				curr_affinity = schedutils.get_affinity(pid)
-				if curr_affinity == new_affinity:
+				if set(curr_affinity) == set(new_affinity):
 					changed = True
-				else:
+				elif set_affinity_warning:
 					set_affinity_warning(pid, new_affinity)
+				else:
+					print "move_threads_to_cpu: could not change pid %d affinity to %s" % (pid, new_affinity)
 
 			# See if this is the thread group leader
 			if not ps.has_key(pid):
@@ -164,13 +166,15 @@ def move_threads_to_cpu(new_affinity, pid_list):
 			threads = procfs.pidstats("/proc/%d/task" % pid)
 			for tid in threads.keys():
 				curr_affinity = schedutils.get_affinity(tid)
-				if curr_affinity != new_affinity:
+				if set(curr_affinity) != set(new_affinity):
 					schedutils.set_affinity(tid, new_affinity)
 					curr_affinity = schedutils.get_affinity(tid)
-					if curr_affinity == new_affinity:
+					if set(curr_affinity) == set(new_affinity):
 						changed = True
-					else:
+					elif set_affinity_warning:
 						set_affinity_warning(tid, new_affinity)
+					else:
+						print "move_threads_to_cpu: could not change pid %d affinity to %s" % (pid, new_affinity)
 		except SystemError:
 			# process died
 			continue
@@ -228,7 +232,7 @@ def isolate_cpus(cpus, nr_cpus):
 
 	return (previous_pid_affinities, previous_irq_affinities)
 
-def include_cpu(cpu, nr_cpus):
+def include_cpus(cpus, nr_cpus):
 	ps = procfs.pidstats()
 	ps.reload_threads()
 	previous_pid_affinities = {}
@@ -236,9 +240,9 @@ def include_cpu(cpu, nr_cpus):
 		if iskthread(pid):
 			continue
 		affinity = schedutils.get_affinity(pid)
-		if cpu not in affinity:
+		if set(affinity).intersection(set(cpus)) != set(cpus):
 			previous_pid_affinities[pid] = copy.copy(affinity)
-			affinity.append(cpu)
+			affinity = list(set(affinity + cpus))
 			schedutils.set_affinity(pid, affinity)
 
 		if not ps[pid].has_key("threads"):
@@ -248,9 +252,9 @@ def include_cpu(cpu, nr_cpus):
 			if iskthread(tid):
 				continue
 			affinity = schedutils.get_affinity(tid)
-			if cpu not in affinity:
+			if set(affinity).intersection(set(cpus)) != set(cpus):
 				previous_pid_affinities[tid] = copy.copy(affinity)
-				affinity.append(cpu)
+				affinity = list(set(affinity + cpus))
 				schedutils.set_affinity(tid, affinity)
 
 	del ps
@@ -263,9 +267,9 @@ def include_cpu(cpu, nr_cpus):
 		if not irqs[irq].has_key("affinity"):
 			continue
 		affinity = irqs[irq]["affinity"]
-		if cpu not in affinity:
+		if set(affinity).intersection(set(cpus)) != set(cpus):
 			previous_irq_affinities[irq] = copy.copy(affinity)
-			affinity.append(cpu)
+			affinity = list(set(affinity + cpus))
 			set_irq_affinity(int(irq),
 					 procfs.hexbitmask(affinity, nr_cpus))
 

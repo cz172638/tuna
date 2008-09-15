@@ -26,19 +26,23 @@
                 <property name="border_width">3</property>
                 <property name="position">200</property>
                 <child>
-                  <widget class="GtkScrolledWindow" id="scrolledwindow1">
+                  <widget class="GtkScrolledWindow" id="cpuview">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="hscrollbar_policy">GTK_POLICY_NEVER</property>
+                    <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
                     <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
                     <property name="shadow_type">GTK_SHADOW_ETCHED_IN</property>
                     <child>
-                      <widget class="GtkTreeView" id="cpuview">
+                      <widget class="GtkViewport" id="viewport2">
                         <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="border_width">2</property>
-                        <property name="enable_search">False</property>
-                        <signal name="button_press_event" handler="on_cpuview_button_press_event"/>
+                        <child>
+                          <widget class="GtkVBox" id="cpuview_box">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="border_width">2</property>
+                            <signal name="button_press_event" handler="on_cpuview_button_press_event"/>
+                          </widget>
+                        </child>
                       </widget>
                     </child>
                   </widget>

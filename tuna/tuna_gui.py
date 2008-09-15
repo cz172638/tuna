@@ -6,6 +6,7 @@ import pygtk
 pygtk.require("2.0")
 
 import copy, ethtool, gtk, gobject, os, pango, procfs, re, schedutils, sys, tuna
+import sysfs, math
 import gtk.glade
 
 try:
@@ -37,22 +38,16 @@ def set_affinity_warning(tid, affinity):
 	dialog.run()
 	dialog.destroy()
 
-def drop_handler_move_threads_to_cpu(cpu, data):
+def drop_handler_move_threads_to_cpu(new_affinity, data):
 	pid_list = [ int(pid) for pid in data.split(",") ]
-	if cpu >= 0:
-		new_affinity = [ cpu, ]
-	else:
-		new_affinity = range(-cpu)
 
-	tuna.move_threads_to_cpu(new_affinity, pid_list)
+	return tuna.move_threads_to_cpu(new_affinity, pid_list,
+					set_affinity_warning)
 
-def drop_handler_move_irqs_to_cpu(cpu, data):
+def drop_handler_move_irqs_to_cpu(cpus, data):
 	irq_list = [ int(irq) for irq in data.split(",") ]
-	if cpu >= 0:
-		new_affinity = [ 1 << cpu, ]
-	else:
-		cpu = -cpu
-		new_affinity = [ (1 << cpu) - 1, ]
+	new_affinity = [ reduce(lambda a, b: a | b,
+			      map(lambda cpu: 1 << cpu, cpus)), ]
 
 	for irq in irq_list:
 		tuna.set_irq_affinity(irq, new_affinity)
@@ -85,26 +80,28 @@ def generate_list_store_columns_with_attr(columns):
 	for column in columns:
 		yield gobject.TYPE_UINT
 
-class cpuview:
+class cpu_socket_frame(gtk.Frame):
 
 	( COL_FILTER, COL_CPU, COL_USAGE ) = range(3)
 
-	def __init__(self, treeview, procview, irqview, cpus_filtered):
-		self.cpustats = procfs.cpusstats()
-		self.procview = procview
-		self.irqview = irqview
-		self.treeview = treeview
+	def __init__(self, socket, cpus, creator):
+
+		gtk.Frame.__init__(self, "Socket %s" % socket)
+
+		self.socket = socket
+		self.cpus = cpus
+		self.nr_cpus = len(cpus)
+		self.creator = creator
+
 		self.list_store = gtk.ListStore(gobject.TYPE_BOOLEAN,
 						gobject.TYPE_UINT,
 						gobject.TYPE_UINT)
-		self.treeview.set_model(self.list_store)
-		self.nr_cpus = len(self.cpustats) - 1
 
-		model = self.treeview.get_model()
+		self.treeview = gtk.TreeView(self.list_store)
 
 		# Filter column
 		renderer = gtk.CellRendererToggle()
-		renderer.connect('toggled', self.filter_toggled, model)
+		renderer.connect('toggled', self.filter_toggled, self.list_store)
 		column = gtk.TreeViewColumn('Filter', renderer, active = self.COL_FILTER)
 		self.treeview.append_column(column)
 
@@ -123,19 +120,71 @@ class cpuview:
 						    text = self.COL_USAGE)
 		self.treeview.append_column(column)
 
+		self.add(self.treeview)
+
 		self.treeview.enable_model_drag_dest(DND_TARGETS,
 						     gtk.gdk.ACTION_DEFAULT)
 		self.treeview.connect("drag_data_received",
 		 		       self.on_drag_data_received_data)
+		self.treeview.connect("button_press_event",
+		 		       self.on_cpu_socket_frame_button_press_event)
 
-		self.timer = gobject.timeout_add(3000, self.refresh)
+		self.drop_handlers = { "pid": (drop_handler_move_threads_to_cpu, self.creator.procview),
+				       "irq": (drop_handler_move_irqs_to_cpu, self.creator.irqview), }
 
-		self.drop_handlers = { "pid": (drop_handler_move_threads_to_cpu, self.procview),
-				       "irq": (drop_handler_move_irqs_to_cpu, self.irqview), }
+		self.drag_dest_set(gtk.DEST_DEFAULT_ALL, DND_TARGETS,
+				   gtk.gdk.ACTION_DEFAULT | gtk.gdk.ACTION_MOVE)
+		self.connect("drag_data_received",
+			     self.on_frame_drag_data_received_data)
 
-		self.previous_pid_affinities = None
-		self.previous_irq_affinities = None
-		self.cpus_filtered = cpus_filtered
+	def on_frame_drag_data_received_data(self, w, context, x, y,
+					     selection, info, etime):
+		# Move to all CPUs in this socket
+		cpus = [ int(cpu.name[3:]) for cpu in self.cpus ]
+		# pid list, a irq list, etc
+		source, data = selection.data.split(":")
+
+		if self.drop_handlers.has_key(source):
+			if self.drop_handlers[source][0](cpus, data):
+				self.drop_handlers[source][1].refresh()
+		else:
+			print "cpu_socket_frame: unhandled drag source '%s'" % source
+
+	def on_drag_data_received_data(self, treeview, context, x, y,
+				       selection, info, etime):
+		drop_info = treeview.get_dest_row_at_pos(x, y)
+
+		# pid list, a irq list, etc
+		source, data = selection.data.split(":")
+
+		if drop_info:
+			model = treeview.get_model()
+			path, position = drop_info
+			iter = model.get_iter(path)
+			cpus = [ model.get_value(iter, self.COL_CPU), ]
+		else:
+			# Move to all CPUs in this socket
+			cpus = [ int(cpu.name[3:]) for cpu in self.cpus ]
+
+		if self.drop_handlers.has_key(source):
+			if self.drop_handlers[source][0](cpus, data):
+				self.drop_handlers[source][1].refresh()
+		else:
+			print "cpu_socket_frame: unhandled drag source '%s'" % source
+
+	def refresh(self):
+		self.list_store.clear()
+		for i in range(self.nr_cpus):
+			cpu = self.cpus[i]
+			cpunr = int(cpu.name[3:])
+			usage = self.creator.cpustats[cpunr + 1].usage
+
+			iter = self.list_store.append()
+			self.list_store.set(iter,
+					    self.COL_FILTER, cpunr not in self.creator.cpus_filtered,
+					    self.COL_CPU, cpunr,
+					    self.COL_USAGE, int(usage))
+		self.treeview.show_all()
 
 	def isolate_cpu(self, a):
 		ret = self.treeview.get_path_at_pos(self.last_x, self.last_y)
@@ -146,14 +195,8 @@ class cpuview:
 			return
 		row = self.list_store.get_iter(path)
 		cpu = self.list_store.get_value(row, self.COL_CPU)
-		self.previous_pid_affinities, \
-		  self.previous_irq_affinities = tuna.isolate_cpus([cpu,], self.nr_cpus)
 
-		if self.previous_pid_affinities:
-			self.procview.refresh()
-
-		if self.previous_irq_affinities:
-			self.irqview.refresh()
+		self.creator.isolate_cpus([cpu,])
 
 	def include_cpu(self, a):
 		ret = self.treeview.get_path_at_pos(self.last_x, self.last_y)
@@ -164,8 +207,136 @@ class cpuview:
 			return
 		row = self.list_store.get_iter(path)
 		cpu = self.list_store.get_value(row, self.COL_CPU)
+
+		self.creator.include_cpus([cpu,])
+
+	def restore_cpu(self, a):
+
+		self.creator.restore_cpu()
+
+	def isolate_cpu_socket(self, a):
+
+		# Isolate all CPUs in this socket
+		cpus = [ int(cpu.name[3:]) for cpu in self.cpus ]
+		self.creator.isolate_cpus(cpus)
+
+	def include_cpu_socket(self, a):
+
+		# Include all CPUs in this socket
+		cpus = [ int(cpu.name[3:]) for cpu in self.cpus ]
+		self.creator.include_cpus(cpus)
+
+	def on_cpu_socket_frame_button_press_event(self, treeview, event):
+		if event.type != gtk.gdk.BUTTON_PRESS or event.button != 3:
+			return
+
+		self.last_x = int(event.x)
+		self.last_y = int(event.y)
+
+		menu = gtk.Menu()
+
+		include = gtk.MenuItem("I_nclude CPU")
+		include_socket = gtk.MenuItem("I_nclude CPU Socket")
+		isolate = gtk.MenuItem("_Isolate CPU")
+		isolate_socket = gtk.MenuItem("_Isolate CPU Socket")
+		restore = gtk.MenuItem("_Restore CPU")
+
+		menu.add(include)
+		menu.add(include_socket)
+		menu.add(isolate)
+		menu.add(isolate_socket)
+		menu.add(restore)
+
+		include.connect_object('activate', self.include_cpu, event)
+		include_socket.connect_object('activate', self.include_cpu_socket, event)
+		isolate.connect_object('activate', self.isolate_cpu, event)
+		isolate_socket.connect_object('activate', self.isolate_cpu_socket, event)
+		if not (self.creator.previous_pid_affinities or \
+			self.creator.previous_irq_affinities):
+			restore.set_sensitive(False)
+		restore.connect_object('activate', self.restore_cpu, event)
+
+		include.show()
+		include_socket.show()
+		isolate.show()
+		isolate_socket.show()
+		restore.show()
+
+		menu.popup(None, None, None, event.button, event.time)
+
+	def filter_toggled(self, cell, path, model):
+		# get toggled iter
+		iter = model.get_iter((int(path),))
+		enabled = model.get_value(iter, self.COL_FILTER)
+		cpu = model.get_value(iter, self.COL_CPU)
+
+		enabled = not enabled
+		self.creator.toggle_mask_cpu(cpu, enabled)
+
+		# set new value
+		model.set(iter, self.COL_FILTER, enabled)
+
+class cpuview:
+
+	def __init__(self, vpaned, hpaned, window, procview, irqview, cpus_filtered):
+		self.cpus = sysfs.cpus()
+		self.cpustats = procfs.cpusstats()
+		self.socket_frames = {}
+
+		self.procview = procview
+		self.irqview = irqview
+
+		vbox = window.get_child().get_child()
+		socket_ids = self.cpus.sockets.keys()
+		socket_ids.sort()
+
+		nr_sockets = len(socket_ids)
+		if nr_sockets > 1:
+			columns = math.ceil(math.sqrt(nr_sockets))
+			rows = math.ceil(nr_sockets / columns)
+			box = gtk.HBox()
+		else:
+			box = vbox
+
+		column = 1
+		for socket_id in socket_ids:
+			frame = cpu_socket_frame(socket_id,
+						 self.cpus.sockets[socket_id],
+						 self)
+			box.pack_start(frame, False, False)
+			self.socket_frames[socket_id] = frame
+			if nr_sockets > 1:
+				if column == columns:
+					vbox.pack_start(box, True, True)
+					box = gtk.HBox()
+					column = 1
+				else:
+					column += 1
+
+		window.show_all()
+
+		self.cpus_filtered = cpus_filtered
+		self.refresh()
+
+		self.previous_pid_affinities = None
+		self.previous_irq_affinities = None
+
+		req = frame.size_request()
+		# FIXME: what is the slack we have
+		# to add to every row and column?
+		width = req[0] + 16
+		height = req[1] + 20
+		if nr_sockets > 1:
+			width *= columns
+			height *= rows
+		vpaned.set_position(int(height))
+		hpaned.set_position(int(width))
+
+		self.timer = gobject.timeout_add(3000, self.refresh)
+
+	def isolate_cpus(self, cpus):
 		self.previous_pid_affinities, \
-		  self.previous_irq_affinities = tuna.include_cpu(cpu, self.nr_cpus)
+		  self.previous_irq_affinities = tuna.isolate_cpus(cpus, self.cpus.nr_cpus)
 
 		if self.previous_pid_affinities:
 			self.procview.refresh()
@@ -173,7 +344,17 @@ class cpuview:
 		if self.previous_irq_affinities:
 			self.irqview.refresh()
 
-	def restore_cpu(self, a):
+	def include_cpus(self, cpus):
+		self.previous_pid_affinities, \
+		  self.previous_irq_affinities = tuna.include_cpus(cpus, self.cpus.nr_cpus)
+
+		if self.previous_pid_affinities:
+			self.procview.refresh()
+
+		if self.previous_irq_affinities:
+			self.irqview.refresh()
+
+	def restore_cpu(self):
 		if not (self.previous_pid_affinities or \
 			self.previous_irq_affinities):
 			return
@@ -188,71 +369,12 @@ class cpuview:
 		for irq in affinities.keys():
 			tuna.set_irq_affinity(int(irq),
 					      procfs.hexbitmask(affinities[irq],
-								self.nr_cpus))
+								self.cpus.nr_cpus))
 
 		self.previous_pid_affinities = None
 		self.previous_irq_affinities = None
 
-	def on_cpuview_button_press_event(self, treeview, event):
-		if event.type != gtk.gdk.BUTTON_PRESS or event.button != 3:
-			return
-
-		self.last_x = int(event.x)
-		self.last_y = int(event.y)
-
-		menu = gtk.Menu()
-
-		include = gtk.MenuItem("I_nclude CPU")
-		isolate = gtk.MenuItem("_Isolate CPU")
-		restore = gtk.MenuItem("_Restore CPU")
-
-		menu.add(include)
-		menu.add(isolate)
-		menu.add(restore)
-
-		include.connect_object('activate', self.include_cpu, event)
-		isolate.connect_object('activate', self.isolate_cpu, event)
-		if not (self.previous_pid_affinities or \
-			self.previous_irq_affinities):
-			restore.set_sensitive(False)
-		restore.connect_object('activate', self.restore_cpu, event)
-
-		include.show()
-		isolate.show()
-		restore.show()
-
-		menu.popup(None, None, None, event.button, event.time)
-
-	def on_drag_data_received_data(self, treeview, context, x, y,
-				       selection, info, etime):
-		drop_info = treeview.get_dest_row_at_pos(x, y)
-
-		# pid list, a irq list, etc
-		source, data = selection.data.split(":")
-
-		if drop_info:
-			model = treeview.get_model()
-			path, position = drop_info
-			iter = model.get_iter(path)
-			cpu = model.get_value(iter, self.COL_CPU)
-		else:
-			# Move to all CPUs
-			cpu = -self.nr_cpus
-
-		if self.drop_handlers.has_key(source):
-			if self.drop_handlers[source][0](cpu, data):
-				self.drop_handlers[source][1].refresh()
-		else:
-			print "cpuview: unhandled drag source '%s'" % source
-
-	def filter_toggled(self, cell, path, model):
-		# get toggled iter
-		iter = model.get_iter((int(path),))
-		enabled = model.get_value(iter, self.COL_FILTER)
-		cpu = model.get_value(iter, self.COL_CPU)
-
-		enabled = not enabled
-
+	def toggle_mask_cpu(self, cpu, enabled):
 		if enabled:
 			if cpu in self.cpus_filtered:
 				self.cpus_filtered.remove(cpu)
@@ -263,19 +385,10 @@ class cpuview:
 		self.procview.toggle_mask_cpu(cpu, enabled)
 		self.irqview.toggle_mask_cpu(cpu, enabled)
 
-		# set new value
-		model.set(iter, self.COL_FILTER, enabled)
-
 	def refresh(self):
-		self.list_store.clear()
 		self.cpustats.reload()
-		for cpunr in range(self.nr_cpus):
-			cpu = self.list_store.append()
-			usage = self.cpustats[cpunr + 1].usage
-			self.list_store.set(cpu, self.COL_FILTER, cpunr not in self.cpus_filtered,
-						 self.COL_CPU, cpunr,
-						 self.COL_USAGE, int(usage))
-		self.treeview.show_all()
+		for frame in self.socket_frames.keys():
+			self.socket_frames[frame].refresh()
 		return True
 
 def on_affinity_text_changed(self):
@@ -1258,13 +1371,14 @@ class gui:
 					 self.ps, show_kthreads, show_uthreads, cpus_filtered)
 		self.irqview = irqview(self.wtree.get_widget("irqlist"),
 				       self.irqs, self.ps, cpus_filtered)
-		self.cpuview = cpuview(self.wtree.get_widget("cpuview"),
+		self.cpuview = cpuview(self.wtree.get_widget("vpaned1"),
+				       self.wtree.get_widget("hpaned2"),
+				       self.wtree.get_widget("cpuview"),
 				       self.procview, self.irqview, cpus_filtered)
 
 		event_handlers = { "on_mainbig_window_delete_event"    : self.on_mainbig_window_delete_event,
 				   "on_processlist_button_press_event" : self.procview.on_processlist_button_press_event,
-				   "on_irqlist_button_press_event"     : self.irqview.on_irqlist_button_press_event,
-				   "on_cpuview_button_press_event"     : self.cpuview.on_cpuview_button_press_event }
+				   "on_irqlist_button_press_event"     : self.irqview.on_irqlist_button_press_event }
 		self.wtree.signal_autoconnect(event_handlers)
 
 		self.ps.reload_threads()
