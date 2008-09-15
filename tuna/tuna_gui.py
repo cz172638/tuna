@@ -196,7 +196,7 @@ class cpu_socket_frame(gtk.Frame):
 		row = self.list_store.get_iter(path)
 		cpu = self.list_store.get_value(row, self.COL_CPU)
 
-		self.creator.isolate_cpu(cpu)
+		self.creator.isolate_cpus([cpu,])
 
 	def include_cpu(self, a):
 		ret = self.treeview.get_path_at_pos(self.last_x, self.last_y)
@@ -208,7 +208,7 @@ class cpu_socket_frame(gtk.Frame):
 		row = self.list_store.get_iter(path)
 		cpu = self.list_store.get_value(row, self.COL_CPU)
 
-		self.creator.include_cpu(cpu)
+		self.creator.include_cpus([cpu,])
 
 	def restore_cpu(self, a):
 
@@ -314,9 +314,9 @@ class cpuview:
 
 		self.timer = gobject.timeout_add(3000, self.refresh)
 
-	def isolate_cpu(self, cpu):
+	def isolate_cpus(self, cpus):
 		self.previous_pid_affinities, \
-		  self.previous_irq_affinities = tuna.isolate_cpus([cpu,], self.cpus.nr_cpus)
+		  self.previous_irq_affinities = tuna.isolate_cpus(cpus, self.cpus.nr_cpus)
 
 		if self.previous_pid_affinities:
 			self.procview.refresh()
@@ -324,9 +324,9 @@ class cpuview:
 		if self.previous_irq_affinities:
 			self.irqview.refresh()
 
-	def include_cpu(self, cpu):
+	def include_cpus(self, cpus):
 		self.previous_pid_affinities, \
-		  self.previous_irq_affinities = tuna.include_cpus([cpu,], self.cpus.nr_cpus)
+		  self.previous_irq_affinities = tuna.include_cpus(cpus, self.cpus.nr_cpus)
 
 		if self.previous_pid_affinities:
 			self.procview.refresh()
