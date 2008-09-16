@@ -1,7 +1,7 @@
 #! /usr/bin/python
 # -*- python -*-
 # -*- coding: utf-8 -*-
-#   tuna - Application Tuning Gru
+#   tuna - Application Tuning GUI
 #   Copyright (C) 2008 Red Hat Inc.
 #
 #   This application is free software; you can redistribute it and/or

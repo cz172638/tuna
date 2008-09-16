@@ -1098,7 +1098,7 @@ class procview:
 	def show(self, force_refresh = False):
 		# Start with the first row, if there is one, on the
 		# process list. If the first time update_rows will just
-		# have everthing in new_tids and append_new_tids will
+		# have everything in new_tids and append_new_tids will
 		# create the rows.
 		if not self.refreshing and not force_refresh:
 			return
@@ -1277,9 +1277,9 @@ class procview:
 						   "Now you can use it with rtctl:\n\n"
 						   "rtctl --file %s reset\n\n"
 						   "If you want the changes to be in "
-						   "effect everytime you boot the system "
+						   "effect every time you boot the system "
 						   "please move %s to /etc/rtgroups\n\n"
-						   "Do you want do do that now?" % (filename, filename))
+						   "Do you want to do that now?" % (filename, filename))
 			response = dialog.run()
 			dialog.destroy()
 			if response == gtk.RESPONSE_YES:
@@ -1443,7 +1443,7 @@ class gui:
 					   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
 					   gtk.MESSAGE_WARNING,
 					   gtk.BUTTONS_YES_NO,
-					   "Root priviledge required\n\n" + \
+					   "Root privilege required\n\n" + \
 					   "Some functions will not work without root " + \
 					   "privilege.\nDo you want to continue?")
 		ret = dialog.run()
