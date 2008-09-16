@@ -971,8 +971,8 @@ class procview:
 		   list_store_column("Policy", gobject.TYPE_STRING),
 		   list_store_column("Priority"),
 		   list_store_column("Affinity", gobject.TYPE_STRING),
-		   list_store_column("VolCtxtSwitch", gobject.TYPE_INT),
-		   list_store_column("NonVolCtxtSwitch", gobject.TYPE_INT),
+		   list_store_column("VolCtxtSwitch", gobject.TYPE_UINT),
+		   list_store_column("NonVolCtxtSwitch", gobject.TYPE_UINT),
 		   list_store_column("Command Line", gobject.TYPE_STRING))
 
 	def __init__(self, treeview, ps,
