@@ -156,9 +156,13 @@ def ps(threads, cpus, show_uthreads, show_kthreads, affect_children):
 	cpuinfo = procfs.cpuinfo()
 	irqs = procfs.interrupts()
 	has_ctxt_switch_info = ps[1]["status"].has_key("voluntary_ctxt_switches")
-	ps_show_header(has_ctxt_switch_info)
-	ps_show(ps, affect_children, cpuinfo, irqs, threads, cpus,
-		show_uthreads, show_kthreads, has_ctxt_switch_info)
+	try:
+		ps_show_header(has_ctxt_switch_info)
+		ps_show(ps, affect_children, cpuinfo, irqs, threads, cpus,
+			show_uthreads, show_kthreads, has_ctxt_switch_info)
+	except IOError:
+		# 'tuna -P | head' for instance
+		pass
 
 def main():
 	try:
