@@ -28,6 +28,10 @@ get_nr_processors() {
 	echo $(grep -i "^processor.*: " /proc/cpuinfo | tail -1 | cut -d ':' -f 2)
 }
 
+get_nr_cpu_sockets() {
+	echo $(grep "^physical id" /proc/cpuinfo | cut -d: -f2 | sort -u | wc -l)
+}
+
 die() {
 	[ -z "$VERBOSE" ] && echo -n "$2: "
 	echo $1
@@ -173,6 +177,27 @@ tuna --cpu=0,$NR_PROCESSORS --thread 1 --move
 AFFINITY=0x$(get_affinity 1)
 
 die_if_not_equal $((AFFINITY & NEW_AFFINITY)) $NEW_AFFINITY "Moving init to just first and last processor"
+
+NR_CPU_SOCKETS=$(get_nr_cpu_sockets)
+if [ $NR_CPU_SOCKETS -ge 2 ]; then
+	CPU1_SIBLINGS=$(printf "%d" 0x$(cat /sys/devices/system/cpu/cpu1/topology/core_siblings | cut -d',' -f2))
+	CPU1_SOCKET=$(cat /sys/devices/system/cpu/cpu1/topology/physical_package_id)
+
+	tuna --sockets=$CPU1_SOCKET --isolate
+	AFFINITY=0x$(get_affinity 1)
+	die_if_not_zero $((AFFINITY & CPU1_SIBLINGS)) \
+		"Verifying isolation of socket $CPU1_SOCKET"
+
+	tuna --sockets=$CPU1_SOCKET --include
+	AFFINITY=0x$(get_affinity 1)
+	die_if_not_equal $((AFFINITY & CPU1_SIBLINGS)) $CPU1_SIBLINGS \
+		"Verifying inclusion of socket $CPU1_SOCKET"
+
+	tuna --sockets=$CPU1_SOCKET --isolate
+	tuna --sockets=$CPU1_SOCKET --thread 1 --move
+	AFFINITY=0x$(get_affinity 1)
+	die_if_not_equal $((AFFINITY & CPU1_SIBLINGS)) $CPU1_SIBLINGS "Moving init to CPU socket $CPU1_SOCKET"
+fi
 
 taskset -p $INITIAL_INIT_AFFINITY 1 > /dev/null
 rtctl --file $INITIAL reset
