@@ -179,7 +179,7 @@ def main():
 					    "filter", "gui", "help",
 					    "isolate", "include",
 					    "no_kthreads",
-					    "move", "priority", "show_threads",
+					    "move", "priority=", "show_threads",
 					    "save=", "sockets=", "threads=",
 					    "no_uthreads", "what_is"))
 	except getopt.GetoptError, err:
