@@ -148,10 +148,16 @@ def move_threads_to_cpu(new_affinity, pid_list, set_affinity_warning = None):
 	ps = procfs.pidstats()
 	for pid in pid_list:
 		try:
-			curr_affinity = schedutils.get_affinity(pid)
-			if set(curr_affinity) != set(new_affinity):
-				schedutils.set_affinity(pid, new_affinity)
+			try:
 				curr_affinity = schedutils.get_affinity(pid)
+			except SystemError: # (3, 'No such process')
+				continue
+			if set(curr_affinity) != set(new_affinity):
+				try:
+					schedutils.set_affinity(pid, new_affinity)
+					curr_affinity = schedutils.get_affinity(pid)
+				except SystemError: # (3, 'No such process')
+					continue
 				if set(curr_affinity) == set(new_affinity):
 					changed = True
 				elif set_affinity_warning:
@@ -165,10 +171,16 @@ def move_threads_to_cpu(new_affinity, pid_list, set_affinity_warning = None):
 
 			threads = procfs.pidstats("/proc/%d/task" % pid)
 			for tid in threads.keys():
-				curr_affinity = schedutils.get_affinity(tid)
-				if set(curr_affinity) != set(new_affinity):
-					schedutils.set_affinity(tid, new_affinity)
+				try:
 					curr_affinity = schedutils.get_affinity(tid)
+				except SystemError: # (3, 'No such process')
+					continue
+				if set(curr_affinity) != set(new_affinity):
+					try:
+						schedutils.set_affinity(tid, new_affinity)
+						curr_affinity = schedutils.get_affinity(tid)
+					except SystemError: # (3, 'No such process')
+						continue
 					if set(curr_affinity) == set(new_affinity):
 						changed = True
 					elif set_affinity_warning:
@@ -195,11 +207,17 @@ def isolate_cpus(cpus, nr_cpus):
 	for pid in ps.keys():
 		if iskthread(pid):
 			continue
-		affinity = schedutils.get_affinity(pid)
+		try:
+			affinity = schedutils.get_affinity(pid)
+		except SystemError: # (3, 'No such process')
+			continue
 		if set(affinity).intersection(set(cpus)):
 			previous_pid_affinities[pid] = copy.copy(affinity)
 			affinity = affinity_remove_cpus(affinity, cpus, nr_cpus)
-			schedutils.set_affinity(pid, affinity)
+			try:
+				schedutils.set_affinity(pid, affinity)
+			except SystemError: # (3, 'No such process')
+				continue
 
 		if not ps[pid].has_key("threads"):
 			continue
@@ -207,11 +225,17 @@ def isolate_cpus(cpus, nr_cpus):
 		for tid in threads.keys():
 			if iskthread(tid):
 				continue
-			affinity = schedutils.get_affinity(tid)
+			try:
+				affinity = schedutils.get_affinity(tid)
+			except SystemError: # (3, 'No such process')
+				continue
 			if set(affinity).intersection(set(cpus)):
 				previous_pid_affinities[tid] = copy.copy(affinity)
 				affinity = affinity_remove_cpus(affinity, cpus, nr_cpus)
-				schedutils.set_affinity(tid, affinity)
+				try:
+					schedutils.set_affinity(tid, affinity)
+				except SystemError: # (3, 'No such process')
+					continue
 
 	del ps
 
@@ -239,11 +263,17 @@ def include_cpus(cpus, nr_cpus):
 	for pid in ps.keys():
 		if iskthread(pid):
 			continue
-		affinity = schedutils.get_affinity(pid)
+		try:
+			affinity = schedutils.get_affinity(pid)
+		except SystemError: # (3, 'No such process')
+			continue
 		if set(affinity).intersection(set(cpus)) != set(cpus):
 			previous_pid_affinities[pid] = copy.copy(affinity)
 			affinity = list(set(affinity + cpus))
-			schedutils.set_affinity(pid, affinity)
+			try:
+				schedutils.set_affinity(pid, affinity)
+			except SystemError: # (3, 'No such process')
+				continue
 
 		if not ps[pid].has_key("threads"):
 			continue
@@ -251,11 +281,17 @@ def include_cpus(cpus, nr_cpus):
 		for tid in threads.keys():
 			if iskthread(tid):
 				continue
-			affinity = schedutils.get_affinity(tid)
+			try:
+				affinity = schedutils.get_affinity(tid)
+			except SystemError: # (3, 'No such process')
+				continue
 			if set(affinity).intersection(set(cpus)) != set(cpus):
 				previous_pid_affinities[tid] = copy.copy(affinity)
 				affinity = list(set(affinity + cpus))
-				schedutils.set_affinity(tid, affinity)
+				try:
+					schedutils.set_affinity(tid, affinity)
+				except SystemError: # (3, 'No such process')
+					continue
 
 	del ps
 
@@ -298,7 +334,11 @@ def get_irq_affinity_text(irqs, irq):
 
 def thread_filtered(tid, cpus_filtered, show_kthreads, show_uthreads):
 	if cpus_filtered:
-		affinity = schedutils.get_affinity(tid)
+		try:
+			affinity = schedutils.get_affinity(tid)
+		except SystemError: # (3, 'No such process')
+			return False
+
 		if set(cpus_filtered + affinity) == set(cpus_filtered):
 			return True
 
@@ -357,8 +397,11 @@ def get_kthread_sched_tunings(proc = None):
 		if iskthread(pid):
 			name = proc[pid]["stat"]["comm"]
 			rtprio = int(proc[pid]["stat"]["rt_priority"])
-			policy = schedutils.get_scheduler(pid)
-			affinity = schedutils.get_affinity(pid)
+			try:
+				policy = schedutils.get_scheduler(pid)
+				affinity = schedutils.get_affinity(pid)
+			except SystemError: # (3, 'No such process')
+				continue
 			percpu = iskthread(pid) and \
 				 proc.is_bound_to_cpu(pid)
 			kthreads[name] = sched_tunings(name, pid, policy,

@@ -86,7 +86,11 @@ def ps_show_header(has_ctxt_switch_info):
 		 "cmd")
 
 def ps_show_thread(pid, affect_children, ps, cpuinfo, irqs, nics, has_ctxt_switch_info):
-	affinity = schedutils.get_affinity(pid)
+	try:
+		affinity = schedutils.get_affinity(pid)
+	except SystemError: # (3, 'No such process')
+		return
+
 	if len(affinity) <= 4:
 		affinity = ",".join(str(a) for a in affinity)
 	else:
@@ -137,7 +141,10 @@ def ps_show(ps, affect_children, cpuinfo, irqs, threads, cpus,
 			continue
 		if not show_kthreads and iskth:
 			continue
-		affinity = schedutils.get_affinity(pid)
+		try:
+			affinity = schedutils.get_affinity(pid)
+		except SystemError: # (3, 'No such process')
+			continue
 		if cpus and not set(cpus).intersection(set(affinity)):
 			continue
 		ps_list.append(pid)
@@ -149,7 +156,7 @@ def ps_show(ps, affect_children, cpuinfo, irqs, threads, cpus,
 	for pid in ps_list:
 		ps_show_thread(pid, affect_children, ps, cpuinfo, irqs, nics, has_ctxt_switch_info)
 
-def ps(threads, cpus, show_uthreads, show_kthreads, affect_children):
+def do_ps(threads, cpus, show_uthreads, show_kthreads, affect_children):
 	ps = procfs.pidstats()
 	if affect_children:
 		ps.reload_threads()
@@ -215,7 +222,7 @@ def main():
 		elif o in ("-p", "--priority"):
 			tuna.threads_set_priority(threads, a, affect_children)
 		elif o in ("-P", "--show_threads"):
-			ps(threads, cpus, uthreads, kthreads, affect_children)
+			do_ps(threads, cpus, uthreads, kthreads, affect_children)
 		elif o in ("-m", "--move"):
 			if not cpus:
 				print "tuna: --move requires a cpu list!"

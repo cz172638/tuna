@@ -453,7 +453,11 @@ def thread_set_attributes(pid, threads, new_policy, new_prio, new_affinity, nr_c
 		else:
 			changed = True
 
-	curr_affinity = schedutils.get_affinity(pid)
+	try:
+		curr_affinity = schedutils.get_affinity(pid)
+	except SystemError: # (3, 'No such process')
+		return False
+
 	try:
 		new_affinity = [ int(a) for a in new_affinity.split(",") ]
 	except:
@@ -470,7 +474,10 @@ def thread_set_attributes(pid, threads, new_policy, new_prio, new_affinity, nr_c
 		except:
 			return invalid_affinity()
 
-		curr_affinity = schedutils.get_affinity(pid)
+		try:
+			curr_affinity = schedutils.get_affinity(pid)
+		except SystemError: # (3, 'No such process')
+			return False
 		if curr_affinity != new_affinity:
 			print "couldn't change pid %d from %s to %s!" % \
 			      ( pid, curr_affinity, new_affinity )
@@ -1077,11 +1084,11 @@ class procview:
 
 		try:
 			new_value[self.COL_POL] = schedutils.schedstr(schedutils.get_scheduler(tid))[6:]
+			thread_affinity_list = schedutils.get_affinity(tid)
 		except SystemError:
 			return True
 
 		new_value[self.COL_PID] = tid
-		thread_affinity_list = schedutils.get_affinity(tid)
 		new_value[self.COL_AFF] = tuna.list_to_cpustring(thread_affinity_list)
 		try:
 			new_value[self.COL_VOLCTXT] = int(thread_info["status"]["voluntary_ctxt_switches"])
