@@ -174,14 +174,15 @@ def do_ps(threads, cpus, show_uthreads, show_kthreads, affect_children):
 def main():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
-					   "c:CfghiIKmp:Ps:S:t:UW",
+					   "c:CfghiIKmp:Ps:S:t:UWx",
 					   ("cpus=", "affect_children",
 					    "filter", "gui", "help",
 					    "isolate", "include",
 					    "no_kthreads",
 					    "move", "priority=", "show_threads",
 					    "save=", "sockets=", "threads=",
-					    "no_uthreads", "what_is"))
+					    "no_uthreads", "what_is",
+					    "spread"))
 	except getopt.GetoptError, err:
 		usage()
 		print str(err)
@@ -256,6 +257,14 @@ def main():
 				sys.exit(2)
 			for tid in threads:
 				thread_help(tid)
+		elif o in ("-x", "--spread"):
+			if not cpus:
+				print "tuna: --spread requires a cpu list!"
+				sys.exit(2)
+			if not threads:
+				print "tuna: --spread requires a thread list!"
+				sys.exit(2)
+			tuna.move_threads_to_cpu(cpus, threads, spread = True)
 
 	if run_gui:
 		try:

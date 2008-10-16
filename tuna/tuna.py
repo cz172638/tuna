@@ -142,11 +142,21 @@ def list_to_cpustring(l):
 		prev = i
 	return ",".join(strings)
 
-def move_threads_to_cpu(new_affinity, pid_list, set_affinity_warning = None):
+def move_threads_to_cpu(cpus, pid_list, set_affinity_warning = None,
+			spread = False):
 	changed = False
 
 	ps = procfs.pidstats()
+	cpu_idx = 0
+	nr_cpus = len(cpus)
+	new_affinity = cpus
 	for pid in pid_list:
+		if spread:
+			new_affinity = [cpus[cpu_idx]]
+			cpu_idx += 1
+			if cpu_idx == nr_cpus:
+				cpu_idx = 0
+
 		try:
 			try:
 				curr_affinity = schedutils.get_affinity(pid)
