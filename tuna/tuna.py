@@ -142,6 +142,12 @@ def list_to_cpustring(l):
 		prev = i
 	return ",".join(strings)
 
+# FIXME: move to python-linux-procfs
+def is_hardirq_handler(self, pid):
+		PF_HARDIRQ = 0x08000000
+                return int(self.processes[pid]["stat"]["flags"]) & \
+                       PF_HARDIRQ and True or False
+
 def move_threads_to_cpu(cpus, pid_list, set_affinity_warning = None,
 			spread = False):
 	changed = False
@@ -150,6 +156,7 @@ def move_threads_to_cpu(cpus, pid_list, set_affinity_warning = None,
 	cpu_idx = 0
 	nr_cpus = len(cpus)
 	new_affinity = cpus
+	last_cpu = max(cpus) + 1
 	for pid in pid_list:
 		if spread:
 			new_affinity = [cpus[cpu_idx]]
@@ -170,6 +177,13 @@ def move_threads_to_cpu(cpus, pid_list, set_affinity_warning = None,
 					continue
 				if set(curr_affinity) == set(new_affinity):
 					changed = True
+					if is_hardirq_handler(ps, pid):
+						try:
+							irq = int(ps[pid]["stat"]["comm"][4:])
+							bitmasklist = procfs.hexbitmask(new_affinity, last_cpu)
+							set_irq_affinity(irq, bitmasklist)
+						except:
+							pass
 				elif set_affinity_warning:
 					set_affinity_warning(pid, new_affinity)
 				else:
