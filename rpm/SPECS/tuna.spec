@@ -2,7 +2,7 @@
 %{!?python_ver: %define python_ver %(%{__python} -c "import sys ; print sys.version[:3]")}
 
 Name: tuna
-Version: 0.7
+Version: 0.8
 Release: 1%{?dist}
 License: GPLv2
 Summary: Application tuning GUI & command line utility
@@ -75,6 +75,15 @@ rm -rf %{buildroot}
 %{_bindir}/oscilloscope
 
 %changelog
+* Mon Oct 27 2008 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.8-1
+- [Non]VolCtxtSwitch columns should be represented in the GUI as unsigned
+- Several spelling fixes
+- Handle some more schedutils exceptions
+- Fix getopt long option for --priority, it requires an arg
+- Set the irq affinity mask when setting a IRQ thread affinity
+- Add a --spread command line option, it will spread the threads
+  passed thru --threads into the cpus specified in --cpu or --socket.
+
 * Mon Sep 15 2008 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.7-1
 - CPU topology support: operations now can be performed on CPU sockets in
   addition to individual CPUs
