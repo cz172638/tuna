@@ -26,6 +26,7 @@ except:
 
 nr_cpus = None
 ps = None
+version = "0.8.1"
 
 def usage():
 	print '''Usage: tuna [OPTIONS]
@@ -44,7 +45,9 @@ def usage():
 	-S, --sockets=CPU-SOCKET-LIST   CPU-SOCKET-LIST affected by commands
 	-t, --threads=THREAD-LIST	THREAD-LIST affected by commands
 	-U, --no_uthreads		Operations will not affect user threads
-	-W, --what_is			Provides help about selected entities'''
+	-v, --version			show version
+	-W, --what_is			Provides help about selected entities
+	-x, --spread			spread selected entities over CPU-LIST'''
 
 def get_nr_cpus():
 	global nr_cpus
@@ -174,14 +177,14 @@ def do_ps(threads, cpus, show_uthreads, show_kthreads, affect_children):
 def main():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
-					   "c:CfghiIKmp:Ps:S:t:UWx",
+					   "c:CfghiIKmp:Ps:S:t:UvWx",
 					   ("cpus=", "affect_children",
 					    "filter", "gui", "help",
 					    "isolate", "include",
 					    "no_kthreads",
 					    "move", "priority=", "show_threads",
 					    "save=", "sockets=", "threads=",
-					    "no_uthreads", "what_is",
+					    "no_uthreads", "version", "what_is",
 					    "spread"))
 	except getopt.GetoptError, err:
 		usage()
@@ -251,6 +254,8 @@ def main():
 			kthreads = False
 		elif o in ("-U", "--no_uthreads"):
 			uthreads = False
+		elif o in ("-v", "--version"):
+			print version
 		elif o in ("-W", "--what_is"):
 			if not threads:
 				print "tuna: --what_is requires a thread list!"
