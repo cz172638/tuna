@@ -3,6 +3,7 @@
 # -*- coding: utf-8 -*-
 #   tuna - Application Tuning GUI
 #   Copyright (C) 2008 Red Hat Inc.
+#   Arnaldo Carvalho de Melo <acme@redhat.com>
 #
 #   This application is free software; you can redistribute it and/or
 #   modify it under the terms of the GNU General Public License
@@ -41,6 +42,7 @@ def usage():
 	-m, --move			move selected entities to CPU-LIST
 	-p, --priority=[POLICY]:RTPRIO	set thread scheduler POLICY and RTPRIO
 	-P, --show_threads		show thread list
+	-q, --irqs=IRQ-LIST		IRQ-LIST affected by commands
 	-s, --save=FILENAME		save kthreads sched tunables to FILENAME
 	-S, --sockets=CPU-SOCKET-LIST   CPU-SOCKET-LIST affected by commands
 	-t, --threads=THREAD-LIST	THREAD-LIST affected by commands
@@ -132,9 +134,22 @@ def ps_show_thread(pid, affect_children, ps, cpuinfo, irqs, nics, has_ctxt_switc
 				       has_ctxt_switch_info)
 			
 
-def ps_show(ps, affect_children, cpuinfo, irqs, threads, cpus,
+def ps_show(ps, affect_children, cpuinfo, irqs, threads, cpus, irq_list,
 	    show_uthreads, show_kthreads, has_ctxt_switch_info):
 
+	if irq_list:
+		irq_list_numbers = []
+		for i in irq_list:
+			try:
+				irq = int(i)
+			except:
+				irq = irqs.find_by_user(i)
+				if not irq:
+					continue
+				irq = int(irq)
+
+			irq_list_numbers.append(irq)
+				
 	ps_list = []
 	for pid in ps.keys():
 		if threads and pid not in threads:
@@ -144,6 +159,15 @@ def ps_show(ps, affect_children, cpuinfo, irqs, threads, cpus,
 			continue
 		if not show_kthreads and iskth:
 			continue
+		if irq_list_numbers:
+			if not tuna.is_hardirq_handler(ps, pid):
+				continue
+			try:
+				irq = int(ps[pid]["stat"]["comm"][4:])
+				if irq not in irq_list_numbers:
+					continue
+			except:
+				pass
 		try:
 			affinity = schedutils.get_affinity(pid)
 		except SystemError: # (3, 'No such process')
@@ -159,7 +183,8 @@ def ps_show(ps, affect_children, cpuinfo, irqs, threads, cpus,
 	for pid in ps_list:
 		ps_show_thread(pid, affect_children, ps, cpuinfo, irqs, nics, has_ctxt_switch_info)
 
-def do_ps(threads, cpus, show_uthreads, show_kthreads, affect_children):
+def do_ps(threads, cpus, irq_list, show_uthreads,
+	  show_kthreads, affect_children):
 	ps = procfs.pidstats()
 	if affect_children:
 		ps.reload_threads()
@@ -169,7 +194,8 @@ def do_ps(threads, cpus, show_uthreads, show_kthreads, affect_children):
 	try:
 		ps_show_header(has_ctxt_switch_info)
 		ps_show(ps, affect_children, cpuinfo, irqs, threads, cpus,
-			show_uthreads, show_kthreads, has_ctxt_switch_info)
+			irq_list, show_uthreads, show_kthreads,
+			has_ctxt_switch_info)
 	except IOError:
 		# 'tuna -P | head' for instance
 		pass
@@ -177,12 +203,13 @@ def do_ps(threads, cpus, show_uthreads, show_kthreads, affect_children):
 def main():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
-					   "c:CfghiIKmp:Ps:S:t:UvWx",
+					   "c:CfghiIKmp:Pq:s:S:t:UvWx",
 					   ("cpus=", "affect_children",
 					    "filter", "gui", "help",
 					    "isolate", "include",
 					    "no_kthreads",
-					    "move", "priority=", "show_threads",
+					    "move", "priority=",
+					    "show_threads", "irqs=",
 					    "save=", "sockets=", "threads=",
 					    "no_uthreads", "version", "what_is",
 					    "spread"))
@@ -195,6 +222,7 @@ def main():
 	kthreads = True
 	uthreads = True
 	cpus = None
+	irq_list = None
 	threads = None
 	filter = False
 	affect_children = False
@@ -226,15 +254,25 @@ def main():
 		elif o in ("-p", "--priority"):
 			tuna.threads_set_priority(threads, a, affect_children)
 		elif o in ("-P", "--show_threads"):
-			do_ps(threads, cpus, uthreads, kthreads, affect_children)
-		elif o in ("-m", "--move"):
+			do_ps(threads, cpus, irq_list, uthreads, kthreads,
+			      affect_children)
+		elif o in ("-m", "--move", "-x", "--spread"):
 			if not cpus:
 				print "tuna: --move requires a cpu list!"
 				sys.exit(2)
-			if not threads:
-				print "tuna: --move requires a thread list!"
+			if not (threads or irq_list):
+				print "tuna: --move requires a list or threads/irqs!"
 				sys.exit(2)
-			tuna.move_threads_to_cpu(cpus, threads)
+
+			spread = o in ("-x", "--spread")
+
+			if threads:
+				tuna.move_threads_to_cpu(cpus, threads,
+							 spread = spread)
+
+			if irq_list:
+				tuna.move_irqs_to_cpu(cpus, irq_list,
+						      spread = spread)
 		elif o in ("-s", "--save"):
 			save(cpus, threads, a)
 		elif o in ("-S", "--sockets"):
@@ -252,6 +290,8 @@ def main():
 			cpus.sort()
 		elif o in ("-K", "--no_kthreads"):
 			kthreads = False
+		elif o in ("-q", "--irqs"):
+			irq_list = a.split(",")
 		elif o in ("-U", "--no_uthreads"):
 			uthreads = False
 		elif o in ("-v", "--version"):
@@ -262,14 +302,6 @@ def main():
 				sys.exit(2)
 			for tid in threads:
 				thread_help(tid)
-		elif o in ("-x", "--spread"):
-			if not cpus:
-				print "tuna: --spread requires a cpu list!"
-				sys.exit(2)
-			if not threads:
-				print "tuna: --spread requires a thread list!"
-				sys.exit(2)
-			tuna.move_threads_to_cpu(cpus, threads, spread = True)
 
 	if run_gui:
 		try:

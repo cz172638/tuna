@@ -216,6 +216,53 @@ def move_threads_to_cpu(cpus, pid_list, set_affinity_warning = None,
 			continue
 	return changed
 
+def move_irqs_to_cpu(cpus, irq_list, spread = False):
+	changed = 0
+	unprocessed = []
+
+	cpu_idx = 0
+	nr_cpus = len(cpus)
+	new_affinity = cpus
+	last_cpu = max(cpus) + 1
+	irqs = None
+	ps = procfs.pidstats()
+	for i in irq_list:
+		try:
+			irq = int(i)
+		except:
+			if not irqs:
+				irqs = procfs.interrupts()
+			irq = irqs.find_by_user(i)
+			if not irq:
+				unprocessed.append(i)
+				continue
+			try:
+				irq = int(irq)
+			except:
+				unprocessed.append(i)
+				continue
+
+		if spread:
+			new_affinity = [cpus[cpu_idx]]
+			cpu_idx += 1
+			if cpu_idx == nr_cpus:
+				cpu_idx = 0
+
+		bitmasklist = procfs.hexbitmask(new_affinity, last_cpu)
+		set_irq_affinity(irq, bitmasklist)
+		changed += 1
+		pid = ps.find_by_name("IRQ-%d" % irq)
+		if pid:
+			pid = int(pid[0])
+			try:
+				schedutils.set_affinity(pid, new_affinity)
+			except SystemError: # (3, 'No such process')
+				unprocessed.append(i)
+				changed -= 1
+				continue
+
+	return (changed, unprocessed)
+
 def affinity_remove_cpus(affinity, cpus, nr_cpus):
 	# If the cpu being isolated was the only one in the current affinity
 	affinity = list(set(affinity) - set(cpus))
