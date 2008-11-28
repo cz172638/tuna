@@ -200,6 +200,15 @@ def do_ps(thread_list, cpu_list, irq_list, show_uthreads,
 		# 'tuna -P | head' for instance
 		pass
 
+def do_cpu_list_op(op, cpu_list, op_list):
+	if not cpu_list:
+		cpu_list = []
+	if op == '+':
+		return list(set(cpu_list + op_list))
+	if op == '-':
+		return list(set(cpu_list) - set(op_list))
+	return list(set(op_list))
+
 def main():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
@@ -232,7 +241,12 @@ def main():
 			usage()
 			return
 		elif o in ("-c", "--cpus"):
-			cpu_list = map(lambda cpu: int(cpu), a.split(","))
+			op = None
+			if a[0] in ('+', '-'):
+				op = a[0]
+				a = a[1:]
+			op_list = map(lambda cpu: int(cpu), a.split(","))
+			cpu_list = do_cpu_list_op(op, cpu_list, op_list)
 		elif o in ("-C", "--affect_children"):
 			affect_children = True
 		elif o in ("-t", "--threads"):
@@ -276,18 +290,25 @@ def main():
 		elif o in ("-s", "--save"):
 			save(cpu_list, thread_list, a)
 		elif o in ("-S", "--sockets"):
+			op = None
+			if a[0] in ('+', '-'):
+				op = a[0]
+				a = a[1:]
 			sockets = map(lambda socket: socket, a.split(","))
+
 			if not cpu_list:
 				cpu_list = []
+
 			cpu_info = sysfs.cpus()
+			op_list = []
 			for socket in sockets:
 				if not cpu_info.sockets.has_key(socket):
 					print "tuna: invalid socket %s, sockets available: %s" % \
 					      (socket,
 					       ", ".join(cpu_info.sockets.keys()))
 					sys.exit(2)
-				cpu_list += [ int(cpu.name[3:]) for cpu in cpu_info.sockets[socket] ]
-			cpu_list.sort()
+				op_list += [ int(cpu.name[3:]) for cpu in cpu_info.sockets[socket] ]
+			cpu_list = do_cpu_list_op(op, cpu_list, op_list)
 		elif o in ("-K", "--no_kthreads"):
 			kthreads = False
 		elif o in ("-q", "--irqs"):
