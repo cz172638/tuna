@@ -205,13 +205,13 @@ def do_ps(thread_list, cpu_list, irq_list, show_uthreads,
 		# 'tuna -P | head' for instance
 		pass
 
-def do_cpu_list_op(op, cpu_list, op_list):
-	if not cpu_list:
-		cpu_list = []
+def do_list_op(op, current_list, op_list):
+	if not current_list:
+		current_list = []
 	if op == '+':
-		return list(set(cpu_list + op_list))
+		return list(set(current_list + op_list))
 	if op == '-':
-		return list(set(cpu_list) - set(op_list))
+		return list(set(current_list) - set(op_list))
 	return list(set(op_list))
 
 def thread_mapper(s):
@@ -264,7 +264,7 @@ def main():
 		elif o in ("-c", "--cpus"):
 			(op, a) = pick_op(a)
 			op_list = map(lambda cpu: int(cpu), a.split(","))
-			cpu_list = do_cpu_list_op(op, cpu_list, op_list)
+			cpu_list = do_list_op(op, cpu_list, op_list)
 		elif o in ("-C", "--affect_children"):
 			affect_children = True
 		elif o in ("-t", "--threads"):
@@ -325,7 +325,7 @@ def main():
 					       ", ".join(cpu_info.sockets.keys()))
 					sys.exit(2)
 				op_list += [ int(cpu.name[3:]) for cpu in cpu_info.sockets[socket] ]
-			cpu_list = do_cpu_list_op(op, cpu_list, op_list)
+			cpu_list = do_list_op(op, cpu_list, op_list)
 		elif o in ("-K", "--no_kthreads"):
 			kthreads = False
 		elif o in ("-q", "--irqs"):
