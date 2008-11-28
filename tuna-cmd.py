@@ -225,6 +225,11 @@ def thread_mapper(s):
 
 	return ps.find_by_name(s)
 
+def pick_op(argument):
+	if argument[0] in ('+', '-'):
+		return (argument[0], argument[1:])
+	return (None, argument)
+
 def main():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
@@ -257,10 +262,7 @@ def main():
 			usage()
 			return
 		elif o in ("-c", "--cpus"):
-			op = None
-			if a[0] in ('+', '-'):
-				op = a[0]
-				a = a[1:]
+			(op, a) = pick_op(a)
 			op_list = map(lambda cpu: int(cpu), a.split(","))
 			cpu_list = do_cpu_list_op(op, cpu_list, op_list)
 		elif o in ("-C", "--affect_children"):
@@ -308,10 +310,7 @@ def main():
 		elif o in ("-s", "--save"):
 			save(cpu_list, thread_list, a)
 		elif o in ("-S", "--sockets"):
-			op = None
-			if a[0] in ('+', '-'):
-				op = a[0]
-				a = a[1:]
+			(op, a) = pick_op(a)
 			sockets = map(lambda socket: socket, a.split(","))
 
 			if not cpu_list:
