@@ -268,9 +268,13 @@ def main():
 		elif o in ("-C", "--affect_children"):
 			affect_children = True
 		elif o in ("-t", "--threads"):
-			thread_list = reduce(lambda i, j: i + j,
-					     map(thread_mapper, a.split(",")))
-			thread_list = list(set(thread_list))
+			(op, a) = pick_op(a)
+			op_list = reduce(lambda i, j: i + j,
+					 map(thread_mapper, a.split(",")))
+			op_list = list(set(op_list))
+			thread_list = do_list_op(op, thread_list, op_list)
+			if not op:
+				irq_list = None
 		elif o in ("-f", "--filter"):
 			filter = True
 		elif o in ("-g", "--gui"):
@@ -329,7 +333,11 @@ def main():
 		elif o in ("-K", "--no_kthreads"):
 			kthreads = False
 		elif o in ("-q", "--irqs"):
-			irq_list = a.split(",")
+			(op, a) = pick_op(a)
+			op_list = list(set(a.split(",")))
+			irq_list = do_list_op(op, irq_list, op_list)
+			if not op:
+				thread_list = None
 		elif o in ("-U", "--no_uthreads"):
 			uthreads = False
 		elif o in ("-v", "--version"):
