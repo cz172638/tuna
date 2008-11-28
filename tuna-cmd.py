@@ -72,12 +72,12 @@ def thread_help(tid):
 	help, title = tuna.kthread_help_plain_text(tid, cmdline)
 	print "%s\n\n%s" % (title, help)
 
-def save(cpus, threads, filename):
+def save(cpu_list, thread_list, filename):
 	kthreads = tuna.get_kthread_sched_tunings()
 	for name in kthreads.keys():
 		kt = kthreads[name]
-		if (cpus and not set(kt.affinity).intersection(set(cpus))) or \
-		   (threads and kt.pid not in threads) :
+		if (cpu_list and not set(kt.affinity).intersection(set(cpu_list))) or \
+		   (thread_list and kt.pid not in thread_list) :
 			del kthreads[name]
 	tuna.generate_rtgroups(filename, kthreads, get_nr_cpus())
 
@@ -134,8 +134,8 @@ def ps_show_thread(pid, affect_children, ps, cpuinfo, irqs, nics, has_ctxt_switc
 				       has_ctxt_switch_info)
 			
 
-def ps_show(ps, affect_children, cpuinfo, irqs, threads, cpus, irq_list,
-	    show_uthreads, show_kthreads, has_ctxt_switch_info):
+def ps_show(ps, affect_children, cpuinfo, irqs, thread_list, cpu_list,
+	    irq_list, show_uthreads, show_kthreads, has_ctxt_switch_info):
 
 	if irq_list:
 		irq_list_numbers = []
@@ -152,7 +152,7 @@ def ps_show(ps, affect_children, cpuinfo, irqs, threads, cpus, irq_list,
 				
 	ps_list = []
 	for pid in ps.keys():
-		if threads and pid not in threads:
+		if thread_list and pid not in thread_list:
 			continue
 		iskth = tuna.iskthread(pid)
 		if not show_uthreads and not iskth:
@@ -172,7 +172,7 @@ def ps_show(ps, affect_children, cpuinfo, irqs, threads, cpus, irq_list,
 			affinity = schedutils.get_affinity(pid)
 		except SystemError: # (3, 'No such process')
 			continue
-		if cpus and not set(cpus).intersection(set(affinity)):
+		if cpu_list and not set(cpu_list).intersection(set(affinity)):
 			continue
 		ps_list.append(pid)
 
@@ -183,7 +183,7 @@ def ps_show(ps, affect_children, cpuinfo, irqs, threads, cpus, irq_list,
 	for pid in ps_list:
 		ps_show_thread(pid, affect_children, ps, cpuinfo, irqs, nics, has_ctxt_switch_info)
 
-def do_ps(threads, cpus, irq_list, show_uthreads,
+def do_ps(thread_list, cpu_list, irq_list, show_uthreads,
 	  show_kthreads, affect_children):
 	ps = procfs.pidstats()
 	if affect_children:
@@ -193,8 +193,8 @@ def do_ps(threads, cpus, irq_list, show_uthreads,
 	has_ctxt_switch_info = ps[1]["status"].has_key("voluntary_ctxt_switches")
 	try:
 		ps_show_header(has_ctxt_switch_info)
-		ps_show(ps, affect_children, cpuinfo, irqs, threads, cpus,
-			irq_list, show_uthreads, show_kthreads,
+		ps_show(ps, affect_children, cpuinfo, irqs, thread_list,
+			cpu_list, irq_list, show_uthreads, show_kthreads,
 			has_ctxt_switch_info)
 	except IOError:
 		# 'tuna -P | head' for instance
@@ -221,9 +221,9 @@ def main():
 	run_gui = not opts
 	kthreads = True
 	uthreads = True
-	cpus = None
+	cpu_list = None
 	irq_list = None
-	threads = None
+	thread_list = None
 	filter = False
 	affect_children = False
 
@@ -232,53 +232,53 @@ def main():
 			usage()
 			return
 		elif o in ("-c", "--cpus"):
-			cpus = map(lambda cpu: int(cpu), a.split(","))
+			cpu_list = map(lambda cpu: int(cpu), a.split(","))
 		elif o in ("-C", "--affect_children"):
 			affect_children = True
 		elif o in ("-t", "--threads"):
-			threads = map(lambda cpu: int(cpu), a.split(","))
+			thread_list = map(lambda cpu: int(cpu), a.split(","))
 		elif o in ("-f", "--filter"):
 			filter = True
 		elif o in ("-g", "--gui"):
 			run_gui = True
 		elif o in ("-i", "--isolate"):
-			if not cpus:
+			if not cpu_list:
 				print "tuna: --isolate requires a cpu list!"
 				sys.exit(2)
-			tuna.isolate_cpus(cpus, get_nr_cpus())
+			tuna.isolate_cpus(cpu_list, get_nr_cpus())
 		elif o in ("-I", "--include"):
-			if not cpus:
+			if not cpu_list:
 				print "tuna: --include requires a cpu list!"
 				sys.exit(2)
-			tuna.include_cpus(cpus, get_nr_cpus())
+			tuna.include_cpus(cpu_list, get_nr_cpus())
 		elif o in ("-p", "--priority"):
-			tuna.threads_set_priority(threads, a, affect_children)
+			tuna.threads_set_priority(thread_list, a, affect_children)
 		elif o in ("-P", "--show_threads"):
-			do_ps(threads, cpus, irq_list, uthreads, kthreads,
-			      affect_children)
+			do_ps(thread_list, cpu_list, irq_list, uthreads,
+			      kthreads, affect_children)
 		elif o in ("-m", "--move", "-x", "--spread"):
-			if not cpus:
+			if not cpu_list:
 				print "tuna: --move requires a cpu list!"
 				sys.exit(2)
-			if not (threads or irq_list):
+			if not (thread_list or irq_list):
 				print "tuna: --move requires a list or threads/irqs!"
 				sys.exit(2)
 
 			spread = o in ("-x", "--spread")
 
-			if threads:
-				tuna.move_threads_to_cpu(cpus, threads,
+			if thread_list:
+				tuna.move_threads_to_cpu(cpu_list, thread_list,
 							 spread = spread)
 
 			if irq_list:
-				tuna.move_irqs_to_cpu(cpus, irq_list,
+				tuna.move_irqs_to_cpu(cpu_list, irq_list,
 						      spread = spread)
 		elif o in ("-s", "--save"):
-			save(cpus, threads, a)
+			save(cpu_list, thread_list, a)
 		elif o in ("-S", "--sockets"):
 			sockets = map(lambda socket: socket, a.split(","))
-			if not cpus:
-				cpus = []
+			if not cpu_list:
+				cpu_list = []
 			cpu_info = sysfs.cpus()
 			for socket in sockets:
 				if not cpu_info.sockets.has_key(socket):
@@ -286,8 +286,8 @@ def main():
 					      (socket,
 					       ", ".join(cpu_info.sockets.keys()))
 					sys.exit(2)
-				cpus += [ int(cpu.name[3:]) for cpu in cpu_info.sockets[socket] ]
-			cpus.sort()
+				cpu_list += [ int(cpu.name[3:]) for cpu in cpu_info.sockets[socket] ]
+			cpu_list.sort()
 		elif o in ("-K", "--no_kthreads"):
 			kthreads = False
 		elif o in ("-q", "--irqs"):
@@ -297,10 +297,10 @@ def main():
 		elif o in ("-v", "--version"):
 			print version
 		elif o in ("-W", "--what_is"):
-			if not threads:
+			if not thread_list:
 				print "tuna: --what_is requires a thread list!"
 				sys.exit(2)
-			for tid in threads:
+			for tid in thread_list:
 				thread_help(tid)
 
 	if run_gui:
@@ -311,7 +311,7 @@ def main():
 			usage()
 			return
 		try:
-			cpus_filtered = filter and cpus or []
+			cpus_filtered = filter and cpu_list or []
 			app = tuna_gui.gui(kthreads, uthreads, cpus_filtered)
 			app.run()
 		except KeyboardInterrupt:
