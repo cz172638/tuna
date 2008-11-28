@@ -137,8 +137,8 @@ def ps_show_thread(pid, affect_children, ps, cpuinfo, irqs, nics, has_ctxt_switc
 def ps_show(ps, affect_children, cpuinfo, irqs, thread_list, cpu_list,
 	    irq_list, show_uthreads, show_kthreads, has_ctxt_switch_info):
 
+	irq_list_numbers = []
 	if irq_list:
-		irq_list_numbers = []
 		for i in irq_list:
 			try:
 				irq = int(i)
@@ -160,14 +160,15 @@ def ps_show(ps, affect_children, cpuinfo, irqs, thread_list, cpu_list,
 		if not show_kthreads and iskth:
 			continue
 		if irq_list_numbers:
-			if not tuna.is_hardirq_handler(ps, pid):
+			if tuna.is_hardirq_handler(ps, pid):
+				try:
+					irq = int(ps[pid]["stat"]["comm"][4:])
+					if irq not in irq_list_numbers:
+						continue
+				except:
+					pass
+			elif not thread_list:
 				continue
-			try:
-				irq = int(ps[pid]["stat"]["comm"][4:])
-				if irq not in irq_list_numbers:
-					continue
-			except:
-				pass
 		try:
 			affinity = schedutils.get_affinity(pid)
 		except SystemError: # (3, 'No such process')
