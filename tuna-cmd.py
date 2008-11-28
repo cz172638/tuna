@@ -122,9 +122,9 @@ def ps_show_thread(pid, affect_children, ps, cpuinfo, irqs, nics, has_ctxt_switc
 						  nonvoluntary_ctxt_switches)
 	
 	if affect_children:
-		print "%6d " % pid,
+		print " %-5d " % pid,
 	else:
-		print "  %5d" % pid,
+		print "  %-5d" % pid,
 	print "%6s %5d %8s%s %15s %s" % (sched, rtprio, affinity,
 					 ctxt_switch_info, cmd, users)
 	if affect_children and ps[pid].has_key("threads"):
