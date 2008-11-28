@@ -210,6 +210,17 @@ def do_cpu_list_op(op, cpu_list, op_list):
 		return list(set(cpu_list) - set(op_list))
 	return list(set(op_list))
 
+def thread_mapper(s):
+	global ps
+	try:
+		return [ int(s), ]
+	except:
+		pass
+	if not ps:
+		ps = procfs.pidstats()
+
+	return ps.find_by_name(s)
+
 def main():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
@@ -251,7 +262,9 @@ def main():
 		elif o in ("-C", "--affect_children"):
 			affect_children = True
 		elif o in ("-t", "--threads"):
-			thread_list = map(lambda cpu: int(cpu), a.split(","))
+			thread_list = reduce(lambda i, j: i + j,
+					     map(thread_mapper, a.split(",")))
+			thread_list = list(set(thread_list))
 		elif o in ("-f", "--filter"):
 			filter = True
 		elif o in ("-g", "--gui"):
