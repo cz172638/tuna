@@ -1115,8 +1115,14 @@ class procview:
 
 	def update_rows(self, threads, row, parent_row):
 		new_tids = threads.keys()
+		previous_row = None
 		while row:
 			tid = self.tree_store.get_value(row, self.COL_PID)
+			if previous_row:
+				previous_tid = self.tree_store.get_value(previous_row, self.COL_PID)
+				if previous_tid == tid:
+					# print "WARNING: tree_store dup %d, fixing..." % tid
+					self.tree_store.remove(previous_row)
 			if not threads.has_key(tid):
 				if self.tree_store.remove(row):
 					# removed and now row is the next one
@@ -1150,6 +1156,7 @@ class procview:
 					child_row = self.tree_store.iter_children(row)
 					self.update_rows(children, child_row, row)
 
+			previous_row = row
 			row = self.tree_store.iter_next(row)
 
 		new_tids.sort()
