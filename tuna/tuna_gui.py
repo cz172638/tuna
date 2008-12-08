@@ -1184,7 +1184,6 @@ class procview:
 	def refresh(self):
 		self.ps.reload()
 		self.ps.reload_threads()
-		self.ps.load_cmdline()
 
 		self.show(True)
 
@@ -1396,7 +1395,6 @@ class gui:
 		self.wtree.signal_autoconnect(event_handlers)
 
 		self.ps.reload_threads()
-		self.ps.load_cmdline()
 		self.show()
 		self.timer = gobject.timeout_add(2500, self.refresh)
 		try:
@@ -1438,7 +1436,6 @@ class gui:
 		self.ps.reload()
 		self.ps.reload_threads()
 		self.irqview.refresh()
-		self.ps.load_cmdline()
 		self.procview.show()
 		return True
 
