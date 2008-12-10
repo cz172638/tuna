@@ -531,7 +531,6 @@ class irq_druid:
 		( COL_TEXT, COL_SCHED ) = range(2)
 		list_store = gtk.ListStore(gobject.TYPE_STRING,
 					   gobject.TYPE_UINT)
-		policy.set_model(list_store)
 		renderer = gtk.CellRendererText()
 		policy.pack_start(renderer, True)
 		policy.add_attribute(renderer, "text", COL_TEXT)
@@ -539,6 +538,7 @@ class irq_druid:
 			row = list_store.append()
 			list_store.set(row, COL_TEXT, schedutils.schedstr(pol),
 					    COL_SCHED, pol)
+		policy.set_model(list_store)
 
 	def on_sched_policy_combo_changed(self, button):
 		new_policy = self.sched_policy.get_active()
@@ -620,8 +620,6 @@ class irqview:
 
 		self.list_store = gtk.ListStore(*generate_list_store_columns_with_attr(self.columns))
 
-		self.treeview.set_model(self.list_store)
-
 		# Allow selecting multiple rows
 		selection = treeview.get_selection()
 		selection.set_mode(gtk.SELECTION_MULTIPLE)
@@ -643,6 +641,8 @@ class irqview:
 
 		self.cpus_filtered = cpus_filtered
 		self.refreshing = True
+
+		self.treeview.set_model(self.list_store)
 
 	def foreach_selected_cb(self, model, path, iter, irq_list):
 		irq = model.get_value(iter, self.COL_NUM)
@@ -847,7 +847,6 @@ class process_druid:
 
 		self.process_list_store = gtk.ListStore(gobject.TYPE_UINT,
 							gobject.TYPE_STRING)
-		processes.set_model(self.process_list_store)
 		renderer = gtk.CellRendererText()
 
 		for col in range(len(labels)):
@@ -855,11 +854,12 @@ class process_druid:
 			column.set_sort_column_id(col)
 			processes.append_column(column)
 
+		processes.set_model(self.process_list_store)
+
 	def create_policy_model(self, policy):
 		( COL_TEXT, COL_SCHED ) = range(2)
 		list_store = gtk.ListStore(gobject.TYPE_STRING,
 					   gobject.TYPE_UINT)
-		policy.set_model(list_store)
 		renderer = gtk.CellRendererText()
 		policy.pack_start(renderer, True)
 		policy.add_attribute(renderer, "text", COL_TEXT)
@@ -867,6 +867,7 @@ class process_druid:
 			row = list_store.append()
 			list_store.set(row, COL_TEXT, schedutils.schedstr(pol),
 					    COL_SCHED, pol)
+		policy.set_model(list_store)
 
 	def on_cmdline_regex_changed(self, entry):
 		process_regex_text = entry.get_text()
