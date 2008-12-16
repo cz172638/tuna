@@ -142,11 +142,7 @@ class oscilloscope_frame(gtk.Frame):
 		self.on_screen_samples[0].set_data(self.ind, self.samples)
 
 	def refresh(self):
-		# Why we need to hide it before redrawing it is a mistery
-		# to me, but it works, so, keep this sequence.
-		self.canvas.hide()
 		self.canvas.draw()
-		self.canvas.show()
 		return
 
 def add_table_row(table, row, label_text, label_value = "0"):
