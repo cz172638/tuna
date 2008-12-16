@@ -280,24 +280,28 @@ class oscilloscope(gtk.Window):
 		self.hist.refresh()
 
 	def get_samples(self, fd, condition):
-		sample = self.get_sample()
-		prev_min, prev_avg, prev_max = self.min, self.avg, self.max
+		try:
+			sample = self.get_sample()
+			prev_min, prev_avg, prev_max = self.min, self.avg, self.max
 
-		self.add_sample(sample)
+			self.add_sample(sample)
 
-		if self.refreshing_screen:
-			if self.min != prev_min:
-				self.min_label.set_text("%-6.3f" % self.min)
-			if self.avg != prev_avg:
-				self.avg_label.set_text("%-6.3f" % self.avg)
-			if self.max != prev_max:
-				self.max_label.set_text("%-6.3f" % self.max)
+			if self.refreshing_screen:
+				if self.min != prev_min:
+					self.min_label.set_text("%-6.3f" % self.min)
+				if self.avg != prev_avg:
+					self.avg_label.set_text("%-6.3f" % self.avg)
+				if self.max != prev_max:
+					self.max_label.set_text("%-6.3f" % self.max)
 
-			self.refresh()
+				self.refresh()
 
-		if self.snapshot_samples == self.scope.nr_samples:
-			self.snapshot()
-			gtk.main_quit()
+			if self.snapshot_samples == self.scope.nr_samples:
+				self.snapshot()
+				gtk.main_quit()
+		except:
+			print "invalid sample, check the input format"
+			pass
 		return self.getting_samples
 
 	def run(self, fd):
