@@ -1082,12 +1082,8 @@ class procview:
 		new_value = [ None ] * self.nr_columns
 
 		new_value[self.COL_PRI] = int(thread_info["stat"]["rt_priority"])
-
-		try:
-			new_value[self.COL_POL] = schedutils.schedstr(schedutils.get_scheduler(tid))[6:]
-			thread_affinity_list = schedutils.get_affinity(tid)
-		except SystemError:
-			return True
+		new_value[self.COL_POL] = schedutils.schedstr(schedutils.get_scheduler(tid))[6:]
+		thread_affinity_list = schedutils.get_affinity(tid)
 
 		new_value[self.COL_PID] = tid
 		new_value[self.COL_AFF] = tuna.list_to_cpustring(thread_affinity_list)
@@ -1100,8 +1096,6 @@ class procview:
 		new_value[self.COL_CMDLINE] = procfs.process_cmdline(thread_info)
 
 		set_store_columns(self.tree_store, iter, new_value)
-
-		return False
 
 	def show(self, force_refresh = False):
 		# Start with the first row, if there is one, on the
@@ -1147,15 +1141,22 @@ class procview:
 					# removed and its the last one
 					break
 				else:
-					self.set_thread_columns(row, tid, threads[tid])
+					try:
+						self.set_thread_columns(row, tid, threads[tid])
 
-					if threads[tid].has_key("threads"):
-						children = threads[tid]["threads"]
-					else:
-						children = {}
+						if threads[tid].has_key("threads"):
+							children = threads[tid]["threads"]
+						else:
+							children = {}
 
-					child_row = self.tree_store.iter_children(row)
-					self.update_rows(children, child_row, row)
+						child_row = self.tree_store.iter_children(row)
+						self.update_rows(children, child_row, row)
+					except: # thread doesn't exists anymore
+						if self.tree_store.remove(row):
+							# removed and now row is the next one
+							continue
+						# removed and its the last one
+						break
 
 			previous_row = row
 			row = self.tree_store.iter_next(row)
@@ -1172,8 +1173,9 @@ class procview:
 
 			row = self.tree_store.append(parent_row)
 
-			if self.set_thread_columns(row, tid, threads[tid]):
-				# Thread doesn't exists anymore
+			try:
+				self.set_thread_columns(row, tid, threads[tid])
+			except: # Thread doesn't exists anymore
 				self.tree_store.remove(row)
 				continue
 
@@ -1183,10 +1185,11 @@ class procview:
 				children_list.sort()
 				for child in children_list:
 					child_row = self.tree_store.append(row)
-					if self.set_thread_columns(child_row,
-								   child,
-								   children[child]):
-						# Thread doesn't exists anymore
+					try:
+						self.set_thread_columns(child_row,
+									child,
+									children[child])
+					except: # Thread doesn't exists anymore
 						self.tree_store.remove(child_row)
 
 	def refresh(self):
