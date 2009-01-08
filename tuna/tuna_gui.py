@@ -5,427 +5,15 @@
 import pygtk
 pygtk.require("2.0")
 
-import copy, ethtool, gtk, gobject, os, pango, procfs, re, schedutils, sys
+import gtk, gobject, os, procfs, re, schedutils, sys
 import gtk.glade
 import gui
 from gui.cpuview import cpuview
+from gui.irqview import irqview
 import tuna
 
 tuna_glade_dirs = [ ".", "tuna", "/usr/share/tuna" ]
 tuna_glade = None
-
-def set_store_columns(store, row, new_value):
-	nr_columns = len(new_value)
-	for col in range(nr_columns):
-		col_weight = col + nr_columns
-		cur_value = store.get_value(row, col)
-		if cur_value == new_value[col]:
-			new_weight = pango.WEIGHT_NORMAL
-		else:
-			new_weight = pango.WEIGHT_BOLD
-
-		store.set(row, col, new_value[col], col_weight, new_weight)
-
-class list_store_column:
-	def __init__(self, name, type = gobject.TYPE_UINT):
-		self.name = name
-		self.type = type
-
-def generate_list_store_columns_with_attr(columns):
-	for column in columns:
-		yield column.type
-	for column in columns:
-		yield gobject.TYPE_UINT
-
-def on_affinity_text_changed(self):
-	new_affinity_text = self.affinity.get_text().strip()
-	if self.affinity_text != new_affinity_text:
-		try:
-			for cpu in new_affinity_text.strip(",").split(","):
-				new_affinity_cpu_entry = int(cpu, 16)
-		except:
-			try:
-				new_affinity = tuna.cpustring_to_list(new_affinity_text)
-			except:
-				if len(new_affinity_text) > 0 and new_affinity_text[-1] != "-":
-					# print "not a hex number"
-					self.affinity.set_text(self.affinity_text)
-					return
-		self.affinity_text = new_affinity_text
-
-def invalid_affinity():
-	dialog = gtk.MessageDialog(None,
-				   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-				   gtk.MESSAGE_WARNING,
-				   gtk.BUTTONS_OK,
-				   "Invalid affinity, specify a list of CPUs!")
-	dialog.run()
-	dialog.destroy()
-	return False
-
-def thread_set_attributes(pid, threads, new_policy, new_prio, new_affinity, nr_cpus):
-	changed = False
-	curr_policy = schedutils.get_scheduler(pid)
-	curr_prio = int(threads[pid]["stat"]["rt_priority"])
-	if new_policy == schedutils.SCHED_OTHER:
-		new_prio = 0
-	if curr_policy != new_policy or curr_prio != new_prio:
-		try:
-			schedutils.set_scheduler(pid, new_policy, new_prio)
-		except:
-			dialog = gtk.MessageDialog(None,
-						   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-						   gtk.MESSAGE_WARNING,
-						   gtk.BUTTONS_OK,
-						   "Invalid parameters!")
-			dialog.run()
-			dialog.destroy()
-			return False
-
-		curr_policy = schedutils.get_scheduler(pid)
-		if curr_policy != new_policy:
-			print "couldn't change pid %d from %s(%d) to %s(%d)!" % \
-			      ( pid, schedutils.schedstr(curr_policy),
-				curr_prio,
-				schedutils.schedstr(new_policy),
-				new_prio)
-		else:
-			changed = True
-
-	try:
-		curr_affinity = schedutils.get_affinity(pid)
-	except SystemError: # (3, 'No such process')
-		return False
-
-	try:
-		new_affinity = [ int(a) for a in new_affinity.split(",") ]
-	except:
-		try:
-			new_affinity = tuna.cpustring_to_list(new_affinity)
-		except:
-			new_affinity = procfs.bitmasklist(new_affinity, nr_cpus)
-
-	new_affinity.sort()
-
-	if curr_affinity != new_affinity:
-		try:
-			schedutils.set_affinity(pid, new_affinity)
-		except:
-			return invalid_affinity()
-
-		try:
-			curr_affinity = schedutils.get_affinity(pid)
-		except SystemError: # (3, 'No such process')
-			return False
-		if curr_affinity != new_affinity:
-			print "couldn't change pid %d from %s to %s!" % \
-			      ( pid, curr_affinity, new_affinity )
-		else:
-			changed = True
-
-	return changed
-
-class irq_druid:
-
-	def __init__(self, irqs, ps, irq):
-		self.irqs = irqs
-		self.ps = ps
-		self.irq = irq
-		self.window = gtk.glade.XML(tuna_glade, "set_irq_attributes")
-		self.dialog = self.window.get_widget("set_irq_attributes")
-		pixbuf = self.dialog.render_icon(gtk.STOCK_PREFERENCES,
-						 gtk.ICON_SIZE_SMALL_TOOLBAR)
-		self.dialog.set_icon(pixbuf)
-		event_handlers = { "on_irq_affinity_text_changed" : self.on_irq_affinity_text_changed,
-				   "on_sched_policy_combo_changed": self.on_sched_policy_combo_changed }
-		self.window.signal_autoconnect(event_handlers)
-
-		self.sched_pri = self.window.get_widget("irq_pri_spinbutton")
-		self.sched_policy = self.window.get_widget("irq_policy_combobox")
-		self.affinity = self.window.get_widget("irq_affinity_text")
-		text = self.window.get_widget("irq_text")
-
-		users = tuna.get_irq_users(irqs, irq)
-		self.affinity_text = tuna.get_irq_affinity_text(irqs, irq)
-
-		pids = ps.find_by_name("IRQ-%d" % irq)
-		if pids:
-			pid = pids[0]
-			prio = int(ps[pid]["stat"]["rt_priority"])
-			self.create_policy_model(self.sched_policy)
-			self.sched_policy.set_active(schedutils.get_scheduler(pid))
-			text.set_markup("IRQ <b>%u</b> (PID <b>%u</b>), pri <b>%u</b>, aff <b>%s</b>, <tt><b>%s</b></tt>" % \
-					( irq, pid, prio, self.affinity_text,
-					  ",".join(users)))
-		else:
-			self.sched_pri.set_sensitive(False)
-			self.sched_policy.set_sensitive(False)
-			text.set_markup("IRQ <b>%u</b>, aff <b>%s</b>, <tt><b>%s</b></tt>" % \
-					( irq, self.affinity_text,
-				 	  ",".join(users)))
-
-		self.affinity.set_text(self.affinity_text)
-
-	def create_policy_model(self, policy):
-		( COL_TEXT, COL_SCHED ) = range(2)
-		list_store = gtk.ListStore(gobject.TYPE_STRING,
-					   gobject.TYPE_UINT)
-		renderer = gtk.CellRendererText()
-		policy.pack_start(renderer, True)
-		policy.add_attribute(renderer, "text", COL_TEXT)
-		for pol in range(4):
-			row = list_store.append()
-			list_store.set(row, COL_TEXT, schedutils.schedstr(pol),
-					    COL_SCHED, pol)
-		policy.set_model(list_store)
-
-	def on_sched_policy_combo_changed(self, button):
-		new_policy = self.sched_policy.get_active()
-		if new_policy in (schedutils.SCHED_FIFO, schedutils.SCHED_RR):
-			can_change_pri = True
-		else:
-			can_change_pri = False
-		self.sched_pri.set_sensitive(can_change_pri)
-
-	def on_irq_affinity_text_changed(self, button):
-		on_affinity_text_changed(self)
-
-	def run(self):
-		changed = False
-		if self.dialog.run() == gtk.RESPONSE_OK:
-			new_policy = self.sched_policy.get_active()
-			new_prio = self.sched_pri.get_value()
-			new_affinity = self.affinity.get_text()
-			pids = self.ps.find_by_name("IRQ-%d" % self.irq)
-			if pids:
-				if thread_set_attributes(pids[0], self.ps,
-							 new_policy,
-							 new_prio,
-							 new_affinity,
-							 self.irqs.nr_cpus):
-					changed = True
-
-			try:
-				new_affinity = [ int(a) for a in new_affinity.split(",") ]
-			except:
-				try:
-					new_affinity = tuna.cpustring_to_list(new_affinity)
-				except:
-					new_affinity = procfs.bitmasklist(new_affinity,
-									  self.irqs.nr_cpus)
-
-			new_affinity.sort()
-
-			curr_affinity = self.irqs[self.irq]["affinity"]
-			if curr_affinity != new_affinity:
-				tuna.set_irq_affinity(self.irq,
-						      procfs.hexbitmask(new_affinity,
-									self.irqs.nr_cpus))
-				changed = True
-
-		self.dialog.destroy()
-		return changed
-
-class irqview:
-
-	nr_columns = 7
-	( COL_NUM, COL_PID, COL_POL, COL_PRI,
-	  COL_AFF, COL_EVENTS, COL_USERS ) = range(nr_columns)
-	columns = (list_store_column("IRQ"),
-		   list_store_column("PID", gobject.TYPE_INT),
-		   list_store_column("Policy", gobject.TYPE_STRING),
-		   list_store_column("Priority", gobject.TYPE_INT),
-		   list_store_column("Affinity", gobject.TYPE_STRING),
-		   list_store_column("Events"),
-		   list_store_column("Users", gobject.TYPE_STRING))
-
-	def __init__(self, treeview, irqs, ps, cpus_filtered):
-
-		self.is_root = os.getuid() == 0
-		self.irqs = irqs
-		self.ps = ps
-		self.treeview = treeview
-		self.has_threaded_irqs = tuna.has_threaded_irqs(irqs, ps)
-		if not self.has_threaded_irqs:
-			self.nr_columns = 4
-			( self.COL_NUM,
-			  self.COL_AFF,
-			  self.COL_EVENTS,
-			  self.COL_USERS ) = range(self.nr_columns)
-			self.columns = (list_store_column("IRQ"),
-					list_store_column("Affinity", gobject.TYPE_STRING),
-					list_store_column("Events"),
-					list_store_column("Users", gobject.TYPE_STRING))
-
-		self.list_store = gtk.ListStore(*generate_list_store_columns_with_attr(self.columns))
-
-		# Allow selecting multiple rows
-		selection = treeview.get_selection()
-		selection.set_mode(gtk.SELECTION_MULTIPLE)
-
-		# Allow enable drag and drop of rows
-		self.treeview.enable_model_drag_source(gtk.gdk.BUTTON1_MASK,
-						       gui.DND_TARGETS,
-						       gtk.gdk.ACTION_DEFAULT | gtk.gdk.ACTION_MOVE)
-		self.treeview.connect("drag_data_get", self.on_drag_data_get_data)
-		self.renderer = gtk.CellRendererText()
-
-		for col in range(self.nr_columns):
-			column = gtk.TreeViewColumn(self.columns[col].name,
-						    self.renderer, text = col)
-			column.set_sort_column_id(col)
-			column.add_attribute(self.renderer, "weight",
-					     col + self.nr_columns)
-			self.treeview.append_column(column)
-
-		self.cpus_filtered = cpus_filtered
-		self.refreshing = True
-
-		self.treeview.set_model(self.list_store)
-
-	def foreach_selected_cb(self, model, path, iter, irq_list):
-		irq = model.get_value(iter, self.COL_NUM)
-		irq_list.append(str(irq))
-
-	def on_drag_data_get_data(self, treeview, context,
-			          selection, target_id, etime):
-		treeselection = treeview.get_selection()
-		irq_list = []
-		treeselection.selected_foreach(self.foreach_selected_cb, irq_list)
-		selection.set(selection.target, 8, "irq:" + ",".join(irq_list))
-
-	def set_irq_columns(self, iter, irq, irq_info, nics):
-		new_value = [ None ] * self.nr_columns
-		users = tuna.get_irq_users(self.irqs, irq, nics)
-		if self.has_threaded_irqs:
-			pids = self.ps.find_by_name("IRQ-%d" % irq)
-			if pids:
-				pid = pids[0]
-				prio = int(self.ps[pid]["stat"]["rt_priority"])
-				sched = schedutils.schedstr(schedutils.get_scheduler(pid))[6:]
-			else:
-				sched = ""
-				pid = -1
-				prio = -1
-			new_value[self.COL_PID] = pid
-			new_value[self.COL_POL] = sched
-			new_value[self.COL_PRI] = prio
-
-		new_value[self.COL_NUM] = irq
-		new_value[self.COL_AFF] = tuna.get_irq_affinity_text(self.irqs, irq)
-		new_value[self.COL_EVENTS] = reduce(lambda a, b: a + b, irq_info["cpu"])
-		new_value[self.COL_USERS] = ",".join(users)
-
-		set_store_columns(self.list_store, iter, new_value)
-
-	def show(self):
-		new_irqs = []
-		for sirq in self.irqs.keys():
-			try:
-				new_irqs.append(int(sirq))
-			except:
-				continue
-
-		nics = ethtool.get_active_devices()
-
-		row = self.list_store.get_iter_first()
-		while row:
-			irq = self.list_store.get_value(row, self.COL_NUM)
-			# IRQ was unregistered? I.e. driver unloaded?
-			if not self.irqs.has_key(irq):
-				if self.list_store.remove(row):
-					# removed and row now its the next one
-					continue
-				# Was the last one
-				break
-			elif tuna.irq_filtered(irq, self.irqs,
-					       self.cpus_filtered,
-					       self.is_root):
-				new_irqs.remove(irq)
-				if self.list_store.remove(row):
-					# removed and row now its the next one
-					continue
-				# Was the last one
-				break
-			else:
-				new_irqs.remove(irq)
-				irq_info = self.irqs[irq]
-				self.set_irq_columns(row, irq, irq_info, nics)
-
-			row = self.list_store.iter_next(row)
-
-		new_irqs.sort()
-		for irq in new_irqs:
-			if tuna.irq_filtered(irq, self.irqs, self.cpus_filtered,
-					     self.is_root):
-				continue
-			row = self.list_store.append()
-			irq_info = self.irqs[irq]
-			self.set_irq_columns(row, irq, irq_info, nics)
-
-		self.treeview.show_all()
-
-	def refresh(self):
-		if not self.refreshing:
-			return
-		self.irqs.reload()
-		self.show()
-
-	def refresh_toggle(self, unused):
-		self.refreshing = not self.refreshing
-
-	def edit_attributes(self, a):
-		ret = self.treeview.get_path_at_pos(self.last_x, self.last_y)
-		if not ret:
-			return
-		path, col, xpos, ypos = ret
-		if not path:
-			return
-		row = self.list_store.get_iter(path)
-		irq = self.list_store.get_value(row, self.COL_NUM)
-		if not self.irqs.has_key(irq):
-			return
-
-		dialog = irq_druid(self.irqs, self.ps, irq)
-		if dialog.run():
-			self.refresh(self.ps)
-
-	def on_irqlist_button_press_event(self, treeview, event):
-		if event.type != gtk.gdk.BUTTON_PRESS or event.button != 3:
-			return
-
-		self.last_x = int(event.x)
-		self.last_y = int(event.y)
-
-		menu = gtk.Menu()
-
-		setattr = gtk.MenuItem("_Set IRQ attributes")
-		if self.refreshing:
-			refresh_prefix = "Sto_p refreshing the"
-		else:
-			refresh_prefix = "_Refresh"
-		refresh = gtk.MenuItem(refresh_prefix + " IRQ list")
-
-		menu.add(setattr)
-		menu.add(refresh)
-
-		setattr.connect_object('activate', self.edit_attributes, event)
-		refresh.connect_object('activate', self.refresh_toggle, event)
-
-		setattr.show()
-		refresh.show()
-
-		menu.popup(None, None, None, event.button, event.time)
-
-	def toggle_mask_cpu(self, cpu, enabled):
-		if not enabled:
-			if cpu not in self.cpus_filtered:
-				self.cpus_filtered.append(cpu)
-				self.show()
-		else:
-			if cpu in self.cpus_filtered:
-				self.cpus_filtered.remove(cpu)
-				self.show()
 
 class process_druid:
 
@@ -554,15 +142,16 @@ class process_druid:
 		self.sched_pri.set_sensitive(can_change_pri)
 
 	def on_affinity_text_changed(self, button):
-		on_affinity_text_changed(self)
+		gui.on_affinity_text_changed(self)
 
 	def set_attributes_for_regex(self, regex, new_policy, new_prio, new_affinity):
 		changed = False
 		cmdline_regex = re.compile(regex)
 		for match_pid in self.ps.find_by_cmdline_regex(cmdline_regex):
-			if thread_set_attributes(match_pid, self.ps, new_policy,
-						 new_prio, new_affinity,
-						 self.nr_cpus):
+			if gui.thread_set_attributes(match_pid, self.ps,
+						     new_policy, new_prio,
+						     new_affinity,
+						     self.nr_cpus):
 				changed = True
 
 		return changed
@@ -571,8 +160,9 @@ class process_druid:
 		changed = False
 		threads = self.ps[pid]["threads"]
 		for tid in threads.keys():
-			if thread_set_attributes(tid, threads, new_policy, new_prio,
-						 new_affinity, self.nr_cpus):
+			if gui.thread_set_attributes(tid, threads, new_policy,
+						     new_prio, new_affinity,
+						     self.nr_cpus):
 				changed = True
 
 		return changed
@@ -584,17 +174,17 @@ class process_druid:
 			new_prio = int(self.sched_pri.get_value())
 			new_affinity = self.affinity.get_text()
 			if self.just_this_thread.get_active():
-				changed = thread_set_attributes(self.pid,
-								self.ps,
-								new_policy,
-								new_prio,
-								new_affinity,
-								self.nr_cpus)
+				changed = gui.thread_set_attributes(self.pid,
+								    self.ps,
+								    new_policy,
+								    new_prio,
+								    new_affinity,
+								    self.nr_cpus)
 			elif self.all_these_threads.get_active():
-				if thread_set_attributes(self.pid, self.ps,
-							 new_policy, new_prio,
-							 new_affinity,
-							 self.nr_cpus):
+				if gui.thread_set_attributes(self.pid, self.ps,
+							     new_policy, new_prio,
+							     new_affinity,
+							     self.nr_cpus):
 					changed = True
 				if self.set_attributes_for_threads(self.pid,
 								   new_policy,
@@ -614,13 +204,13 @@ class procview:
 
 	nr_columns = 7
 	( COL_PID, COL_POL, COL_PRI, COL_AFF, COL_VOLCTXT, COL_NONVOLCTXT, COL_CMDLINE ) = range(nr_columns)
-	columns = (list_store_column("PID"),
-		   list_store_column("Policy", gobject.TYPE_STRING),
-		   list_store_column("Priority"),
-		   list_store_column("Affinity", gobject.TYPE_STRING),
-		   list_store_column("VolCtxtSwitch", gobject.TYPE_UINT),
-		   list_store_column("NonVolCtxtSwitch", gobject.TYPE_UINT),
-		   list_store_column("Command Line", gobject.TYPE_STRING))
+	columns = (gui.list_store_column("PID"),
+		   gui.list_store_column("Policy", gobject.TYPE_STRING),
+		   gui.list_store_column("Priority"),
+		   gui.list_store_column("Affinity", gobject.TYPE_STRING),
+		   gui.list_store_column("VolCtxtSwitch", gobject.TYPE_UINT),
+		   gui.list_store_column("NonVolCtxtSwitch", gobject.TYPE_UINT),
+		   gui.list_store_column("Command Line", gobject.TYPE_STRING))
 
 	def __init__(self, treeview, ps,
 		     show_kthreads = True, show_uthreads = True,
@@ -633,13 +223,13 @@ class procview:
 			self.nr_columns = 5
 			( self.COL_PID, self.COL_POL, self.COL_PRI,
 			  self.COL_AFF, self.COL_CMDLINE ) = range(self.nr_columns)
-			self.columns = (list_store_column("PID"),
-					list_store_column("Policy", gobject.TYPE_STRING),
-					list_store_column("Priority"),
-					list_store_column("Affinity", gobject.TYPE_STRING),
-					list_store_column("Command Line", gobject.TYPE_STRING))
+			self.columns = (gui.list_store_column("PID"),
+					gui.list_store_column("Policy", gobject.TYPE_STRING),
+					gui.list_store_column("Priority"),
+					gui.list_store_column("Affinity", gobject.TYPE_STRING),
+					gui.list_store_column("Command Line", gobject.TYPE_STRING))
 
-		self.tree_store = gtk.TreeStore(*generate_list_store_columns_with_attr(self.columns))
+		self.tree_store = gtk.TreeStore(*gui.generate_list_store_columns_with_attr(self.columns))
 		self.treeview.set_model(self.tree_store)
 
 		# Allow selecting multiple rows
@@ -734,7 +324,7 @@ class procview:
 
 		new_value[self.COL_CMDLINE] = procfs.process_cmdline(thread_info)
 
-		set_store_columns(self.tree_store, iter, new_value)
+		gui.set_store_columns(self.tree_store, iter, new_value)
 
 	def show(self, force_refresh = False):
 		# Start with the first row, if there is one, on the
@@ -1033,7 +623,8 @@ class main_gui:
 		self.procview = procview(self.wtree.get_widget("processlist"),
 					 self.ps, show_kthreads, show_uthreads, cpus_filtered)
 		self.irqview = irqview(self.wtree.get_widget("irqlist"),
-				       self.irqs, self.ps, cpus_filtered)
+				       self.irqs, self.ps, cpus_filtered,
+				       tuna_glade)
 		self.cpuview = cpuview(self.wtree.get_widget("vpaned1"),
 				       self.wtree.get_widget("hpaned2"),
 				       self.wtree.get_widget("cpuview"),
