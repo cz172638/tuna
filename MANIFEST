@@ -6,6 +6,8 @@ tuna/sysfs.py
 tuna/tuna.py
 tuna/tuna_gui.py
 tuna/tuna_gui.glade
+tuna/gui/__init__.py
+tuna/gui/cpuview.py
 setup.py
 rpm/SPECS/tuna.spec
 MANIFEST

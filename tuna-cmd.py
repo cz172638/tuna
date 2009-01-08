@@ -358,7 +358,7 @@ def main():
 			return
 		try:
 			cpus_filtered = filter and cpu_list or []
-			app = tuna_gui.gui(kthreads, uthreads, cpus_filtered)
+			app = tuna_gui.main_gui(kthreads, uthreads, cpus_filtered)
 			app.run()
 		except KeyboardInterrupt:
 			pass
