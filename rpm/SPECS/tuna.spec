@@ -12,7 +12,7 @@ BuildArch: noarch
 BuildRequires: python-devel
 Requires: python-ethtool
 Requires: python-linux-procfs >= 0.4.1
-Requires: python-schedutils
+Requires: python-schedutils >= 0.2
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 %description

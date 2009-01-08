@@ -17,9 +17,6 @@ except:
 	# OK, we're modern, having sets as first class citizens
 	pass
 
-# FIXME: should go to python-schedutils
-( SCHED_OTHER, SCHED_FIFO, SCHED_RR, SCHED_BATCH ) = range(4)
-
 tuna_glade_dirs = [ ".", "tuna", "/usr/share/tuna" ]
 tuna_glade = None
 
@@ -76,7 +73,7 @@ def thread_set_attributes(pid, threads, new_policy, new_prio, new_affinity, nr_c
 	changed = False
 	curr_policy = schedutils.get_scheduler(pid)
 	curr_prio = int(threads[pid]["stat"]["rt_priority"])
-	if new_policy == SCHED_OTHER:
+	if new_policy == schedutils.SCHED_OTHER:
 		new_prio = 0
 	if curr_policy != new_policy or curr_prio != new_prio:
 		try:
@@ -190,7 +187,7 @@ class irq_druid:
 
 	def on_sched_policy_combo_changed(self, button):
 		new_policy = self.sched_policy.get_active()
-		if new_policy in ( SCHED_FIFO, SCHED_RR ):
+		if new_policy in (schedutils.SCHED_FIFO, schedutils.SCHED_RR):
 			can_change_pri = True
 		else:
 			can_change_pri = False
@@ -556,7 +553,7 @@ class process_druid:
 
 	def on_sched_policy_combo_changed(self, button):
 		new_policy = self.sched_policy.get_active()
-		if new_policy in ( SCHED_FIFO, SCHED_RR ):
+		if new_policy in (schedutils.SCHED_FIFO, schedutils.SCHED_RR):
 			can_change_pri = True
 		else:
 			can_change_pri = False
