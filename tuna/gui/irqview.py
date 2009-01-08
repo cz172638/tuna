@@ -78,7 +78,7 @@ class irq_druid:
 		changed = False
 		if self.dialog.run() == gtk.RESPONSE_OK:
 			new_policy = self.sched_policy.get_active()
-			new_prio = self.sched_pri.get_value()
+			new_prio = int(self.sched_pri.get_value())
 			new_affinity = self.affinity.get_text()
 			pids = self.ps.find_by_name("IRQ-%d" % self.irq)
 			if pids:
