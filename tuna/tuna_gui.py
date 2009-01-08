@@ -11,12 +11,6 @@ import gui
 from gui.cpuview import cpuview
 import tuna
 
-try:
-	from sets import Set as set
-except:
-	# OK, we're modern, having sets as first class citizens
-	pass
-
 tuna_glade_dirs = [ ".", "tuna", "/usr/share/tuna" ]
 tuna_glade = None
 
