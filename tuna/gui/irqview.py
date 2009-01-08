@@ -37,6 +37,7 @@ class irq_druid:
 			prio = int(ps[pid]["stat"]["rt_priority"])
 			self.create_policy_model(self.sched_policy)
 			self.sched_policy.set_active(schedutils.get_scheduler(pid))
+			self.sched_pri.set_value(prio)
 			text.set_markup("IRQ <b>%u</b> (PID <b>%u</b>), pri <b>%u</b>, aff <b>%s</b>, <tt><b>%s</b></tt>" % \
 					( irq, pid, prio, self.affinity_text,
 					  ",".join(users)))
