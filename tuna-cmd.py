@@ -254,6 +254,7 @@ def main():
 	cpu_list = None
 	irq_list = None
 	thread_list = None
+	thread_list_str = None
 	filter = False
 	affect_children = False
 
@@ -273,6 +274,13 @@ def main():
 					 map(thread_mapper, a.split(",")))
 			op_list = list(set(op_list))
 			thread_list = do_list_op(op, thread_list, op_list)
+			# Check if a process name was especified and no
+			# threads was found, which would result in an empty
+			# thread list, i.e. we would print all the threads
+			# in the system when we should print nothing.
+			if not op_list and type(a) == type(''):
+				thread_list_str = do_list_op(op, thread_list_str,
+							     a.split(","))
 			if not op:
 				irq_list = None
 		elif o in ("-f", "--filter"):
@@ -292,6 +300,10 @@ def main():
 		elif o in ("-p", "--priority"):
 			tuna.threads_set_priority(thread_list, a, affect_children)
 		elif o in ("-P", "--show_threads"):
+			# If the user specified process names that weren't
+			# resolved to pids, don't show all threads.
+			if thread_list_str and not thread_list:
+				continue
 			do_ps(thread_list, cpu_list, irq_list, uthreads,
 			      kthreads, affect_children)
 		elif o in ("-m", "--move", "-x", "--spread"):
