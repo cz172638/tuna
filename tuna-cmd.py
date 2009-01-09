@@ -2,7 +2,7 @@
 # -*- python -*-
 # -*- coding: utf-8 -*-
 #   tuna - Application Tuning GUI
-#   Copyright (C) 2008 Red Hat Inc.
+#   Copyright (C) 2008, 2009 Red Hat Inc.
 #   Arnaldo Carvalho de Melo <acme@redhat.com>
 #
 #   This application is free software; you can redistribute it and/or
