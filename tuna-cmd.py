@@ -14,7 +14,7 @@
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 #   General Public License for more details.
 
-import getopt, ethtool, procfs, re, schedutils, sys
+import getopt, ethtool, fnmatch, procfs, re, schedutils, sys
 from tuna import tuna, sysfs
 
 try:
@@ -224,7 +224,7 @@ def thread_mapper(s):
 		ps = procfs.pidstats()
 
 	try:
-		return ps.find_by_regex(re.compile(s))
+		return ps.find_by_regex(re.compile(fnmatch.translate(s)))
 	except:
 		return ps.find_by_name(s)
 
