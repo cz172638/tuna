@@ -11,7 +11,7 @@ Source: http://userweb.kernel.org/~acme/tuna/%{name}-%{version}.tar.bz2
 BuildArch: noarch
 BuildRequires: python-devel
 Requires: python-ethtool
-Requires: python-linux-procfs >= 0.4.1
+Requires: python-linux-procfs >= 0.4.2
 Requires: python-schedutils >= 0.2
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 

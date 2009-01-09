@@ -27,6 +27,7 @@ except:
 
 nr_cpus = None
 ps = None
+irqs = None
 version = "0.8.3"
 
 def usage():
@@ -90,7 +91,8 @@ def ps_show_header(has_ctxt_switch_info):
 		 has_ctxt_switch_info and " %9s %12s" % ("voluntary", "nonvoluntary") or "",
 		 "cmd")
 
-def ps_show_thread(pid, affect_children, ps, cpuinfo, irqs, nics, has_ctxt_switch_info):
+def ps_show_thread(pid, affect_children, ps, cpuinfo, nics, has_ctxt_switch_info):
+	global irqs
 	try:
 		affinity = schedutils.get_affinity(pid)
 	except SystemError: # (3, 'No such process')
@@ -106,6 +108,8 @@ def ps_show_thread(pid, affect_children, ps, cpuinfo, irqs, nics, has_ctxt_switc
 	users = ""
 	if cmd[:4] == "IRQ-":
 		try:
+			if not irqs:
+				irqs = procfs.interrupts()
 			users = irqs[cmd[4:]]["users"]
 			for u in users:
 				if u in nics:
@@ -130,25 +134,11 @@ def ps_show_thread(pid, affect_children, ps, cpuinfo, irqs, nics, has_ctxt_switc
 	if affect_children and ps[pid].has_key("threads"):
 		for tid in ps[pid]["threads"].keys():
 			ps_show_thread(tid, False, ps[pid]["threads"],
-				       cpuinfo, irqs, nics,
-				       has_ctxt_switch_info)
+				       cpuinfo, nics, has_ctxt_switch_info)
 			
 
-def ps_show(ps, affect_children, cpuinfo, irqs, thread_list, cpu_list,
-	    irq_list, show_uthreads, show_kthreads, has_ctxt_switch_info):
-
-	irq_list_numbers = []
-	if irq_list:
-		for i in irq_list:
-			try:
-				irq = int(i)
-			except:
-				irq = irqs.find_by_user(i)
-				if not irq:
-					continue
-				irq = int(irq)
-
-			irq_list_numbers.append(irq)
+def ps_show(ps, affect_children, cpuinfo, thread_list, cpu_list,
+	    irq_list_numbers, show_uthreads, show_kthreads, has_ctxt_switch_info):
 				
 	ps_list = []
 	for pid in ps.keys():
@@ -186,7 +176,7 @@ def ps_show(ps, affect_children, cpuinfo, irqs, thread_list, cpu_list,
 	nics = ethtool.get_active_devices()
 
 	for pid in ps_list:
-		ps_show_thread(pid, affect_children, ps, cpuinfo, irqs, nics, has_ctxt_switch_info)
+		ps_show_thread(pid, affect_children, ps, cpuinfo, nics, has_ctxt_switch_info)
 
 def do_ps(thread_list, cpu_list, irq_list, show_uthreads,
 	  show_kthreads, affect_children):
@@ -194,11 +184,10 @@ def do_ps(thread_list, cpu_list, irq_list, show_uthreads,
 	if affect_children:
 		ps.reload_threads()
 	cpuinfo = procfs.cpuinfo()
-	irqs = procfs.interrupts()
 	has_ctxt_switch_info = ps[1]["status"].has_key("voluntary_ctxt_switches")
 	try:
 		ps_show_header(has_ctxt_switch_info)
-		ps_show(ps, affect_children, cpuinfo, irqs, thread_list,
+		ps_show(ps, affect_children, cpuinfo, thread_list,
 			cpu_list, irq_list, show_uthreads, show_kthreads,
 			has_ctxt_switch_info)
 	except IOError:
@@ -228,6 +217,24 @@ def thread_mapper(s):
 	except:
 		return ps.find_by_name(s)
 
+def irq_mapper(s):
+	global irqs
+	try:
+		return [ int(s), ]
+	except:
+		pass
+	if not irqs:
+		irqs = procfs.interrupts()
+
+	irq_list_str = irqs.find_by_user_regex(re.compile(fnmatch.translate(s)))
+	irq_list = []
+	for i in irq_list_str:
+		try:
+			irq_list.append(int(i))
+		except:
+			pass
+	return irq_list
+
 def pick_op(argument):
 	if argument[0] in ('+', '-'):
 		return (argument[0], argument[1:])
@@ -256,6 +263,7 @@ def main():
 	uthreads = True
 	cpu_list = None
 	irq_list = None
+	irq_list_str = None
 	thread_list = None
 	thread_list_str = None
 	filter = False
@@ -305,8 +313,9 @@ def main():
 		elif o in ("-P", "--show_threads"):
 			# If the user specified process names that weren't
 			# resolved to pids, don't show all threads.
-			if thread_list_str and not thread_list:
-				continue
+			if not thread_list and not irq_list:
+				if thread_list_str or irq_list_str:
+					continue
 			do_ps(thread_list, cpu_list, irq_list, uthreads,
 			      kthreads, affect_children)
 		elif o in ("-m", "--move", "-x", "--spread"):
@@ -349,8 +358,13 @@ def main():
 			kthreads = False
 		elif o in ("-q", "--irqs"):
 			(op, a) = pick_op(a)
-			op_list = list(set(a.split(",")))
+			op_list = reduce(lambda i, j: i + j,
+					 map(irq_mapper, list(set(a.split(",")))))
 			irq_list = do_list_op(op, irq_list, op_list)
+			# See comment above about thread_list_str
+			if not op_list and type(a) == type(''):
+				irq_list_str = do_list_op(op, irq_list_str,
+							  a.split(","))
 			if not op:
 				thread_list = None
 		elif o in ("-U", "--no_uthreads"):
