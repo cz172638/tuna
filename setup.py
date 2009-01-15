@@ -24,5 +24,5 @@ Provides interface for changing scheduler and IRQ tunables, at whole CPU and at 
 thread/IRQ level. Allows isolating CPUs for use by a specific application and moving
 threads and interrupts to a CPU by just dragging and dropping them.
 """,
-      packages = ["tuna"],
+      packages = ["tuna", "tuna/gui"],
       )
