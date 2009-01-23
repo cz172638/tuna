@@ -21,3 +21,14 @@ bz2dev: rpmdirs
 
 rpmdev: bz2dev rpmdirs
 	rpmbuild -ba --define "_topdir $(PWD)/rpm" rpm/SPECS/$(PACKAGE).spec
+
+rpmclean:
+	@rm -f rpm/RPMS/*/$(PACKAGE)-$(VERSION)-*.rpm
+	@rm -f rpm/SRPMS/$(PACKAGE)-$(VERSION)-*.src.rpm
+	@rm -f rpm/SOURCES/$(PACKAGE)-$(VERSION).tar.bz2
+	@rm -rf rpm/BUILD/$(PACKAGE)-$(VERSION)*
+
+pyclean:
+	@find . -type f \( -name \*~ -o -name \*.pyc \) -delete
+
+clean: pyclean rpmclean
