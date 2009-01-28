@@ -53,8 +53,10 @@ def kthread_help_plain_text(pid, cmdline):
 
 	return help, title
 
-# Zombies also doesn't have smaps entries, but it should be good enough
 def iskthread(pid):
+	# FIXME: we should leave to the callers to handle all the exceptions,
+	# in this function, so that they know that the thread vanished and
+	# can act accordingly, removing entries from tree views, etc
 	try:
 		f = file("/proc/%d/smaps" % pid)
 	except IOError:
@@ -63,7 +65,19 @@ def iskthread(pid):
 
 	line = f.readline()
 	f.close()
-	return not line
+	if line:
+		return False
+	# Zombies also doesn't have smaps entries, so check the
+	# state:
+	try:
+		p = procfs.pidstat(pid)
+	except:
+		return True
+	
+	if p["state"] == 'Z':
+		return False
+	return True
+	
 
 # FIXME: Move to python-linux-procfs
 def has_threaded_irqs(irqs, ps):
