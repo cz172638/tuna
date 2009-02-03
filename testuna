@@ -199,6 +199,19 @@ if [ $NR_CPU_SOCKETS -ge 2 ]; then
 	die_if_not_equal $((AFFINITY & CPU1_SIBLINGS)) $CPU1_SIBLINGS "Moving init to CPU socket $CPU1_SOCKET"
 fi
 
+if [ $NR_PROCESSORS -gt 2 ]; then
+	THREAD_PREFIX="watchdog/"
+	PID=$(ps h -C ${THREAD_PREFIX}0 -o pid)
+	RTPRIO=$(get_rtprio $PID)
+	NEW_RTPRIO=$((RTPRIO - 1))
+	tuna -t $THREAD_PREFIX* -p $NEW_RTPRIO
+	for CPU in $(seq 0 $((NR_PROCESSORS - 1))); do
+		PID=$(ps h -C ${THREAD_PREFIX}$CPU -o pid)
+		RTPRIO=$(get_rtprio $PID)
+		die_if_not_equal $RTPRIO $NEW_RTPRIO "Using --thread globbing"
+	done
+fi
+
 taskset -p $INITIAL_INIT_AFFINITY 1 > /dev/null
 rtctl --file $INITIAL reset
 
