@@ -2,7 +2,7 @@
 %{!?python_ver: %define python_ver %(%{__python} -c "import sys ; print sys.version[:3]")}
 
 Name: tuna
-Version: 0.8.3
+Version: 0.8.4
 Release: 1%{?dist}
 License: GPLv2
 Summary: Application tuning GUI & command line utility
@@ -75,6 +75,21 @@ rm -rf %{buildroot}
 %{_bindir}/oscilloscope
 
 %changelog
+* Mon Oct 27 2008 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.8.4-1
+- cmdline: Allow globbing --irqs/-q
+- cmdline: Allow globbing --threads/-t
+- cmdline: Support regex on --thread
+- cmdline: Check if thread names resolved to TIDs
+- irqview: We have to pass an int to schedutils.setscheduler
+- irqview: Initialize the rt_prio entry box
+- gui: move procview to a separate file
+- gui: Move irqview to a separate file
+- gui: remove the Set/set trick in tuna/tuna_gui.py, not used anymore
+- gui: Use schedutils.SCHED_{OTHER,FIFO,RR}
+- gui: move cpuview classes to a separate file
+- gui: Stop handling exceptions at procview.set_thread_columns
+- oscilloscope: Ignore invalid samples, emitting just a warning
+
 * Mon Oct 27 2008 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.8-1
 - [Non]VolCtxtSwitch columns should be represented in the GUI as unsigned
 - Several spelling fixes
