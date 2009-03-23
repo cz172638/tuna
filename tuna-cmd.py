@@ -28,7 +28,7 @@ except:
 nr_cpus = None
 ps = None
 irqs = None
-version = "0.8.3"
+version = "0.8.4"
 
 def usage():
 	print '''Usage: tuna [OPTIONS]

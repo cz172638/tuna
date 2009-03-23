@@ -81,6 +81,11 @@ die_if_not_equal() {
 	[ $1 -ne $2 ] && die 'FAILED!' "$3"
 }
 
+die_if_not_str_equal() {
+	dprint "$3"
+	[ $1 != $2 ] && die 'FAILED!' "$3"
+}
+
 TESTUNA_DIR=$(mktemp -d -t testuna.XXXXXX) || exit 1
 INITIAL=$TESTUNA_DIR/initial.tuna
 INITIAL_INIT_AFFINITY=$(get_affinity 1)
@@ -92,6 +97,11 @@ NEW=$TESTUNA_DIR/new.tuna
 dprint "Saving initial configuration"
 
 tuna_save $INITIAL
+
+TUNA_RPM_VERSION=$(rpm -q --qf "%{version}\n" tuna)
+TUNA_BIN_VERSION=$(tuna --version)
+die_if_not_str_equal "$TUNA_RPM_VERSION" "$TUNA_BIN_VERSION" \
+	"Verifying --version ($TUNA_BIN_VERSION) matches package version ($TUNA_RPM_VERSION)"
 
 rtctl --file $INITIAL reset
 
