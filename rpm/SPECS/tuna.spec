@@ -18,7 +18,8 @@ BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 %description
 Provides interface for changing scheduler and IRQ tunables, at whole CPU and at per
 thread/IRQ level. Allows isolating CPUs for use by a specific application and moving
-threads and interrupts to a CPU by just dragging and dropping them.
+threads and interrupts to a CPU by just dragging and dropping them. Operations can
+be done on CPU sockets, understanding CPU topology.
 
 Can be used as a command line utility without requiring the GUI libraries to be
 installed.
