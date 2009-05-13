@@ -2,7 +2,7 @@
 %{!?python_ver: %define python_ver %(%{__python} -c "import sys ; print sys.version[:3]")}
 
 Name: tuna
-Version: 0.8.4
+Version: 0.9
 Release: 1%{?dist}
 License: GPLv2
 Summary: Application tuning GUI & command line utility
@@ -13,6 +13,7 @@ BuildRequires: python-devel
 Requires: python-ethtool
 Requires: python-linux-procfs >= 0.4.2
 Requires: python-schedutils >= 0.2
+Requires: python-inet_diag
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 %description
@@ -76,6 +77,9 @@ rm -rf %{buildroot}
 %{_bindir}/oscilloscope
 
 %changelog
+* Wed May 13 2009 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.9-1
+- cmdline: add --show_sockets/-n
+
 * Mon Oct 27 2008 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.8.4-1
 - cmdline: Allow globbing --irqs/-q
 - cmdline: Allow globbing --threads/-t

@@ -14,7 +14,7 @@
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 #   General Public License for more details.
 
-import getopt, ethtool, fnmatch, procfs, re, schedutils, sys
+import getopt, ethtool, fnmatch, inet_diag, os, procfs, re, schedutils, sys
 from tuna import tuna, sysfs
 
 try:
@@ -28,7 +28,7 @@ except:
 nr_cpus = None
 ps = None
 irqs = None
-version = "0.8.4"
+version = "0.9"
 
 def usage():
 	print '''Usage: tuna [OPTIONS]
@@ -41,6 +41,7 @@ def usage():
 	-I, --include			Allow all threads to run on CPU-LIST
 	-K, --no_kthreads		Operations will not affect kernel threads
 	-m, --move			move selected entities to CPU-LIST
+	-n, --show_sockets		show network sockets in use by threads
 	-p, --priority=[POLICY]:RTPRIO	set thread scheduler POLICY and RTPRIO
 	-P, --show_threads		show thread list
 	-q, --irqs=IRQ-LIST		IRQ-LIST affected by commands
@@ -91,7 +92,40 @@ def ps_show_header(has_ctxt_switch_info):
 		 has_ctxt_switch_info and " %9s %12s" % ("voluntary", "nonvoluntary") or "",
 		 "cmd")
 
-def ps_show_thread(pid, affect_children, ps, cpuinfo, nics, has_ctxt_switch_info):
+def ps_show_sockets(pid, ps, inodes, inode_re, indent = 0):
+	header_printed = False
+	dirname = "/proc/%s/fd" % pid
+	try:
+		filenames = os.listdir(dirname)
+	except: # Process died
+		return
+	sindent = " " * indent
+	for filename in filenames:
+		pathname = os.path.join(dirname, filename)
+		try:
+			linkto = os.readlink(pathname)
+		except: # Process died
+			continue
+		inode_match = inode_re.match(linkto)
+		if not inode_match:
+			continue
+		inode = int(inode_match.group(1))
+		if not inodes.has_key(inode):
+			continue
+		if not header_printed:
+			print "%s%-10s %-6s %-6s %15s:%-5s %15s:%-5s" % \
+			      (sindent, "State", "Recv-Q", "Send-Q",
+			       "Local Address", "Port",
+			       "Peer Address", "Port")
+			header_printed = True
+		s = inodes[inode]
+		print "%s%-10s %-6d %-6d %15s:%-5d %15s:%-5d" % \
+		      (sindent, s.state(),
+		       s.receive_queue(), s.write_queue(),
+		       s.saddr(), s.sport(), s.daddr(), s.dport())
+
+def ps_show_thread(pid, affect_children, ps, cpuinfo, nics,
+		   has_ctxt_switch_info, sock_inodes, sock_inode_re):
 	global irqs
 	try:
 		affinity = schedutils.get_affinity(pid)
@@ -131,14 +165,19 @@ def ps_show_thread(pid, affect_children, ps, cpuinfo, nics, has_ctxt_switch_info
 		print "  %-5d" % pid,
 	print "%6s %5d %8s%s %15s %s" % (sched, rtprio, affinity,
 					 ctxt_switch_info, cmd, users)
+	if sock_inodes:
+		ps_show_sockets(pid, ps, sock_inodes, sock_inode_re,
+				affect_children and 3 or 4)
 	if affect_children and ps[pid].has_key("threads"):
 		for tid in ps[pid]["threads"].keys():
 			ps_show_thread(tid, False, ps[pid]["threads"],
-				       cpuinfo, nics, has_ctxt_switch_info)
+				       cpuinfo, nics, has_ctxt_switch_info,
+				       sock_inodes, sock_inode_re)
 			
 
 def ps_show(ps, affect_children, cpuinfo, thread_list, cpu_list,
-	    irq_list_numbers, show_uthreads, show_kthreads, has_ctxt_switch_info):
+	    irq_list_numbers, show_uthreads, show_kthreads,
+	    has_ctxt_switch_info, sock_inodes, sock_inode_re):
 				
 	ps_list = []
 	for pid in ps.keys():
@@ -176,20 +215,45 @@ def ps_show(ps, affect_children, cpuinfo, thread_list, cpu_list,
 	nics = ethtool.get_active_devices()
 
 	for pid in ps_list:
-		ps_show_thread(pid, affect_children, ps, cpuinfo, nics, has_ctxt_switch_info)
+		ps_show_thread(pid, affect_children, ps, cpuinfo, nics,
+			       has_ctxt_switch_info, sock_inodes,
+			       sock_inode_re)
+
+def load_socktype(socktype, inodes):
+	idiag = inet_diag.create(socktype = socktype)
+	while True:
+		try:
+			s = idiag.get()
+		except:
+			break
+		inodes[s.inode()] = s
+
+def load_sockets():
+	inodes = {}
+	for socktype in (inet_diag.TCPDIAG_GETSOCK,
+			 inet_diag.DCCPDIAG_GETSOCK):
+		load_socktype(socktype, inodes)
+	return inodes
 
 def do_ps(thread_list, cpu_list, irq_list, show_uthreads,
-	  show_kthreads, affect_children):
+	  show_kthreads, affect_children, show_sockets):
 	ps = procfs.pidstats()
 	if affect_children:
 		ps.reload_threads()
+
+	sock_inodes = None
+	sock_inode_re = None
+	if show_sockets:
+		sock_inodes = load_sockets()
+		sock_inode_re = re.compile(r"socket:\[(\d+)\]")
+	
 	cpuinfo = procfs.cpuinfo()
 	has_ctxt_switch_info = ps[1]["status"].has_key("voluntary_ctxt_switches")
 	try:
 		ps_show_header(has_ctxt_switch_info)
 		ps_show(ps, affect_children, cpuinfo, thread_list,
 			cpu_list, irq_list, show_uthreads, show_kthreads,
-			has_ctxt_switch_info)
+			has_ctxt_switch_info, sock_inodes, sock_inode_re)
 	except IOError:
 		# 'tuna -P | head' for instance
 		pass
@@ -243,12 +307,12 @@ def pick_op(argument):
 def main():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
-					   "c:CfghiIKmp:Pq:s:S:t:UvWx",
+					   "c:CfghiIKmnp:Pq:s:S:t:UvWx",
 					   ("cpus=", "affect_children",
 					    "filter", "gui", "help",
 					    "isolate", "include",
-					    "no_kthreads",
-					    "move", "priority=",
+					    "no_kthreads", "move",
+					    "show_sockets", "priority=",
 					    "show_threads", "irqs=",
 					    "save=", "sockets=", "threads=",
 					    "no_uthreads", "version", "what_is",
@@ -268,6 +332,7 @@ def main():
 	thread_list_str = None
 	filter = False
 	affect_children = False
+	show_sockets = False
 
 	for o, a in opts:
 		if o in ("-h", "--help"):
@@ -317,7 +382,9 @@ def main():
 				if thread_list_str or irq_list_str:
 					continue
 			do_ps(thread_list, cpu_list, irq_list, uthreads,
-			      kthreads, affect_children)
+			      kthreads, affect_children, show_sockets)
+		elif o in ("-n", "--show_sockets"):
+			show_sockets = True
 		elif o in ("-m", "--move", "-x", "--spread"):
 			if not cpu_list:
 				print "tuna: --move requires a cpu list!"
