@@ -259,6 +259,7 @@ class cpuview:
 			columns = math.ceil(math.sqrt(self.nr_sockets))
 			rows = math.ceil(self.nr_sockets / columns)
 			box = gtk.HBox()
+			vbox.pack_start(box, True, True)
 		else:
 			box = vbox
 
@@ -271,8 +272,8 @@ class cpuview:
 			self.socket_frames[socket_id] = frame
 			if self.nr_sockets > 1:
 				if column == columns:
-					vbox.pack_start(box, True, True)
 					box = gtk.HBox()
+					vbox.pack_start(box, True, True)
 					column = 1
 				else:
 					column += 1
