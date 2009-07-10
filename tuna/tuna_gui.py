@@ -99,9 +99,10 @@ class main_gui:
 					   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
 					   gtk.MESSAGE_WARNING,
 					   gtk.BUTTONS_YES_NO,
-					   _("Root privilege required\n\n" + \
-					   "Some functions will not work without root " + \
-					   "privilege.\nDo you want to continue?"))
+					   "%s\n\n%s\n%s" % \
+					   (_("Root privilege required"),
+					    _("Some functions will not work without root privilege."),
+					    _("Do you want to continue?")))
 		ret = dialog.run()
 		dialog.destroy()
 		if ret == gtk.RESPONSE_NO:

@@ -13,8 +13,8 @@ def set_affinity_warning(tid, affinity):
 				   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
 				   gtk.MESSAGE_WARNING,
 				   gtk.BUTTONS_OK,
-				   _("Couldn't change the affinity of %d to %s!") % \
-				   (tid, affinity))
+				   "%s %d %s %s!" % (_("Couldn't change the affinity of"),
+						     tid, _("to"), affinity))
 	dialog.run()
 	dialog.destroy()
 

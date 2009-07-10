@@ -201,7 +201,9 @@ def move_threads_to_cpu(cpus, pid_list, set_affinity_warning = None,
 				elif set_affinity_warning:
 					set_affinity_warning(pid, new_affinity)
 				else:
-					print _("move_threads_to_cpu: could not change pid %d affinity to %s") % (pid, new_affinity)
+					print "move_threads_to_cpu: %s " % \
+					      (_("could not change %(pid)d affinity to %(new_affinity)s") % \
+					       {'pid':pid, 'new_affinity':new_affinity})
 
 			# See if this is the thread group leader
 			if not ps.has_key(pid):
@@ -224,7 +226,9 @@ def move_threads_to_cpu(cpus, pid_list, set_affinity_warning = None,
 					elif set_affinity_warning:
 						set_affinity_warning(tid, new_affinity)
 					else:
-						print _("move_threads_to_cpu: could not change pid %d affinity to %s") % (pid, new_affinity)
+						print "move_threads_to_cpu: %s " % \
+						      (_("could not change %(pid)d affinity to %(new_affinity)s") % \
+						       {'pid':pid, 'new_affinity':new_affinity})
 		except SystemError:
 			# process died
 			continue

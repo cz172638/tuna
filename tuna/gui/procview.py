@@ -283,7 +283,9 @@ class procview:
 			key = cmdline
 			suffix_help = ""
 		help = tuna.kthread_help(key)
-		tooltip.set_markup(_("<b>Kernel Thread %d (%s):</b>\n%s%s") % (pid, cmdline, help, suffix_help))
+		tooltip.set_markup("<b>%s %d(%s)</b>\n%s%s" % (_("Kernel Thread"),
+							       pid, cmdline, help,
+							       suffix_help))
 		return True
 
 	def foreach_selected_cb(self, model, path, iter, pid_list):

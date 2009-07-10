@@ -34,27 +34,33 @@ irqs = None
 version = "0.9"
 
 def usage():
-	print _('''Usage: tuna [OPTIONS]
-	-h, --help			Give this help list
-	-g, --gui			Start the GUI
-	-c, --cpus=CPU-LIST		CPU-LIST affected by commands
-	-C, --affect_children		Operation will affect children threads
-	-f, --filter			Display filter the selected entities
-	-i, --isolate			Move all threads away from CPU-LIST
-	-I, --include			Allow all threads to run on CPU-LIST
-	-K, --no_kthreads		Operations will not affect kernel threads
-	-m, --move			move selected entities to CPU-LIST
-	-n, --show_sockets		show network sockets in use by threads
-	-p, --priority=[POLICY]:RTPRIO	set thread scheduler POLICY and RTPRIO
-	-P, --show_threads		show thread list
-	-q, --irqs=IRQ-LIST		IRQ-LIST affected by commands
-	-s, --save=FILENAME		save kthreads sched tunables to FILENAME
-	-S, --sockets=CPU-SOCKET-LIST   CPU-SOCKET-LIST affected by commands
-	-t, --threads=THREAD-LIST	THREAD-LIST affected by commands
-	-U, --no_uthreads		Operations will not affect user threads
-	-v, --version			show version
-	-W, --what_is			Provides help about selected entities
-	-x, --spread			spread selected entities over CPU-LIST''')
+	print _('Usage: tuna [OPTIONS]')
+	fmt = '\t%-40s %s'
+	print fmt % ('-h, --help',		    _('Give this help list'))
+	print fmt % ('-g, --gui',		    _('Start the GUI'))
+	print fmt % ('-c, --cpus=' + _('CPU-LIST'), _('CPU-LIST') + ' ' + _('affected by commands'))
+	print fmt % ('-C, --affect_children',	    _('Operation will affect children threads'))
+	print fmt % ('-f, --filter',		    _('Display filter the selected entities'))
+	print fmt % ('-i, --isolate',		    _('Move all threads away from') + ' ' + _('CPU-LIST'))
+	print fmt % ('-I, --include',		    _('Allow all threads to run on') + ' ' + _('CPU-LIST'))
+	print fmt % ('-K, --no_kthreads',	    _('Operations will not affect kernel threads'))
+	print fmt % ('-m, --move',		    _('Move selected entities to') + ' ' + _('CPU-LIST'))
+	print fmt % ('-n, --show_sockets',	    _('show network sockets in use by threads'))
+	print fmt % ('-p, --priority=[' +
+		     _('POLICY') + ']:' +
+		     _('RTPRIO'),		    "%s %s %s %s" % (_('Set thread scheduler tunables:'),
+								     _('POLICY'),  _('and'), _('RTPRIO')))
+	print fmt % ('-P, --show_threads',	    _('Show thread list'))
+	print fmt % ('-q, --irqs=' + _('IRQ-LIST'), _('IRQ-LIST') + ' ' + _('affected by commands'))
+	print fmt % ('-s, --save=' + _('FILENAME'), _('save kthreads sched tunables to') + ' ' + _('FILENAME'))
+	print fmt % ('-S, --sockets=' +
+		     _('CPU-SOCKET-LIST'),	    _('CPU-SOCKET-LIST') + ' ' + _('affected by commands'))
+	print fmt % ('-t, --threads=' +
+		     _('THREAD-LIST'),		    _('THREAD-LIST') + ' ' + _('affected by commands'))
+	print fmt % ('-U, --no_uthreads',	    _('Operations will not affect user threads'))
+	print fmt % ('-v, --version',		    _('Show version'))
+	print fmt % ('-W, --what_is',		    _('Provides help about selected entities'))
+	print fmt % ('-x, --spread',		    _('Spread selected entities over') + ' ' + _('CPU-LIST'))
 
 def get_nr_cpus():
 	global nr_cpus
@@ -69,7 +75,7 @@ def thread_help(tid):
 		ps = procfs.pidstats()
 
 	if not ps.has_key(tid):
-		print _("tuna: thread %d doesn't exists!") % tid
+		print "tuna: " + _("thread %d doesn't exists!") % tid
 		return
 
 	pinfo = ps[tid]
@@ -376,12 +382,12 @@ def main():
 			run_gui = True
 		elif o in ("-i", "--isolate"):
 			if not cpu_list:
-				print _("tuna: --isolate requires a cpu list!")
+				print "tuna: --isolate " + _("requires a cpu list!")
 				sys.exit(2)
 			tuna.isolate_cpus(cpu_list, get_nr_cpus())
 		elif o in ("-I", "--include"):
 			if not cpu_list:
-				print _("tuna: --include requires a cpu list!")
+				print "tuna: --include " + _("requires a cpu list!")
 				sys.exit(2)
 			tuna.include_cpus(cpu_list, get_nr_cpus())
 		elif o in ("-p", "--priority"):
@@ -398,10 +404,10 @@ def main():
 			show_sockets = True
 		elif o in ("-m", "--move", "-x", "--spread"):
 			if not cpu_list:
-				print _("tuna: --move requires a cpu list!")
+				print "tuna: --move " + _("requires a cpu list!")
 				sys.exit(2)
 			if not (thread_list or irq_list):
-				print _("tuna: --move requires a list or threads/irqs!")
+				print "tuna: --move " + _("requires a list of threads/irqs!")
 				sys.exit(2)
 
 			spread = o in ("-x", "--spread")
@@ -426,8 +432,9 @@ def main():
 			op_list = []
 			for socket in sockets:
 				if not cpu_info.sockets.has_key(socket):
-					print _("tuna: invalid socket %s, sockets available: %s") % \
-					      (socket,
+					print "tuna: %s %s" % \
+					      (_("invalid socket"), socket,
+					       _("sockets available: "),
 					       ", ".join(cpu_info.sockets.keys()))
 					sys.exit(2)
 				op_list += [ int(cpu.name[3:]) for cpu in cpu_info.sockets[socket] ]
@@ -451,7 +458,7 @@ def main():
 			print version
 		elif o in ("-W", "--what_is"):
 			if not thread_list:
-				print _("tuna: --what_is requires a thread list!")
+				print "tuna: --what_is " + _("requires a thread list!")
 				sys.exit(2)
 			for tid in thread_list:
 				thread_help(tid)
