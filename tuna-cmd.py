@@ -438,10 +438,10 @@ def main():
 			op_list = []
 			for socket in sockets:
 				if not cpu_info.sockets.has_key(socket):
-					print "tuna: %s %s" % \
-					      (_("invalid socket"), socket,
-					       _("sockets available: "),
-					       ", ".join(cpu_info.sockets.keys()))
+					print "tuna: %s" % \
+					      (_("invalid socket %(socket)s sockets available: %(available)s") % \
+					      {"socket": socket,
+					       "available": ",".join(cpu_info.sockets.keys())})
 					sys.exit(2)
 				op_list += [ int(cpu.name[3:]) for cpu in cpu_info.sockets[socket] ]
 			cpu_list = do_list_op(op, cpu_list, op_list)
