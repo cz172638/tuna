@@ -13,7 +13,8 @@ BuildRequires: python-devel
 Requires: python-ethtool
 Requires: python-linux-procfs >= 0.4.2
 Requires: python-schedutils >= 0.2
-Requires: python-inet_diag
+# This really should be a Suggests...
+# Requires: python-inet_diag
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 %description

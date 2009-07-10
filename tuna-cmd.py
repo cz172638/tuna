@@ -14,11 +14,17 @@
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 #   General Public License for more details.
 
-import getopt, ethtool, fnmatch, inet_diag, os, procfs, re, schedutils, sys
+import getopt, ethtool, fnmatch, os, procfs, re, schedutils, sys
 from tuna import tuna, sysfs
 
 import gettext
 import locale
+
+try:
+	import inet_diag
+	have_inet_diag = True
+except:
+	have_inet_diag = False
 
 try:
 	from sets import Set as set
@@ -45,7 +51,8 @@ def usage():
 	print fmt % ('-I, --include',		    _('Allow all threads to run on') + ' ' + _('CPU-LIST'))
 	print fmt % ('-K, --no_kthreads',	    _('Operations will not affect kernel threads'))
 	print fmt % ('-m, --move',		    _('Move selected entities to') + ' ' + _('CPU-LIST'))
-	print fmt % ('-n, --show_sockets',	    _('show network sockets in use by threads'))
+	if have_inet_diag:
+		print fmt % ('-n, --show_sockets',  _('show network sockets in use by threads'))
 	print fmt % ('-p, --priority=[' +
 		     _('POLICY') + ']:' +
 		     _('RTPRIO'),		    "%s %s %s %s" % (_('Set thread scheduler tunables:'),
@@ -323,17 +330,16 @@ def i18n_init():
 def main():
 	i18n_init()
 	try:
-		opts, args = getopt.getopt(sys.argv[1:],
-					   "c:CfghiIKmnp:Pq:s:S:t:UvWx",
-					   ("cpus=", "affect_children",
-					    "filter", "gui", "help",
-					    "isolate", "include",
-					    "no_kthreads", "move",
-					    "show_sockets", "priority=",
-					    "show_threads", "irqs=",
-					    "save=", "sockets=", "threads=",
-					    "no_uthreads", "version", "what_is",
-					    "spread"))
+		short = "c:CfghiIKmp:Pq:s:S:t:UvWx"
+		long = ["cpus=", "affect_children", "filter", "gui", "help",
+			"isolate", "include", "no_kthreads", "move",
+			"show_sockets", "priority=", "show_threads", "irqs=",
+			"save=", "sockets", "threads=", "no_uthreads",
+			"version", "what_is", "spread"]
+		if have_inet_diag:
+			short += "n"
+			long.append("show_sockets")
+		opts, args = getopt.getopt(sys.argv[1:], short, long)
 	except getopt.GetoptError, err:
 		usage()
 		print str(err)
