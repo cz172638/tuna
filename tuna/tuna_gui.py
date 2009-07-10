@@ -25,7 +25,7 @@ class main_gui:
 			tuna_glade = "%s/tuna_gui.glade" % dir
 			if os.access(tuna_glade, os.F_OK):
 				break
-		self.wtree = gtk.glade.XML(tuna_glade, "mainbig_window")
+		self.wtree = gtk.glade.XML(tuna_glade, "mainbig_window", "tuna")
 		self.ps = procfs.pidstats()
 		self.irqs = procfs.interrupts()
 		self.window = self.wtree.get_widget("mainbig_window")
@@ -99,9 +99,9 @@ class main_gui:
 					   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
 					   gtk.MESSAGE_WARNING,
 					   gtk.BUTTONS_YES_NO,
-					   "Root privilege required\n\n" + \
+					   _("Root privilege required\n\n" + \
 					   "Some functions will not work without root " + \
-					   "privilege.\nDo you want to continue?")
+					   "privilege.\nDo you want to continue?"))
 		ret = dialog.run()
 		dialog.destroy()
 		if ret == gtk.RESPONSE_NO:

@@ -47,7 +47,7 @@ def invalid_affinity():
 				   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
 				   gtk.MESSAGE_WARNING,
 				   gtk.BUTTONS_OK,
-				   "Invalid affinity, specify a list of CPUs!")
+				   _("Invalid affinity, specify a list of CPUs!"))
 	dialog.run()
 	dialog.destroy()
 	return False
@@ -66,18 +66,18 @@ def thread_set_attributes(pid, threads, new_policy, new_prio, new_affinity, nr_c
 						   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
 						   gtk.MESSAGE_WARNING,
 						   gtk.BUTTONS_OK,
-						   "Invalid parameters!")
+						   _("Invalid parameters!"))
 			dialog.run()
 			dialog.destroy()
 			return False
 
 		curr_policy = schedutils.get_scheduler(pid)
 		if curr_policy != new_policy:
-			print "couldn't change pid %d from %s(%d) to %s(%d)!" % \
-			      ( pid, schedutils.schedstr(curr_policy),
-				curr_prio,
-				schedutils.schedstr(new_policy),
-				new_prio)
+			print _("couldn't change pid %(pid)d from %(cpol)s(%(cpri)d) to %(npol)s(%(npri)d)!") % \
+			      { 'pid': pid, 'cpol': schedutils.schedstr(curr_policy),
+				'cpri': curr_prio,
+				'npol': schedutils.schedstr(new_policy),
+				'npri': new_prio}
 		else:
 			changed = True
 
@@ -107,8 +107,8 @@ def thread_set_attributes(pid, threads, new_policy, new_prio, new_affinity, nr_c
 		except SystemError: # (3, 'No such process')
 			return False
 		if curr_affinity != new_affinity:
-			print "couldn't change pid %d from %s to %s!" % \
-			      ( pid, curr_affinity, new_affinity )
+			print _("couldn't change pid %(pid)d from %(caff)s to %(naff)s!") % \
+			      { 'pid':pid, 'caff':curr_affinity, 'naff':new_affinity }
 		else:
 			changed = True
 

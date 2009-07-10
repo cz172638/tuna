@@ -56,6 +56,14 @@ install -m755 tuna-cmd.py %{buildroot}/%{_bindir}/tuna
 install -m755 oscilloscope-cmd.py %{buildroot}/%{_bindir}/oscilloscope
 install -m644 help/kthreads/* %{buildroot}/%{_datadir}/tuna/help/kthreads/
 
+# l10n-ed message catalogues
+for lng in `cat po/LINGUAS`; do
+        po=po/"$lng.po"
+        mkdir -p %{buildroot}/%{_datadir}/locale/${lng}/LC_MESSAGES
+        msgfmt $po -o %{buildroot}/%{_datadir}/locale/${lng}/LC_MESSAGES/tuna.mo
+done
+
+
 %clean
 rm -rf %{buildroot}
 
@@ -67,6 +75,7 @@ rm -rf %{buildroot}
 %dir %{_datadir}/tuna/help
 %dir %{_datadir}/tuna/help/kthreads/
 %{_datadir}/tuna/help/kthreads/*
+%{_datadir}/locale/*/LC_MESSAGES/*.mo
 %{python_sitelib}/tuna/
 %if "%{python_ver}" >= "2.5"
 %{python_sitelib}/*.egg-info

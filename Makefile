@@ -22,6 +22,12 @@ bz2dev: rpmdirs
 rpmdev: bz2dev rpmdirs
 	rpmbuild -ba --define "_topdir $(PWD)/rpm" rpm/SPECS/$(PACKAGE).spec
 
+po/$(PACKAGE).pot:
+	xgettext -k_ -kN_ -f po/POTFILES.in -o $@
+
+po/%.po: po/$(PACKAGE).pot
+	msgmerge --suffix=.old -U $@ $< && rm -f $@.old
+
 rpmclean:
 	@rm -f rpm/RPMS/*/$(PACKAGE)-$(VERSION)-*.rpm
 	@rm -f rpm/SRPMS/$(PACKAGE)-$(VERSION)-*.src.rpm

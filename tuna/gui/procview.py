@@ -13,7 +13,7 @@ class process_druid:
 		self.pid = pid
 		self.nr_cpus = nr_cpus
 		pid_info = self.ps[pid]
-		self.window = gtk.glade.XML(gladefile, "set_process_attributes")
+		self.window = gtk.glade.XML(gladefile, "set_process_attributes", "tuna")
 		self.dialog = self.window.get_widget("set_process_attributes")
 		pixbuf = self.dialog.render_icon(gtk.STOCK_PREFERENCES,
 						 gtk.ICON_SIZE_SMALL_TOOLBAR)
@@ -193,13 +193,13 @@ class procview:
 
 	nr_columns = 7
 	( COL_PID, COL_POL, COL_PRI, COL_AFF, COL_VOLCTXT, COL_NONVOLCTXT, COL_CMDLINE ) = range(nr_columns)
-	columns = (gui.list_store_column("PID"),
-		   gui.list_store_column("Policy", gobject.TYPE_STRING),
-		   gui.list_store_column("Priority"),
-		   gui.list_store_column("Affinity", gobject.TYPE_STRING),
-		   gui.list_store_column("VolCtxtSwitch", gobject.TYPE_UINT),
-		   gui.list_store_column("NonVolCtxtSwitch", gobject.TYPE_UINT),
-		   gui.list_store_column("Command Line", gobject.TYPE_STRING))
+	columns = (gui.list_store_column(_("PID")),
+		   gui.list_store_column(_("Policy"), gobject.TYPE_STRING),
+		   gui.list_store_column(_("Priority")),
+		   gui.list_store_column(_("Affinity"), gobject.TYPE_STRING),
+		   gui.list_store_column(_("VolCtxtSwitch"), gobject.TYPE_UINT),
+		   gui.list_store_column(_("NonVolCtxtSwitch"), gobject.TYPE_UINT),
+		   gui.list_store_column(_("Command Line"), gobject.TYPE_STRING))
 
 	def __init__(self, treeview, ps,
 		     show_kthreads, show_uthreads,
@@ -213,11 +213,11 @@ class procview:
 			self.nr_columns = 5
 			( self.COL_PID, self.COL_POL, self.COL_PRI,
 			  self.COL_AFF, self.COL_CMDLINE ) = range(self.nr_columns)
-			self.columns = (gui.list_store_column("PID"),
-					gui.list_store_column("Policy", gobject.TYPE_STRING),
-					gui.list_store_column("Priority"),
-					gui.list_store_column("Affinity", gobject.TYPE_STRING),
-					gui.list_store_column("Command Line", gobject.TYPE_STRING))
+			self.columns = (gui.list_store_column(_("PID")),
+					gui.list_store_column(_("Policy"), gobject.TYPE_STRING),
+					gui.list_store_column(_("Priority")),
+					gui.list_store_column(_("Affinity"), gobject.TYPE_STRING),
+					gui.list_store_column(_("Command Line"), gobject.TYPE_STRING))
 
 		self.tree_store = gtk.TreeStore(*gui.generate_list_store_columns_with_attr(self.columns))
 		self.treeview.set_model(self.tree_store)
@@ -283,7 +283,7 @@ class procview:
 			key = cmdline
 			suffix_help = ""
 		help = tuna.kthread_help(key)
-		tooltip.set_markup("<b>Kernel Thread %d (%s):</b>\n%s%s" % (pid, cmdline, help, suffix_help))
+		tooltip.set_markup(_("<b>Kernel Thread %d (%s):</b>\n%s%s") % (pid, cmdline, help, suffix_help))
 		return True
 
 	def foreach_selected_cb(self, model, path, iter, pid_list):
@@ -469,7 +469,7 @@ class procview:
 		self.refreshing = not self.refreshing
 
 	def save_kthreads_tunings(self, a):
-		dialog = gtk.FileChooserDialog("Save As",
+		dialog = gtk.FileChooserDialog(_("Save As"),
 					       None,
 					       gtk.FILE_CHOOSER_ACTION_SAVE,
 					       (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
@@ -527,7 +527,7 @@ class procview:
 					   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
 					   gtk.MESSAGE_INFO,
 					   gtk.BUTTONS_OK,
-					   "Kernel thread tunings saved to %s!" % filename)
+					   _("Kernel thread tunings saved to %s!") % filename)
 		dialog.run()
 		dialog.destroy()
 
@@ -540,26 +540,25 @@ class procview:
 
 		menu = gtk.Menu()
 
-		setattr = gtk.MenuItem("_Set process attributes")
+		setattr = gtk.MenuItem(_("_Set process attributes"))
 		if self.refreshing:
-			refresh_prefix = "Sto_p refreshing the"
+			refresh = gtk.MenuItem(_("Sto_p refreshing the process list"))
 		else:
-			refresh_prefix = "_Refresh the "
-		refresh = gtk.MenuItem(refresh_prefix + " process list")
+			refresh = gtk.MenuItem(_("_Refresh the process list"))
+
 		if self.show_kthreads:
-			kthreads_prefix = "_Hide"
+			kthreads = gtk.MenuItem(_("_Hide kernel threads"))
 		else:
-			kthreads_prefix = "_Show"
-		kthreads = gtk.MenuItem(kthreads_prefix + " kernel threads")
+			kthreads = gtk.MenuItem(_("_Show kernel threads"))
+
 		if self.show_uthreads:
-			uthreads_prefix = "_Hide"
+			uthreads = gtk.MenuItem(_("_Hide user threads"))
 		else:
-			uthreads_prefix = "_Show"
-		uthreads = gtk.MenuItem(uthreads_prefix + " user threads")
+			uthreads = gtk.MenuItem(_("_Show user threads"))
 
-		help = gtk.MenuItem("_What is this?")
+		help = gtk.MenuItem(_("_What is this?"))
 
-		save_kthreads_tunings = gtk.MenuItem("_Save kthreads tunings")
+		save_kthreads_tunings = gtk.MenuItem(_("_Save kthreads tunings"))
 
 		menu.add(save_kthreads_tunings)
 		menu.add(setattr)

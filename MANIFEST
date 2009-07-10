@@ -10,6 +10,11 @@ tuna/gui/__init__.py
 tuna/gui/cpuview.py
 tuna/gui/irqview.py
 tuna/gui/procview.py
+tuna/gui/util.py
 setup.py
 rpm/SPECS/tuna.spec
 MANIFEST
+po/LINGUAS
+po/POTFILES.in
+po/ja.po
+po/tuna.pot

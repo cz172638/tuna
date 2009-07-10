@@ -17,6 +17,9 @@
 import getopt, ethtool, fnmatch, inet_diag, os, procfs, re, schedutils, sys
 from tuna import tuna, sysfs
 
+import gettext
+import locale
+
 try:
 	from sets import Set as set
 except:
@@ -31,7 +34,7 @@ irqs = None
 version = "0.9"
 
 def usage():
-	print '''Usage: tuna [OPTIONS]
+	print _('''Usage: tuna [OPTIONS]
 	-h, --help			Give this help list
 	-g, --gui			Start the GUI
 	-c, --cpus=CPU-LIST		CPU-LIST affected by commands
@@ -51,7 +54,7 @@ def usage():
 	-U, --no_uthreads		Operations will not affect user threads
 	-v, --version			show version
 	-W, --what_is			Provides help about selected entities
-	-x, --spread			spread selected entities over CPU-LIST'''
+	-x, --spread			spread selected entities over CPU-LIST''')
 
 def get_nr_cpus():
 	global nr_cpus
@@ -66,7 +69,7 @@ def thread_help(tid):
 		ps = procfs.pidstats()
 
 	if not ps.has_key(tid):
-		print "tuna: thread %d doesn't exists!" % tid
+		print _("tuna: thread %d doesn't exists!") % tid
 		return
 
 	pinfo = ps[tid]
@@ -85,7 +88,7 @@ def save(cpu_list, thread_list, filename):
 
 def ps_show_header(has_ctxt_switch_info):
 	print "%7s %6s %5s %7s       %s" % \
-		(" ", " ", " ", "thread",
+		(" ", " ", " ", _("thread"),
 		 has_ctxt_switch_info and "ctxt_switches" or "")
 	print "%7s %6s %5s %7s%s %15s" % \
 		("pid", "SCHED_", "rtpri", "affinity",
@@ -304,7 +307,15 @@ def pick_op(argument):
 		return (argument[0], argument[1:])
 	return (None, argument)
 
+def i18n_init():
+	(app, localedir) = ('tuna', '/usr/share/locale')
+	locale.setlocale(locale.LC_ALL, '')
+	gettext.bindtextdomain(app, localedir)
+	gettext.textdomain(app)
+	gettext.install(app, localedir)
+
 def main():
+	i18n_init()
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
 					   "c:CfghiIKmnp:Pq:s:S:t:UvWx",
@@ -365,12 +376,12 @@ def main():
 			run_gui = True
 		elif o in ("-i", "--isolate"):
 			if not cpu_list:
-				print "tuna: --isolate requires a cpu list!"
+				print _("tuna: --isolate requires a cpu list!")
 				sys.exit(2)
 			tuna.isolate_cpus(cpu_list, get_nr_cpus())
 		elif o in ("-I", "--include"):
 			if not cpu_list:
-				print "tuna: --include requires a cpu list!"
+				print _("tuna: --include requires a cpu list!")
 				sys.exit(2)
 			tuna.include_cpus(cpu_list, get_nr_cpus())
 		elif o in ("-p", "--priority"):
@@ -387,10 +398,10 @@ def main():
 			show_sockets = True
 		elif o in ("-m", "--move", "-x", "--spread"):
 			if not cpu_list:
-				print "tuna: --move requires a cpu list!"
+				print _("tuna: --move requires a cpu list!")
 				sys.exit(2)
 			if not (thread_list or irq_list):
-				print "tuna: --move requires a list or threads/irqs!"
+				print _("tuna: --move requires a list or threads/irqs!")
 				sys.exit(2)
 
 			spread = o in ("-x", "--spread")
@@ -415,7 +426,7 @@ def main():
 			op_list = []
 			for socket in sockets:
 				if not cpu_info.sockets.has_key(socket):
-					print "tuna: invalid socket %s, sockets available: %s" % \
+					print _("tuna: invalid socket %s, sockets available: %s") % \
 					      (socket,
 					       ", ".join(cpu_info.sockets.keys()))
 					sys.exit(2)
@@ -440,7 +451,7 @@ def main():
 			print version
 		elif o in ("-W", "--what_is"):
 			if not thread_list:
-				print "tuna: --what_is requires a thread list!"
+				print _("tuna: --what_is requires a thread list!")
 				sys.exit(2)
 			for tid in thread_list:
 				thread_help(tid)

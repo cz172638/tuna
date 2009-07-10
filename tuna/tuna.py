@@ -45,10 +45,10 @@ def kthread_help_plain_text(pid, cmdline):
 			key = cmdline
 			suffix_help = ""
 		help = kthread_help(key)
-		title = "Kernel Thread %d (%s):" % (pid, cmdline)
+		title = _("Kernel Thread %(pid)d (%(cmdline)s):") % {'pid':pid, 'cmdline':cmdline}
 		help += suffix_help
 	else:
-		title = "User Thread %d (%s):" % (pid, cmdline)
+		title = _("User Thread %(pid)d (%(cmdline)s):") % {'pid':pid, 'cmdline':cmdline}
 		help = title
 
 	return help, title
@@ -201,7 +201,7 @@ def move_threads_to_cpu(cpus, pid_list, set_affinity_warning = None,
 				elif set_affinity_warning:
 					set_affinity_warning(pid, new_affinity)
 				else:
-					print "move_threads_to_cpu: could not change pid %d affinity to %s" % (pid, new_affinity)
+					print _("move_threads_to_cpu: could not change pid %d affinity to %s") % (pid, new_affinity)
 
 			# See if this is the thread group leader
 			if not ps.has_key(pid):
@@ -224,7 +224,7 @@ def move_threads_to_cpu(cpus, pid_list, set_affinity_warning = None,
 					elif set_affinity_warning:
 						set_affinity_warning(tid, new_affinity)
 					else:
-						print "move_threads_to_cpu: could not change pid %d affinity to %s" % (pid, new_affinity)
+						print _("move_threads_to_cpu: could not change pid %d affinity to %s") % (pid, new_affinity)
 		except SystemError:
 			# process died
 			continue

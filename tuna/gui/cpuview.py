@@ -13,7 +13,7 @@ def set_affinity_warning(tid, affinity):
 				   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
 				   gtk.MESSAGE_WARNING,
 				   gtk.BUTTONS_OK,
-				   "Couldn't change the affinity of %d to %s!" % \
+				   _("Couldn't change the affinity of %d to %s!") % \
 				   (tid, affinity))
 	dialog.run()
 	dialog.destroy()
@@ -44,7 +44,7 @@ class cpu_socket_frame(gtk.Frame):
 	def __init__(self, socket, cpus, creator):
 
 		if creator.nr_sockets > 1:
-			gtk.Frame.__init__(self, "Socket %s" % socket)
+			gtk.Frame.__init__(self, _("Socket %s") % socket)
 		else:
 			gtk.Frame.__init__(self)
 
@@ -62,21 +62,21 @@ class cpu_socket_frame(gtk.Frame):
 		# Filter column
 		renderer = gtk.CellRendererToggle()
 		renderer.connect('toggled', self.filter_toggled, self.list_store)
-		column = gtk.TreeViewColumn('Filter', renderer, active = self.COL_FILTER)
+		column = gtk.TreeViewColumn(_('Filter'), renderer, active = self.COL_FILTER)
 		self.treeview.append_column(column)
 
 		# CPU# column
-		column = gtk.TreeViewColumn('CPU', gtk.CellRendererText(),
+		column = gtk.TreeViewColumn(_('CPU'), gtk.CellRendererText(),
 					    text = self.COL_CPU)
 		self.treeview.append_column(column)
 
 		# CPU usage column
 		try:
-			column = gtk.TreeViewColumn('Usage', gtk.CellRendererProgress(),
+			column = gtk.TreeViewColumn(_('Usage'), gtk.CellRendererProgress(),
 						    text = self.COL_USAGE, value = self.COL_USAGE)
 		except:
 			# CellRendererProgress needs pygtk2 >= 2.6
-			column = gtk.TreeViewColumn('Usage', gtk.CellRendererText(),
+			column = gtk.TreeViewColumn(_('Usage'), gtk.CellRendererText(),
 						    text = self.COL_USAGE)
 		self.treeview.append_column(column)
 
@@ -195,12 +195,12 @@ class cpu_socket_frame(gtk.Frame):
 
 		menu = gtk.Menu()
 
-		include = gtk.MenuItem("I_nclude CPU")
-		isolate = gtk.MenuItem("_Isolate CPU")
+		include = gtk.MenuItem(_("I_nclude CPU"))
+		isolate = gtk.MenuItem(_("_Isolate CPU"))
 		if self.creator.nr_sockets > 1:
-			include_socket = gtk.MenuItem("I_nclude CPU Socket")
-			isolate_socket = gtk.MenuItem("_Isolate CPU Socket")
-		restore = gtk.MenuItem("_Restore CPU")
+			include_socket = gtk.MenuItem(_("I_nclude CPU Socket"))
+			isolate_socket = gtk.MenuItem(_("_Isolate CPU Socket"))
+		restore = gtk.MenuItem(_("_Restore CPU"))
 
 		menu.add(include)
 		menu.add(isolate)

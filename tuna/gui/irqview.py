@@ -14,7 +14,7 @@ class irq_druid:
 		self.irqs = irqs
 		self.ps = ps
 		self.irq = irq
-		self.window = gtk.glade.XML(gladefile, "set_irq_attributes")
+		self.window = gtk.glade.XML(gladefile, "set_irq_attributes", "tuna")
 		self.dialog = self.window.get_widget("set_irq_attributes")
 		pixbuf = self.dialog.render_icon(gtk.STOCK_PREFERENCES,
 						 gtk.ICON_SIZE_SMALL_TOOLBAR)
@@ -115,13 +115,13 @@ class irqview:
 	nr_columns = 7
 	( COL_NUM, COL_PID, COL_POL, COL_PRI,
 	  COL_AFF, COL_EVENTS, COL_USERS ) = range(nr_columns)
-	columns = (gui.list_store_column("IRQ"),
-		   gui.list_store_column("PID", gobject.TYPE_INT),
-		   gui.list_store_column("Policy", gobject.TYPE_STRING),
-		   gui.list_store_column("Priority", gobject.TYPE_INT),
-		   gui.list_store_column("Affinity", gobject.TYPE_STRING),
-		   gui.list_store_column("Events"),
-		   gui.list_store_column("Users", gobject.TYPE_STRING))
+	columns = (gui.list_store_column(_("IRQ")),
+		   gui.list_store_column(_("PID"), gobject.TYPE_INT),
+		   gui.list_store_column(_("Policy"), gobject.TYPE_STRING),
+		   gui.list_store_column(_("Priority"), gobject.TYPE_INT),
+		   gui.list_store_column(_("Affinity"), gobject.TYPE_STRING),
+		   gui.list_store_column(_("Events")),
+		   gui.list_store_column(_("Users"), gobject.TYPE_STRING))
 
 	def __init__(self, treeview, irqs, ps, cpus_filtered, gladefile):
 
@@ -137,10 +137,10 @@ class irqview:
 			  self.COL_AFF,
 			  self.COL_EVENTS,
 			  self.COL_USERS ) = range(self.nr_columns)
-			self.columns = (gui.list_store_column("IRQ"),
-					gui.list_store_column("Affinity", gobject.TYPE_STRING),
-					gui.list_store_column("Events"),
-					gui.list_store_column("Users", gobject.TYPE_STRING))
+			self.columns = (gui.list_store_column(_("IRQ")),
+					gui.list_store_column(_("Affinity"), gobject.TYPE_STRING),
+					gui.list_store_column(_("Events")),
+					gui.list_store_column(_("Users"), gobject.TYPE_STRING))
 
 		self.list_store = gtk.ListStore(*gui.generate_list_store_columns_with_attr(self.columns))
 
@@ -284,12 +284,11 @@ class irqview:
 
 		menu = gtk.Menu()
 
-		setattr = gtk.MenuItem("_Set IRQ attributes")
+		setattr = gtk.MenuItem(_("_Set IRQ attributes"))
 		if self.refreshing:
-			refresh_prefix = "Sto_p refreshing the"
+			refresh = gtk.MenuItem(_("Sto_p refreshing the IRQ list"))
 		else:
-			refresh_prefix = "_Refresh"
-		refresh = gtk.MenuItem(refresh_prefix + " IRQ list")
+			refresh = gtk.MenuItem(_("_Refresh the IRQ list"))
 
 		menu.add(setattr)
 		menu.add(refresh)
