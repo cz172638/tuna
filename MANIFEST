@@ -17,4 +17,5 @@ MANIFEST
 po/LINGUAS
 po/POTFILES.in
 po/ja.po
-po/tuna.pot
+po/pt_BR.po
+ChangeLog
