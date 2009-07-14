@@ -44,30 +44,39 @@ def usage():
 	fmt = '\t%-40s %s'
 	print fmt % ('-h, --help',		    _('Give this help list'))
 	print fmt % ('-g, --gui',		    _('Start the GUI'))
-	print fmt % ('-c, --cpus=' + _('CPU-LIST'), _('CPU-LIST') + ' ' + _('affected by commands'))
+	print fmt % ('-c, --cpus=' + _('CPU-LIST'), _('%(cpulist)s affected by commands') % \
+							{"cpulist": _('CPU-LIST')})
 	print fmt % ('-C, --affect_children',	    _('Operation will affect children threads'))
 	print fmt % ('-f, --filter',		    _('Display filter the selected entities'))
-	print fmt % ('-i, --isolate',		    _('Move all threads away from') + ' ' + _('CPU-LIST'))
-	print fmt % ('-I, --include',		    _('Allow all threads to run on') + ' ' + _('CPU-LIST'))
+	print fmt % ('-i, --isolate',		    _('Move all threads away from %(cpulist)s') % \
+							{"cpulist": _('CPU-LIST')})
+	print fmt % ('-I, --include',		    _('Allow all threads to run on %(cpulist)s') % \
+							{"cpulist": _('CPU-LIST')})
 	print fmt % ('-K, --no_kthreads',	    _('Operations will not affect kernel threads'))
-	print fmt % ('-m, --move',		    _('Move selected entities to') + ' ' + _('CPU-LIST'))
+	print fmt % ('-m, --move',		    _('Move selected entities to %(cpulist)s') % \
+							{"cpulist": _('CPU-LIST')})
 	if have_inet_diag:
-		print fmt % ('-n, --show_sockets',  _('show network sockets in use by threads'))
+		print fmt % ('-n, --show_sockets',  _('Show network sockets in use by threads'))
 	print fmt % ('-p, --priority=[' +
 		     _('POLICY') + ']:' +
-		     _('RTPRIO'),		    "%s %s %s %s" % (_('Set thread scheduler tunables:'),
-								     _('POLICY'),  _('and'), _('RTPRIO')))
+		     _('RTPRIO'),		    _('Set thread scheduler tunables: %(policy)s and %(rtprio)s') % \
+							{"policy": _('POLICY'), "rtprio": _('RTPRIO')})
 	print fmt % ('-P, --show_threads',	    _('Show thread list'))
-	print fmt % ('-q, --irqs=' + _('IRQ-LIST'), _('IRQ-LIST') + ' ' + _('affected by commands'))
-	print fmt % ('-s, --save=' + _('FILENAME'), _('save kthreads sched tunables to') + ' ' + _('FILENAME'))
+	print fmt % ('-q, --irqs=' + _('IRQ-LIST'), _('%(irqlist)s affected by commands') %
+							{"irqlist": _('IRQ-LIST')})
+	print fmt % ('-s, --save=' + _('FILENAME'), _('Save kthreads sched tunables to %(filename)s') % \
+							{"filename": _('FILENAME')})
 	print fmt % ('-S, --sockets=' +
-		     _('CPU-SOCKET-LIST'),	    _('CPU-SOCKET-LIST') + ' ' + _('affected by commands'))
+		     _('CPU-SOCKET-LIST'),	    _('%(cpusocketlist)s affected by commands') % \
+							{"cpusocketlist": _('CPU-SOCKET-LIST')})
 	print fmt % ('-t, --threads=' +
-		     _('THREAD-LIST'),		    _('THREAD-LIST') + ' ' + _('affected by commands'))
+		     _('THREAD-LIST'),		    _('%(threadlist)s affected by commands') % \
+							{"threadlist": _('THREAD-LIST')})
 	print fmt % ('-U, --no_uthreads',	    _('Operations will not affect user threads'))
 	print fmt % ('-v, --version',		    _('Show version'))
 	print fmt % ('-W, --what_is',		    _('Provides help about selected entities'))
-	print fmt % ('-x, --spread',		    _('Spread selected entities over') + ' ' + _('CPU-LIST'))
+	print fmt % ('-x, --spread',		    _('Spread selected entities over %(cpulist)s') % \
+							{"cpulist": _('CPU-LIST')})
 
 def get_nr_cpus():
 	global nr_cpus

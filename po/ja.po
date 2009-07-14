@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: tuna 0.8.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-07-09 20:04+0900\n"
+"POT-Creation-Date: 2009-07-13 12:21-0300\n"
 "PO-Revision-Date: 2009-07-09 21:43+0900\n"
 "Last-Translator: Satoru SATOH <ssato@redhat.com>\n"
 "Language-Team: Japanese <LL@li.org>\n"
@@ -76,27 +76,34 @@ msgid "<b>Set attributes for this IRQ:</b>"
 msgstr "<b>この IRQ の属性を設定:</b>"
 
 #: tuna/tuna_gui.py:102
-msgid ""
-"Root privilege required\n"
-"\n"
+#, fuzzy
+msgid "Root privilege required"
 msgstr ""
 "root 権限が必要です\n"
 "\n"
 
-#: tuna/tuna.py:48
+#: tuna/tuna_gui.py:103
+msgid "Some functions will not work without root privilege."
+msgstr ""
+
+#: tuna/tuna_gui.py:104
+msgid "Do you want to continue?"
+msgstr ""
+
+#: tuna/tuna.py:47
 #, python-format
 msgid "Kernel Thread %(pid)d (%(cmdline)s):"
 msgstr "カーネルスレッド %(pid)d (%(cmdline)s):"
 
-#: tuna/tuna.py:51
+#: tuna/tuna.py:50
 #, python-format
 msgid "User Thread %(pid)d (%(cmdline)s):"
 msgstr "ユーザースレッド %(pid)d (%(cmdline)s):"
 
-#: tuna/tuna.py:204 tuna/tuna.py:227
-#, python-format
-msgid "move_threads_to_cpu: could not change pid %d affinity to %s"
-msgstr "move_threads_to_cpu: PID %d のアフィニティを %s に変更できませんでした"
+#: tuna/tuna.py:204 tuna/tuna.py:229
+#, fuzzy, python-format
+msgid "could not change %(pid)d affinity to %(new_affinity)s"
+msgstr "PID %(pid)d について %(caff)s から %(naff)s に変更できませんでした!"
 
 #: tuna/gui/util.py:50
 msgid "Invalid affinity, specify a list of CPUs!"
@@ -110,70 +117,71 @@ msgstr "不正なパラメータです!"
 #, python-format
 msgid ""
 "couldn't change pid %(pid)d from %(cpol)s(%(cpri)d) to %(npol)s(%(npri)d)!"
-msgstr "PID %(pid)d について %(cpol)s(%(cpri)d) から %(npol)s(%(npri)d) に"
-"変更できませんでした!"
+msgstr ""
+"PID %(pid)d について %(cpol)s(%(cpri)d) から %(npol)s(%(npri)d) に変更できま"
+"せんでした!"
 
 #: tuna/gui/util.py:110
 #, python-format
 msgid "couldn't change pid %(pid)d from %(caff)s to %(naff)s!"
 msgstr "PID %(pid)d について %(caff)s から %(naff)s に変更できませんでした!"
 
-#: tuna/gui/cpuview.py:16
-#, python-format
-msgid "Couldn't change the affinity of %d to %s!"
-msgstr "%d のアフィニティを %s に変更できませんでした!"
+#: tuna/gui/cpuview.py:15
+#, fuzzy, python-format
+msgid "Couldn't change the affinity of %(tid)d to %(affinity)s!"
+msgstr "PID %(pid)d について %(caff)s から %(naff)s に変更できませんでした!"
 
-#: tuna/gui/cpuview.py:47
+#: tuna/gui/cpuview.py:46
 #, python-format
 msgid "Socket %s"
 msgstr "ソケット %s"
 
-#: tuna/gui/cpuview.py:65
+#: tuna/gui/cpuview.py:64
 msgid "Filter"
 msgstr "フィルタ"
 
-#: tuna/gui/cpuview.py:69
+#: tuna/gui/cpuview.py:68
 msgid "CPU"
 msgstr "CPU"
 
-#: tuna/gui/cpuview.py:75 tuna/gui/cpuview.py:79
+#: tuna/gui/cpuview.py:74 tuna/gui/cpuview.py:78
 msgid "Usage"
 msgstr "消費率"
 
-#: tuna/gui/cpuview.py:198
+#: tuna/gui/cpuview.py:197
 msgid "I_nclude CPU"
 msgstr "CPU を含める(_N)"
 
-#: tuna/gui/cpuview.py:199
+#: tuna/gui/cpuview.py:198
 msgid "_Isolate CPU"
 msgstr ""
 
-#: tuna/gui/cpuview.py:201
+#: tuna/gui/cpuview.py:200
 msgid "I_nclude CPU Socket"
 msgstr "CPU ソケットを含める(_N)"
 
-#: tuna/gui/cpuview.py:202
+#: tuna/gui/cpuview.py:201
 msgid "_Isolate CPU Socket"
 msgstr ""
 
-#: tuna/gui/cpuview.py:203
+#: tuna/gui/cpuview.py:202
 msgid "_Restore CPU"
 msgstr ""
 
-#: tuna/gui/procview.py:196 tuna/gui/procview.py:216 tuna/gui/irqview.py:119
+#: tuna/gui/procview.py:196 tuna/gui/procview.py:216 tuna/gui/irqview.py:118
 msgid "PID"
 msgstr "PID"
 
-#: tuna/gui/procview.py:197 tuna/gui/procview.py:217 tuna/gui/irqview.py:120
+#: tuna/gui/procview.py:197 tuna/gui/procview.py:217 tuna/gui/irqview.py:119
 msgid "Policy"
 msgstr "ポリシー"
 
-#: tuna/gui/procview.py:198 tuna/gui/procview.py:218 tuna/gui/irqview.py:121
+#: tuna/gui/procview.py:198 tuna/gui/procview.py:218 tuna/gui/irqview.py:120
 msgid "Priority"
 msgstr "優先度"
 
-#: tuna/gui/procview.py:199 tuna/gui/procview.py:219 tuna/gui/irqview.py:122
-#: tuna/gui/irqview.py:141
+#: tuna/gui/procview.py:199 tuna/gui/procview.py:219 tuna/gui/irqview.py:121
+#: tuna/gui/irqview.py:140
 msgid "Affinity"
 msgstr "アフィニティ"
 
@@ -190,158 +198,295 @@ msgid "Command Line"
 msgstr "コマンドライン"
 
 #: tuna/gui/procview.py:286
-#, python-format
-msgid ""
-"<b>Kernel Thread %d (%s):</b>\n"
-"%s%s"
-msgstr "<b>カーネルスレッド %d %s):</b>\n%s%s"
+#, fuzzy
+msgid "Kernel Thread"
+msgstr "カーネルスレッドを隠す(_H)"
 
-#: tuna/gui/procview.py:472
+#: tuna/gui/procview.py:474
 msgid "Save As"
 msgstr "名前を付けて保存"
 
-#: tuna/gui/procview.py:530
+#: tuna/gui/procview.py:532
 #, python-format
 msgid "Kernel thread tunings saved to %s!"
 msgstr "カーネルスレッド設定を %s に保存しました!"
 
-#: tuna/gui/procview.py:543
+#: tuna/gui/procview.py:545
 msgid "_Set process attributes"
 msgstr "プロセス属性を設定(_S)"
 
-#: tuna/gui/procview.py:545
+#: tuna/gui/procview.py:547
 msgid "Sto_p refreshing the process list"
 msgstr "プロセスリストの更新を停止(_P)"
 
-#: tuna/gui/procview.py:547
+#: tuna/gui/procview.py:549
 msgid "_Refresh the process list"
 msgstr "プロセスリストを更新(_R)"
 
-#: tuna/gui/procview.py:550
+#: tuna/gui/procview.py:552
 msgid "_Hide kernel threads"
 msgstr "カーネルスレッドを隠す(_H)"
 
-#: tuna/gui/procview.py:552
+#: tuna/gui/procview.py:554
 msgid "_Show kernel threads"
 msgstr "カーネルスレッドを表示(_S)"
 
-#: tuna/gui/procview.py:555
+#: tuna/gui/procview.py:557
 msgid "_Hide user threads"
 msgstr "ユーザースレッドを隠す(_H)"
 
-#: tuna/gui/procview.py:557
+#: tuna/gui/procview.py:559
 msgid "_Show user threads"
 msgstr "ユーザースレッドを表示(_S)"
 
-#: tuna/gui/procview.py:559
+#: tuna/gui/procview.py:561
 msgid "_What is this?"
 msgstr "これは何?(_W)"
 
-#: tuna/gui/procview.py:561
+#: tuna/gui/procview.py:563
 msgid "_Save kthreads tunings"
 msgstr "カーネルスレッド設定を保存(_S)"
 
-#: tuna/gui/irqview.py:118 tuna/gui/irqview.py:140
+#: tuna/gui/irqview.py:117 tuna/gui/irqview.py:139
 msgid "IRQ"
 msgstr "IRQ"
 
-#: tuna/gui/irqview.py:123 tuna/gui/irqview.py:142
+#: tuna/gui/irqview.py:122 tuna/gui/irqview.py:141
 msgid "Events"
 msgstr "Events"
 
-#: tuna/gui/irqview.py:124 tuna/gui/irqview.py:143
+#: tuna/gui/irqview.py:123 tuna/gui/irqview.py:142
 msgid "Users"
 msgstr "Users"
 
-#: tuna/gui/irqview.py:287
+#: tuna/gui/irqview.py:286
 msgid "_Set IRQ attributes"
 msgstr "IRQ の属性を設定(_S)"
 
-#: tuna/gui/irqview.py:289
+#: tuna/gui/irqview.py:288
 msgid "Sto_p refreshing the IRQ list"
 msgstr "IRQ リストの更新を停止(_P)"
 
-#: tuna/gui/irqview.py:291
+#: tuna/gui/irqview.py:290
 msgid "_Refresh the IRQ list"
 msgstr "IRQ リストを更新(_R)"
 
-#: tuna-cmd.py:37
-msgid ""
-"Usage: tuna [OPTIONS]\n"
-"\t-h, --help\t\t\tGive this help list\n"
-"\t-g, --gui\t\t\tStart the GUI\n"
-"\t-c, --cpus=CPU-LIST\t\tCPU-LIST affected by commands\n"
-"\t-C, --affect_children\t\tOperation will affect children threads\n"
-"\t-f, --filter\t\t\tDisplay filter the selected entities\n"
-"\t-i, --isolate\t\t\tMove all threads away from CPU-LIST\n"
-"\t-I, --include\t\t\tAllow all threads to run on CPU-LIST\n"
-"\t-K, --no_kthreads\t\tOperations will not affect kernel threads\n"
-"\t-m, --move\t\t\tmove selected entities to CPU-LIST\n"
-"\t-p, --priority=[POLICY]:RTPRIO\tset thread scheduler POLICY and RTPRIO\n"
-"\t-P, --show_threads\t\tshow thread list\n"
-"\t-q, --irqs=IRQ-LIST\t\tIRQ-LIST affected by commands\n"
-"\t-s, --save=FILENAME\t\tsave kthreads sched tunables to FILENAME\n"
-"\t-S, --sockets=CPU-SOCKET-LIST   CPU-SOCKET-LIST affected by commands\n"
-"\t-t, --threads=THREAD-LIST\tTHREAD-LIST affected by commands\n"
-"\t-U, --no_uthreads\t\tOperations will not affect user threads\n"
-"\t-v, --version\t\t\tshow version\n"
-"\t-W, --what_is\t\t\tProvides help about selected entities\n"
-"\t-x, --spread\t\t\tspread selected entities over CPU-LIST"
+#: tuna-cmd.py:43
+msgid "Usage: tuna [OPTIONS]"
 msgstr ""
-"使い方: tuna [OPTIONS]\n"
-"\t-h, --help\t\t\tこのヘルプリストを表示\n"
-"\t-g, --gui\t\t\tGUI を起動\n"
-"\t-c, --cpus=CPU-LIST\t\tコマンドの対象とする CPU-LIST を指定\n"
-"\t-C, --affect_children\t\t子のスレッドにも操作の影響が及ぶようにする\n"
-"\t-f, --filter\t\t\tDisplay filter the selected entities\n"
-"\t-i, --isolate\t\t\tCPU-LIST からすべてのスレッドを移動\n"
-"\t-I, --include\t\t\tCPU-LIST でのすべてのスレッドの実行を許可\n"
-"\t-K, --no_kthreads\t\tカーネルスレッドを操作の対象から外す\n"
-"\t-m, --move\t\t\t選択したエンティティを CPU-LIST に移動\n"
-"\t-p, --priority=[POLICY]:RTPRIO\tスレッドスケジューラ POLICY と RTPRIO を設"
-"定\n"
-"\t-P, --show_threads\t\tスレッドリストを表示\n"
-"\t-q, --irqs=IRQ-LIST\t\tコマンドの対象とする IRQ-LIST を指定\n"
-"\t-s, --save=FILENAME\t\tカーネルスレッドのスケジューラ設定を FILENAME に保"
-"存\n"
-"\t-S, --sockets=CPU-SOCKET-LIST   コマンドの対象とする CPU-SOCKET-LIST を指"
-"定\n"
-"\t-t, --threads=THREAD-LIST\tコマンドの対象とする THREAD-LIST を指定\n"
-"\t-U, --no_uthreads\t\tユーザースレッドを操作の対象から外す\n"
-"\t-v, --version\t\t\tバージョンを表示\n"
-"\t-W, --what_is\t\t\t選択したエンティティのヘルプを表示\n"
-"\t-x, --spread\t\t\t選択したエンティティを CPU-LIST に展開"
 
-#: tuna-cmd.py:71
+#: tuna-cmd.py:45
+msgid "Give this help list"
+msgstr ""
+
+#: tuna-cmd.py:46
+msgid "Start the GUI"
+msgstr ""
+
+#: tuna-cmd.py:47 tuna-cmd.py:48 tuna-cmd.py:52 tuna-cmd.py:54 tuna-cmd.py:57
+#: tuna-cmd.py:79
+msgid "CPU-LIST"
+msgstr ""
+
+#: tuna-cmd.py:47
 #, python-format
-msgid "tuna: thread %d doesn't exists!"
+msgid "%(cpulist)s affected by commands"
+msgstr ""
+
+#: tuna-cmd.py:49
+msgid "Operation will affect children threads"
+msgstr ""
+
+#: tuna-cmd.py:50
+msgid "Display filter the selected entities"
+msgstr ""
+
+#: tuna-cmd.py:51
+#, python-format
+msgid "Move all threads away from %(cpulist)s"
+msgstr ""
+
+#: tuna-cmd.py:53
+#, python-format
+msgid "Allow all threads to run on %(cpulist)s"
+msgstr ""
+
+#: tuna-cmd.py:55
+msgid "Operations will not affect kernel threads"
+msgstr ""
+
+#: tuna-cmd.py:56
+#, python-format
+msgid "Move selected entities to %(cpulist)s"
+msgstr ""
+
+#: tuna-cmd.py:59
+msgid "Show network sockets in use by threads"
+msgstr ""
+
+#: tuna-cmd.py:61 tuna-cmd.py:63
+msgid "POLICY"
+msgstr ""
+
+#: tuna-cmd.py:62 tuna-cmd.py:63
+msgid "RTPRIO"
+msgstr ""
+
+#: tuna-cmd.py:62
+#, python-format
+msgid "Set thread scheduler tunables: %(policy)s and %(rtprio)s"
+msgstr ""
+
+#: tuna-cmd.py:64
+#, fuzzy
+msgid "Show thread list"
+msgstr "ユーザースレッドを表示(_S)"
+
+#: tuna-cmd.py:65 tuna-cmd.py:66
+msgid "IRQ-LIST"
+msgstr ""
+
+#: tuna-cmd.py:65
+#, python-format
+msgid "%(irqlist)s affected by commands"
+msgstr ""
+
+#: tuna-cmd.py:67 tuna-cmd.py:68
+msgid "FILENAME"
+msgstr ""
+
+#: tuna-cmd.py:67
+#, fuzzy, python-format
+msgid "Save kthreads sched tunables to %(filename)s"
+msgstr "カーネルスレッド設定を保存(_S)"
+
+#: tuna-cmd.py:70 tuna-cmd.py:71
+msgid "CPU-SOCKET-LIST"
+msgstr ""
+
+#: tuna-cmd.py:70
+#, python-format
+msgid "%(cpusocketlist)s affected by commands"
+msgstr ""
+
+#: tuna-cmd.py:73 tuna-cmd.py:74
+msgid "THREAD-LIST"
+msgstr ""
+
+#: tuna-cmd.py:73
+#, python-format
+msgid "%(threadlist)s affected by commands"
+msgstr ""
+
+#: tuna-cmd.py:75
+msgid "Operations will not affect user threads"
+msgstr ""
+
+#: tuna-cmd.py:76
+msgid "Show version"
+msgstr ""
+
+#: tuna-cmd.py:77
+msgid "Provides help about selected entities"
+msgstr ""
+
+#: tuna-cmd.py:78
+#, python-format
+msgid "Spread selected entities over %(cpulist)s"
+msgstr ""
+
+#: tuna-cmd.py:94
+#, fuzzy, python-format
+msgid "thread %d doesn't exists!"
 msgstr "tuna: スレッド %d は存在しません!"
 
-#: tuna-cmd.py:90
+#: tuna-cmd.py:113
 msgid "thread"
 msgstr "スレッド"
 
-#: tuna-cmd.py:314
-msgid "tuna: --isolate requires a cpu list!"
-msgstr "tuna: --isolate には CPU リストが必要です!"
-
-#: tuna-cmd.py:319
-msgid "tuna: --include requires a cpu list!"
-msgstr "tuna: --include には CPU リストが必要です!"
-
-#: tuna-cmd.py:334
-msgid "tuna: --move requires a cpu list!"
+#: tuna-cmd.py:400 tuna-cmd.py:405 tuna-cmd.py:422
+#, fuzzy
+msgid "requires a cpu list!"
 msgstr "tuna: --move には CPU リストが必要です!"
 
-#: tuna-cmd.py:337
-msgid "tuna: --move requires a list or threads/irqs!"
+#: tuna-cmd.py:425
+#, fuzzy
+msgid "requires a list of threads/irqs!"
 msgstr "tuna: --move にはリストかスレッド/IRQ が必要です!"
 
-#: tuna-cmd.py:362
-#, python-format
-msgid "tuna: invalid socket %s, sockets available: %s"
+#: tuna-cmd.py:451
+#, fuzzy, python-format
+msgid "invalid socket %(socket)s sockets available: %(available)s"
 msgstr "tuna: 不正なソケット %s, 利用可能なソケット: %s"
 
-#: tuna-cmd.py:387
-msgid "tuna: --what_is requires a thread list!"
+#: tuna-cmd.py:476
+#, fuzzy
+msgid "requires a thread list!"
 msgstr "tuna: --what_is にはスレッドリストが必要です!"
+
+#, fuzzy
+#~ msgid "Couldn't change the affinity of"
+#~ msgstr "%d のアフィニティを %s に変更できませんでした!"
+
+#~ msgid "move_threads_to_cpu: could not change pid %d affinity to %s"
+#~ msgstr ""
+#~ "move_threads_to_cpu: PID %d のアフィニティを %s に変更できませんでした"
+
+#~ msgid ""
+#~ "<b>Kernel Thread %d (%s):</b>\n"
+#~ "%s%s"
+#~ msgstr ""
+#~ "<b>カーネルスレッド %d %s):</b>\n"
+#~ "%s%s"
+
+#~ msgid ""
+#~ "Usage: tuna [OPTIONS]\n"
+#~ "\t-h, --help\t\t\tGive this help list\n"
+#~ "\t-g, --gui\t\t\tStart the GUI\n"
+#~ "\t-c, --cpus=CPU-LIST\t\tCPU-LIST affected by commands\n"
+#~ "\t-C, --affect_children\t\tOperation will affect children threads\n"
+#~ "\t-f, --filter\t\t\tDisplay filter the selected entities\n"
+#~ "\t-i, --isolate\t\t\tMove all threads away from CPU-LIST\n"
+#~ "\t-I, --include\t\t\tAllow all threads to run on CPU-LIST\n"
+#~ "\t-K, --no_kthreads\t\tOperations will not affect kernel threads\n"
+#~ "\t-m, --move\t\t\tmove selected entities to CPU-LIST\n"
+#~ "\t-p, --priority=[POLICY]:RTPRIO\tset thread scheduler POLICY and RTPRIO\n"
+#~ "\t-P, --show_threads\t\tshow thread list\n"
+#~ "\t-q, --irqs=IRQ-LIST\t\tIRQ-LIST affected by commands\n"
+#~ "\t-s, --save=FILENAME\t\tsave kthreads sched tunables to FILENAME\n"
+#~ "\t-S, --sockets=CPU-SOCKET-LIST   CPU-SOCKET-LIST affected by commands\n"
+#~ "\t-t, --threads=THREAD-LIST\tTHREAD-LIST affected by commands\n"
+#~ "\t-U, --no_uthreads\t\tOperations will not affect user threads\n"
+#~ "\t-v, --version\t\t\tshow version\n"
+#~ "\t-W, --what_is\t\t\tProvides help about selected entities\n"
+#~ "\t-x, --spread\t\t\tspread selected entities over CPU-LIST"
+#~ msgstr ""
+#~ "使い方: tuna [OPTIONS]\n"
+#~ "\t-h, --help\t\t\tこのヘルプリストを表示\n"
+#~ "\t-g, --gui\t\t\tGUI を起動\n"
+#~ "\t-c, --cpus=CPU-LIST\t\tコマンドの対象とする CPU-LIST を指定\n"
+#~ "\t-C, --affect_children\t\t子のスレッドにも操作の影響が及ぶようにする\n"
+#~ "\t-f, --filter\t\t\tDisplay filter the selected entities\n"
+#~ "\t-i, --isolate\t\t\tCPU-LIST からすべてのスレッドを移動\n"
+#~ "\t-I, --include\t\t\tCPU-LIST でのすべてのスレッドの実行を許可\n"
+#~ "\t-K, --no_kthreads\t\tカーネルスレッドを操作の対象から外す\n"
+#~ "\t-m, --move\t\t\t選択したエンティティを CPU-LIST に移動\n"
+#~ "\t-p, --priority=[POLICY]:RTPRIO\tスレッドスケジューラ POLICY と RTPRIO を"
+#~ "設定\n"
+#~ "\t-P, --show_threads\t\tスレッドリストを表示\n"
+#~ "\t-q, --irqs=IRQ-LIST\t\tコマンドの対象とする IRQ-LIST を指定\n"
+#~ "\t-s, --save=FILENAME\t\tカーネルスレッドのスケジューラ設定を FILENAME に"
+#~ "保存\n"
+#~ "\t-S, --sockets=CPU-SOCKET-LIST   コマンドの対象とする CPU-SOCKET-LIST を"
+#~ "指定\n"
+#~ "\t-t, --threads=THREAD-LIST\tコマンドの対象とする THREAD-LIST を指定\n"
+#~ "\t-U, --no_uthreads\t\tユーザースレッドを操作の対象から外す\n"
+#~ "\t-v, --version\t\t\tバージョンを表示\n"
+#~ "\t-W, --what_is\t\t\t選択したエンティティのヘルプを表示\n"
+#~ "\t-x, --spread\t\t\t選択したエンティティを CPU-LIST に展開"
+
+#~ msgid "tuna: --isolate requires a cpu list!"
+#~ msgstr "tuna: --isolate には CPU リストが必要です!"
+
+#~ msgid "tuna: --include requires a cpu list!"
+#~ msgstr "tuna: --include には CPU リストが必要です!"
