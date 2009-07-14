@@ -19,3 +19,6 @@ po/POTFILES.in
 po/ja.po
 po/pt_BR.po
 ChangeLog
+docs/oscilloscope+tuna.html
+docs/oscilloscope+tuna.pdf
+

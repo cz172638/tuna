@@ -8,6 +8,7 @@ License: GPLv2
 Summary: Application tuning GUI & command line utility
 Group: Applications/System
 Source: http://userweb.kernel.org/~acme/tuna/%{name}-%{version}.tar.bz2
+URL: http://userweb.kernel.org/~acme/tuna/
 BuildArch: noarch
 BuildRequires: python-devel
 Requires: python-ethtool
@@ -80,8 +81,10 @@ rm -rf %{buildroot}
 %{python_sitelib}/tuna/
 
 %files -n oscilloscope
-%defattr(0755,root,root,0755)
+%defattr(-,root,root,-)
 %{_bindir}/oscilloscope
+%doc docs/oscilloscope+tuna.html
+%doc docs/oscilloscope+tuna.pdf
 
 %changelog
 * Fri Jul 10 2009 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.9-1
