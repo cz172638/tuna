@@ -57,7 +57,7 @@ msgstr "Rege_x para a linha de comando:"
 
 #: tuna/tuna_gui.glade:412
 msgid "Set IRQ Attributes"
-msgstr ""
+msgstr "Configurar Atributos de IRQ"
 
 #: tuna/tuna_gui.glade:488
 msgid "A_ffinity"
