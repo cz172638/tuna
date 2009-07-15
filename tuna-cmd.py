@@ -27,10 +27,10 @@ except:
 	have_inet_diag = False
 
 try:
+	set
+except NameError:
+	# In python < 2.4, "set" is not the first class citizen.
 	from sets import Set as set
-except:
-	# OK, we're modern, having sets as first class citizens
-	pass
 
 # FIXME: ETOOMANYGLOBALS, we need a class!
 

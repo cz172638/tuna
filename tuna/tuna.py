@@ -4,10 +4,9 @@
 import copy, ethtool, os, procfs, schedutils
 
 try:
+	set
+except NameError:
 	from sets import Set as set
-except:
-	# OK, we're modern, having sets as first class citizens
-	pass
 
 kthread_help_str = {}
 
