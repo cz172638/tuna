@@ -2,13 +2,14 @@
 # Copyright (C) 2009 Red Hat Inc.
 # This file is distributed under the same license as the tuna package.
 # Arnaldo Carvalho de Melo <acme@redhat.com>, 2009.
+# Revision: Luis Claudio R. Goncalves <lgoncalv@redhat.com>
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: tuna 0.9\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2009-07-13 12:23-0300\n"
-"PO-Revision-Date: 2009-07-10 11:10+BRT\n"
+"PO-Revision-Date: 2009-07-15 11:10+BRT\n"
 "Last-Translator: Arnaldo Carvalho de Melo <acme@redhat.com>\n"
 "Language-Team: pt_BR <pt-br@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -33,7 +34,7 @@ msgstr "_Todas as threads do processo selecionado"
 
 #: tuna/tuna_gui.glade:172
 msgid "A_ll command lines matching the regex below:"
-msgstr "T_odas as linhas de comando casando com a expressão regular abaixo:"
+msgstr "T_odas as linhas de comando combinando com a expressão regular abaixo:"
 
 #: tuna/tuna_gui.glade:190
 msgid "<b>Set for these processes</b>"
@@ -57,7 +58,7 @@ msgstr "Rege_x para a linha de comando:"
 
 #: tuna/tuna_gui.glade:412
 msgid "Set IRQ Attributes"
-msgstr "Configurar Atributos de IRQ"
+msgstr "Configure atributos desta IRQ"
 
 #: tuna/tuna_gui.glade:488
 msgid "A_ffinity"
@@ -95,12 +96,12 @@ msgstr "Thread do Kernel %(pid)d (%(cmdline)s):"
 #: tuna/tuna.py:50
 #, python-format
 msgid "User Thread %(pid)d (%(cmdline)s):"
-msgstr "Thread normal %(pid)d (%(cmdline)s):"
+msgstr "Thread %(pid)d (%(cmdline)s):"
 
 #: tuna/tuna.py:204 tuna/tuna.py:229
 #, python-format
 msgid "could not change %(pid)d affinity to %(new_affinity)s"
-msgstr "Não foi possível mudar a affinidade de %(pid)d para %(new_affinity)s"
+msgstr "Não foi possível mudar a afinidade de %(pid)d para %(new_affinity)s"
 
 #: tuna/gui/util.py:50
 msgid "Invalid affinity, specify a list of CPUs!"
@@ -194,8 +195,7 @@ msgid "NonVolCtxtSwitch"
 msgstr ""
 "Trocas de\n"
 "Contexto\n"
-"NÃO\n"
-"Voluntárias"
+"Involuntárias"
 
 #: tuna/gui/procview.py:202 tuna/gui/procview.py:220
 msgid "Command Line"
@@ -236,11 +236,11 @@ msgstr "Mostrar thread_s do kernel"
 
 #: tuna/gui/procview.py:557
 msgid "_Hide user threads"
-msgstr "Não mostrar threads normais"
+msgstr "Não mostrar threads"
 
 #: tuna/gui/procview.py:559
 msgid "_Show user threads"
-msgstr "_Mostrar threads normais"
+msgstr "_Mostrar threads"
 
 #: tuna/gui/procview.py:561
 msgid "_What is this?"
@@ -298,21 +298,21 @@ msgstr "%(cpulist)s afetada por comandos"
 
 #: tuna-cmd.py:49
 msgid "Operation will affect children threads"
-msgstr "A operação afetará as threads descendentes"
+msgstr "A operação afetará as threads criadas por esta"
 
 #: tuna-cmd.py:50
 msgid "Display filter the selected entities"
-msgstr "Filtre as entidades selecionadas"
+msgstr "Filtre os elementos selecionados"
 
 #: tuna-cmd.py:51
 #, python-format
 msgid "Move all threads away from %(cpulist)s"
-msgstr "Mova todas as threads para longe de %(cpulist)s"
+msgstr "Remova todas as threads de %(cpulist)s"
 
 #: tuna-cmd.py:53
 #, python-format
 msgid "Allow all threads to run on %(cpulist)s"
-msgstr "Permite que todas as threads rodem em %(cpulist)s"
+msgstr "Permita que todas as threads executem em %(cpulist)s"
 
 #: tuna-cmd.py:55
 msgid "Operations will not affect kernel threads"
@@ -321,11 +321,11 @@ msgstr "Operações não afetarão threads do kernel"
 #: tuna-cmd.py:56
 #, python-format
 msgid "Move selected entities to %(cpulist)s"
-msgstr "Mova as entidades selecionadas para %(cpulist)s"
+msgstr "Mova os elementos selecionados para %(cpulist)s"
 
 #: tuna-cmd.py:59
 msgid "Show network sockets in use by threads"
-msgstr "Mostre a lista de conexões de rede em uso pelas threads"
+msgstr "Mostre a lista de sockets de rede em uso pelas threads"
 
 #: tuna-cmd.py:61 tuna-cmd.py:63
 msgid "POLICY"
@@ -383,7 +383,7 @@ msgstr "%(threadlist)s afetada por comandos"
 
 #: tuna-cmd.py:75
 msgid "Operations will not affect user threads"
-msgstr "Operações não afetarão threads normais"
+msgstr "Operações não afetarão threads de usuário"
 
 #: tuna-cmd.py:76
 msgid "Show version"
@@ -391,12 +391,12 @@ msgstr "Mostra número de versão"
 
 #: tuna-cmd.py:77
 msgid "Provides help about selected entities"
-msgstr "Mostra ajuda sobre as entidades selecionadas"
+msgstr "Mostra ajuda sobre os elementos selecionados"
 
 #: tuna-cmd.py:78
 #, python-format
 msgid "Spread selected entities over %(cpulist)s"
-msgstr "Espalhe as entidades selecionadas em %(cpulist)s"
+msgstr "Espalhe os elementos selecionados em %(cpulist)s"
 
 #: tuna-cmd.py:94
 #, python-format
