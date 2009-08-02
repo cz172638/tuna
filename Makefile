@@ -23,7 +23,7 @@ rpmdev: bz2dev rpmdirs
 	rpmbuild -ba --define "_topdir $(PWD)/rpm" rpm/SPECS/$(PACKAGE).spec
 
 po/$(PACKAGE).pot:
-	xgettext -k_ -kN_ -f po/POTFILES.in -o $@
+	xgettext -L python -k_ -kN_ -f po/POTFILES.in -o $@
 
 po/%.po: po/$(PACKAGE).pot
 	msgmerge --suffix=.old -U $@ $< && rm -f $@.old

@@ -4,6 +4,10 @@ pygtk.require("2.0")
 from tuna import tuna, gui
 import gobject, gtk, procfs, re, schedutils
 
+def N_(s):
+	"""gettext_noop"""
+	return s
+
 class process_druid:
 
 	( PROCESS_COL_PID, PROCESS_COL_NAME ) = range(2)
@@ -275,17 +279,9 @@ class procview:
 		if not tuna.iskthread(pid):
 			return True
 		cmdline = self.tree_store.get_value(row, self.COL_CMDLINE).split(' ')[0]
-		try:
-			index = cmdline.index("/")
-			key = cmdline[:index + 1]
-			suffix_help = "\n<i>One per CPU</i>"
-		except:
-			key = cmdline
-			suffix_help = ""
-		help = tuna.kthread_help(key)
-		tooltip.set_markup("<b>%s %d(%s)</b>\n%s%s" % (_("Kernel Thread"),
-							       pid, cmdline, help,
-							       suffix_help))
+		help = tuna.kthread_help(cmdline)
+		tooltip.set_markup("<b>%s %d(%s)</b>\n%s" % \
+			(_("Kernel Thread"), pid, cmdline, _(help)))
 		return True
 
 	def foreach_selected_cb(self, model, path, iter, pid_list):
@@ -462,7 +458,7 @@ class procview:
 		dialog = gtk.MessageDialog(None,
 					   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
 					   gtk.MESSAGE_INFO,
-					   gtk.BUTTONS_OK, help)
+					   gtk.BUTTONS_OK, _(help))
 		dialog.set_title(title)
 		ret = dialog.run()
 		dialog.destroy()

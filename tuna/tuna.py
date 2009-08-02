@@ -2,51 +2,29 @@
 # -*- coding: utf-8 -*-
 
 import copy, ethtool, os, procfs, schedutils
+import help
 
 try:
 	set
 except NameError:
 	from sets import Set as set
 
-kthread_help_str = {}
 
 def kthread_help(key):
-	if kthread_help_str.has_key(key):
-		help = kthread_help_str[key]
-	else:
-		orig_key = key
-		if key[-1:] == '/':
-			key = "%s-" % key[:-1]
-		helpfile1 = "/usr/share/tuna/help/kthreads/%s" % key
-		helpfile2 = "help/kthreads/%s" % key
-		try: 
-			f = file(helpfile1)
-		except:
-			try:
-				f = file(helpfile2)
-			except:
-				return ""
+	if '/' in key:
+		key = key[:key.rfind('/')+1]
+	return help.KTHREAD_HELP.get(key, " ")
 
-		help = reduce(lambda a, b: a + b, f.readlines())
-		f.close()
-		kthread_help_str[orig_key] = help
-	return help
 
 def kthread_help_plain_text(pid, cmdline):
 	cmdline = cmdline.split(' ')[0]
+	params = {'pid':pid, 'cmdline':cmdline}
+
 	if iskthread(pid):
-		try:
-			index = cmdline.index("/")
-			key = cmdline[:index + 1]
-			suffix_help = "\nOne per CPU"
-		except:
-			key = cmdline
-			suffix_help = ""
-		help = kthread_help(key)
-		title = _("Kernel Thread %(pid)d (%(cmdline)s):") % {'pid':pid, 'cmdline':cmdline}
-		help += suffix_help
+		title = _("Kernel Thread %(pid)d (%(cmdline)s):") % params
+		help = kthread_help(cmdline)
 	else:
-		title = _("User Thread %(pid)d (%(cmdline)s):") % {'pid':pid, 'cmdline':cmdline}
+		title = _("User Thread %(pid)d (%(cmdline)s):") % params
 		help = title
 
 	return help, title

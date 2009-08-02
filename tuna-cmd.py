@@ -97,7 +97,7 @@ def thread_help(tid):
 	pinfo = ps[tid]
 	cmdline = procfs.process_cmdline(pinfo)
 	help, title = tuna.kthread_help_plain_text(tid, cmdline)
-	print "%s\n\n%s" % (title, help)
+	print "%s\n\n%s" % (title, _(help))
 
 def save(cpu_list, thread_list, filename):
 	kthreads = tuna.get_kthread_sched_tunings()

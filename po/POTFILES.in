@@ -4,6 +4,7 @@ tuna/tuna_gui.py
 tuna/sysfs.py
 tuna/oscilloscope.py
 tuna/tuna.py
+tuna/help.py
 tuna/gui/__init__.py
 tuna/gui/util.py
 tuna/gui/cpuview.py

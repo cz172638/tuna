@@ -8,73 +8,13 @@ msgid ""
 msgstr ""
 "Project-Id-Version: tuna 0.9\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-07-13 12:23-0300\n"
+"POT-Creation-Date: 2009-08-02 16:24-0300\n"
 "PO-Revision-Date: 2009-07-15 11:10+BRT\n"
 "Last-Translator: Arnaldo Carvalho de Melo <acme@redhat.com>\n"
 "Language-Team: pt_BR <pt-br@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-
-#: tuna/tuna_gui.glade:8
-msgid "Tuna"
-msgstr ""
-
-#: tuna/tuna_gui.glade:111
-msgid "Set Process Attributes"
-msgstr "Configurar Atributos do Processo"
-
-#: tuna/tuna_gui.glade:140
-msgid "_Just the selected thread"
-msgstr "_Somente a thread selecionada"
-
-#: tuna/tuna_gui.glade:155
-msgid "_All threads of the selected process"
-msgstr "_Todas as threads do processo selecionado"
-
-#: tuna/tuna_gui.glade:172
-msgid "A_ll command lines matching the regex below:"
-msgstr "T_odas as linhas de comando combinando com a expressão regular abaixo:"
-
-#: tuna/tuna_gui.glade:190
-msgid "<b>Set for these processes</b>"
-msgstr "<b>Configure estes processos</b>"
-
-#: tuna/tuna_gui.glade:210
-msgid "_Policy: "
-msgstr "_Política: "
-
-#: tuna/tuna_gui.glade:241
-msgid "_Scheduler priority:"
-msgstr "_Prioridade no escalonador"
-
-#: tuna/tuna_gui.glade:277
-msgid "A_ffinity:"
-msgstr "A_finidade: "
-
-#: tuna/tuna_gui.glade:324
-msgid "Command line rege_x:"
-msgstr "Rege_x para a linha de comando:"
-
-#: tuna/tuna_gui.glade:412
-msgid "Set IRQ Attributes"
-msgstr "Configure atributos desta IRQ"
-
-#: tuna/tuna_gui.glade:488
-msgid "A_ffinity"
-msgstr "A_finidade"
-
-#: tuna/tuna_gui.glade:503
-msgid "_Scheduler priority"
-msgstr "Prioridade no E_scalonador"
-
-#: tuna/tuna_gui.glade:518
-msgid "_Policy"
-msgstr "_Política"
-
-#: tuna/tuna_gui.glade:538
-msgid "<b>Set attributes for this IRQ:</b>"
-msgstr "<b>Configure attributos desta IRQ:</b>"
 
 #: tuna/tuna_gui.py:102
 msgid "Root privilege required"
@@ -88,20 +28,214 @@ msgstr "Algumas partes não funcionarão sem privilégios de super usuário."
 msgid "Do you want to continue?"
 msgstr "Deseja continuar?"
 
-#: tuna/tuna.py:47
+#: tuna/tuna.py:24
 #, python-format
 msgid "Kernel Thread %(pid)d (%(cmdline)s):"
 msgstr "Thread do Kernel %(pid)d (%(cmdline)s):"
 
-#: tuna/tuna.py:50
+#: tuna/tuna.py:27
 #, python-format
 msgid "User Thread %(pid)d (%(cmdline)s):"
 msgstr "Thread %(pid)d (%(cmdline)s):"
 
-#: tuna/tuna.py:204 tuna/tuna.py:229
+#: tuna/tuna.py:181 tuna/tuna.py:206
 #, python-format
 msgid "could not change %(pid)d affinity to %(new_affinity)s"
 msgstr "Não foi possível mudar a afinidade de %(pid)d para %(new_affinity)s"
+
+#: tuna/help.py:10
+msgid ""
+"Used to create kernel threads via kthread_create(). It is the parent of all "
+"the other kernel threads."
+msgstr ""
+
+#: tuna/help.py:11
+msgid ""
+"Per-cpu thread that handles POSIX timer callbacks. Timer callbacks are bound "
+"to a cpu and are handled by these threads as per-cpu data."
+msgstr ""
+
+#: tuna/help.py:12
+msgid ""
+"This cpufreq workqueue runs periodically to sample the idleness of the "
+"system, increasing or reducing the CPU frequency to save power. \n"
+"[One per CPU]"
+msgstr ""
+
+#: tuna/help.py:13
+msgid ""
+"Pushes the RCU grace period along (if possible) and will handle dereferenced "
+"RCU callbacks, such as freeing structures after a grace period. \n"
+"[One per CPU]"
+msgstr ""
+
+#: tuna/help.py:14
+msgid ""
+"Used to call user mode helpers from the kernel, such as /sbin/bridge-stp, "
+"ocfs2_hb_ctl, pnpbios, poweroff, request-key, etc.\""
+msgstr ""
+
+#: tuna/help.py:15
+msgid "Scheduler load balance monitoring."
+msgstr ""
+
+#: tuna/help.py:16
+msgid ""
+"Main thread function used to manage a filesystem logging device journal. "
+"This kernel thread is responsible for two things: <b>COMMIT</b>: Every so "
+"often we need to commit the current state of the filesystem to disk.  The "
+"journal thread is responsible for writing all of the metadata buffers to "
+"disk. <b>CHECKPOINT</b>: We cannot reuse a used section of the log file "
+"until all of the data in that part of the log has been rewritten elsewhere "
+"on the disk.  Flushing these old buffers to reclaim space in the log is "
+"known as checkpointing, and this thread is responsible for that job."
+msgstr ""
+
+#: tuna/help.py:17
+msgid "Locking arbiter for NFS on the system"
+msgstr ""
+
+#: tuna/help.py:18
+msgid ""
+"Triggered when a rebalance of tasks is needed to CPU domains. This handles "
+"balancing of SCHED_OTHER tasks across CPUs. RT tasks balancing is done "
+"directly in schedule and wakeup paths.  Runs at prio 1 because it needs to "
+"schedule above all SCHED_OTHER tasks. If the user has the same issue but "
+"doesn\"t mind having latencies against other kernel threads that run here, "
+"then its fine. But it should definitely be documented that PRIO 1 has other "
+"threads on it at boot up. \n"
+"[One per CPU]"
+msgstr ""
+
+#: tuna/help.py:19
+msgid ""
+"This is from a poor attempt to prioritize tasklets. Some tasklets wanted to "
+"run before anything else. Thus there were two tasklet softirqs made. "
+"tasklet_vec and tasklet_hi_vec. A driver writer could put their \"critical\" "
+"tasklets into the tasklet_hi_vec and it would run before other softirqs. "
+"This never really worked as intended. \n"
+"[One per CPU]"
+msgstr ""
+
+#: tuna/help.py:20
+msgid ""
+"Workqueue used to process IO requests. Used by IO schedulers and block "
+"device drivers. \n"
+"[One per CPU]"
+msgstr ""
+
+#: tuna/help.py:21
+msgid ""
+"When receiving a packet the device will place the packet on a queue with its "
+"hard interrupt (threaded in RT). The sirq-net-rx is responsible for finding "
+"out what to do with the packet. It may forward it to another box if the "
+"current box is used as a router, or it will find the task the packet is for. "
+"If that task is currently waiting for the packet, the softirq might hand it "
+"off to that task and the task will handle the rest of the processing of the "
+"packet. \n"
+"[One per CPU]"
+msgstr ""
+
+#: tuna/help.py:22
+msgid ""
+"This should run at the lowest RT priority. With preemptible RCU, a loaded "
+"system may have tasks that hold RCU locks but have a high nice value. These "
+"tasks may be pushed off for seconds, and if the system is tight on memory, "
+"the RCU deferred freeing may not occur. The result can be drastic.  The "
+"krcupreemptd is a daemon that runs just above SCHED_OTHER and wakes up once "
+"a second and performs a synchronize RCU. With RCU boosting, all those that "
+"hold RCU locks will inherit the priority of the krcupreemptd and wake up and "
+"release the RCU locks.  This is only a concern for loaded systems and "
+"SCHED_OTHER tasks. If there is an issue of RT tasks starving out SCHED_OTHER "
+"tasks and causing problems with freeing memory, then the RT tasks are "
+"designed badly."
+msgstr ""
+
+#: tuna/help.py:23
+msgid ""
+"Activated when under heavy networking activity. Used to avoid monopolizing "
+"the CPUs doing just software interrupt processing. \n"
+"[One per CPU]"
+msgstr ""
+
+#: tuna/help.py:24
+msgid ""
+"Basically the timer wheel. Things that add itself to the timer wheel "
+"timeouts will be handled by this softirq. Parts of the kernel that need "
+"timeouts will use this softirq (i.e. network timeouts). The resolution to "
+"these timeouts are defined by the HZ value. \n"
+"[One per CPU]"
+msgstr ""
+
+#: tuna/help.py:25
+msgid ""
+"Global workqueue, used to schedule work to be done in process context. \n"
+"[One per CPU]"
+msgstr ""
+
+#: tuna/help.py:26
+msgid ""
+"Run briefly once per second to reset the softlockup timestamp.  If this gets "
+"delayed for more than 60 seconds then a message will be printed.  Use /proc/"
+"sys/kernel/hung_task_timeout_secs and /proc/sys/kernel/hung_task_check_count "
+"to control this behaviour.  Setting /proc/sys/kernel/hung_task_timeout_secs "
+"to zero will disable this check. \n"
+"[One per CPU]"
+msgstr ""
+
+#: tuna/help.py:27
+msgid ""
+"This is the network transmit queue. Most of the time the network packets "
+"will be handled by the task that is sending the packets out, and doing so at "
+"the priority of that task. But if the protocol window or the network device "
+"queue is full, then the packets will be pushed off to later. The sirq-net-tx "
+"softirq is responsible for sending out these packets. \n"
+"[One per CPU]"
+msgstr ""
+
+#: tuna/help.py:28
+msgid ""
+"Called after a completion to a block device is made. Looking further into "
+"this call, I only see a couple of users. The SCSI driver uses this as well "
+"as cciss. \n"
+"[One per CPU]"
+msgstr ""
+
+#: tuna/help.py:29
+msgid ""
+"Catch all for those devices that couldn\"t use softirqs directly and mostly "
+"made before work queues were around. The difference between a tasklet and a "
+"softirq is that the same tasklet can not run on two different CPUs at the "
+"same time. In this regard it acts like a \"task\" (hence the name \"tasklet"
+"\"). Various devices use tasklets. \n"
+"[One per CPU]"
+msgstr ""
+
+#: tuna/help.py:30
+msgid ""
+"Per USB storage device virtual SCSI controller.  Persistant across device "
+"insertion/removal, as is the SCSI node. This is done so that a device which "
+"is removed can be re-attached and be granted the same /dev node as before, "
+"creating persistance between connections of the target unit.  Gets commands "
+"from the SCSI mid-layer and, after sanity checking several things, sends the "
+"command to the \"protocol\" handler. This handler is responsible for re-"
+"writing the command (if necessary) into a form which the device will accept. "
+"For example, ATAPI devices do not support 6-byte commands. Thus, they must "
+"be re-written into 10-byte variants."
+msgstr ""
+
+#: tuna/help.py:31
+msgid ""
+"High priority system thread that performs thread migration by bumping thread "
+"off CPU then pushing onto another runqueue. \n"
+"[One per CPU]"
+msgstr ""
+
+#: tuna/help.py:32
+msgid ""
+"Handles Sun RPC network messages (mainly for NFS) \n"
+"[One per CPU]"
+msgstr ""
 
 #: tuna/gui/util.py:50
 msgid "Invalid affinity, specify a list of CPUs!"
@@ -166,87 +300,87 @@ msgstr "_Isole Soquete de CPU"
 msgid "_Restore CPU"
 msgstr "_Restaure CPU"
 
-#: tuna/gui/procview.py:196 tuna/gui/procview.py:216 tuna/gui/irqview.py:118
+#: tuna/gui/procview.py:200 tuna/gui/procview.py:220 tuna/gui/irqview.py:118
 msgid "PID"
 msgstr ""
 
-#: tuna/gui/procview.py:197 tuna/gui/procview.py:217 tuna/gui/irqview.py:119
+#: tuna/gui/procview.py:201 tuna/gui/procview.py:221 tuna/gui/irqview.py:119
 msgid "Policy"
 msgstr "Política"
 
-#: tuna/gui/procview.py:198 tuna/gui/procview.py:218 tuna/gui/irqview.py:120
+#: tuna/gui/procview.py:202 tuna/gui/procview.py:222 tuna/gui/irqview.py:120
 msgid "Priority"
 msgstr "Prioridade"
 
-#: tuna/gui/procview.py:199 tuna/gui/procview.py:219 tuna/gui/irqview.py:121
+#: tuna/gui/procview.py:203 tuna/gui/procview.py:223 tuna/gui/irqview.py:121
 #: tuna/gui/irqview.py:140
 msgid "Affinity"
 msgstr "Afinidade"
 
-#: tuna/gui/procview.py:200
+#: tuna/gui/procview.py:204
 msgid "VolCtxtSwitch"
 msgstr ""
 "Trocas de\n"
 "Contexto\n"
 "Voluntárias"
 
-#: tuna/gui/procview.py:201
+#: tuna/gui/procview.py:205
 msgid "NonVolCtxtSwitch"
 msgstr ""
 "Trocas de\n"
 "Contexto\n"
 "Involuntárias"
 
-#: tuna/gui/procview.py:202 tuna/gui/procview.py:220
+#: tuna/gui/procview.py:206 tuna/gui/procview.py:224
 msgid "Command Line"
 msgstr "Linha de Comando"
 
-#: tuna/gui/procview.py:286
+#: tuna/gui/procview.py:284
 msgid "Kernel Thread"
 msgstr "Thread do Kernel"
 
-#: tuna/gui/procview.py:474
+#: tuna/gui/procview.py:470
 msgid "Save As"
 msgstr "Salvar Como"
 
-#: tuna/gui/procview.py:532
+#: tuna/gui/procview.py:528
 #, python-format
 msgid "Kernel thread tunings saved to %s!"
 msgstr "Configurações das threads do kernel salvas no arquivo %s!"
 
-#: tuna/gui/procview.py:545
+#: tuna/gui/procview.py:541
 msgid "_Set process attributes"
 msgstr "Configurar atributo_s do processo"
 
-#: tuna/gui/procview.py:547
+#: tuna/gui/procview.py:543
 msgid "Sto_p refreshing the process list"
 msgstr "_Parar de atualizar a lista de processos"
 
-#: tuna/gui/procview.py:549
+#: tuna/gui/procview.py:545
 msgid "_Refresh the process list"
 msgstr "Atualiza_r a lista de processos"
 
-#: tuna/gui/procview.py:552
+#: tuna/gui/procview.py:548
 msgid "_Hide kernel threads"
 msgstr "_Não mostrar threads do kernel"
 
-#: tuna/gui/procview.py:554
+#: tuna/gui/procview.py:550
 msgid "_Show kernel threads"
 msgstr "Mostrar thread_s do kernel"
 
-#: tuna/gui/procview.py:557
+#: tuna/gui/procview.py:553
 msgid "_Hide user threads"
 msgstr "Não mostrar threads"
 
-#: tuna/gui/procview.py:559
+#: tuna/gui/procview.py:555
 msgid "_Show user threads"
 msgstr "_Mostrar threads"
 
-#: tuna/gui/procview.py:561
+#: tuna/gui/procview.py:557
 msgid "_What is this?"
 msgstr "_O que é isto?"
 
-#: tuna/gui/procview.py:563
+#: tuna/gui/procview.py:559
 msgid "_Save kthreads tunings"
 msgstr "_Salvar"
 
@@ -424,3 +558,46 @@ msgstr ""
 #: tuna-cmd.py:476
 msgid "requires a thread list!"
 msgstr "requer uma lista de threads!"
+
+#~ msgid "Set Process Attributes"
+#~ msgstr "Configurar Atributos do Processo"
+
+#~ msgid "_Just the selected thread"
+#~ msgstr "_Somente a thread selecionada"
+
+#~ msgid "_All threads of the selected process"
+#~ msgstr "_Todas as threads do processo selecionado"
+
+#~ msgid "A_ll command lines matching the regex below:"
+#~ msgstr ""
+#~ "T_odas as linhas de comando combinando com a expressão regular abaixo:"
+
+#~ msgid "<b>Set for these processes</b>"
+#~ msgstr "<b>Configure estes processos</b>"
+
+#~ msgid "_Policy: "
+#~ msgstr "_Política: "
+
+#~ msgid "_Scheduler priority:"
+#~ msgstr "_Prioridade no escalonador"
+
+#~ msgid "A_ffinity:"
+#~ msgstr "A_finidade: "
+
+#~ msgid "Command line rege_x:"
+#~ msgstr "Rege_x para a linha de comando:"
+
+#~ msgid "Set IRQ Attributes"
+#~ msgstr "Configure atributos desta IRQ"
+
+#~ msgid "A_ffinity"
+#~ msgstr "A_finidade"
+
+#~ msgid "_Scheduler priority"
+#~ msgstr "Prioridade no E_scalonador"
+
+#~ msgid "_Policy"
+#~ msgstr "_Política"
+
+#~ msgid "<b>Set attributes for this IRQ:</b>"
+#~ msgstr "<b>Configure attributos desta IRQ:</b>"
