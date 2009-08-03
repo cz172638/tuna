@@ -18,6 +18,10 @@ class main_gui:
 	def __init__(self, show_kthreads = True, show_uthreads = True, cpus_filtered = []):
 		global tuna_glade
 
+		(app, localedir) = ('tuna', '/usr/share/locale')
+		gtk.glade.bindtextdomain(app, localedir)
+		gtk.glade.textdomain(app)
+
 		if self.check_root():
 			sys.exit(1)
 		for dir in tuna_glade_dirs:
