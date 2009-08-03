@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: tuna 0.9\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-08-02 16:24-0300\n"
+"POT-Creation-Date: 2009-08-02 23:00-0300\n"
 "PO-Revision-Date: 2009-07-15 11:10+BRT\n"
 "Last-Translator: Arnaldo Carvalho de Melo <acme@redhat.com>\n"
 "Language-Team: pt_BR <pt-br@li.org>\n"
@@ -16,15 +16,75 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: tuna/tuna_gui.py:102
+#: tuna/tuna_gui.glade:8
+msgid "Tuna"
+msgstr ""
+
+#: tuna/tuna_gui.glade:111
+msgid "Set Process Attributes"
+msgstr "Configurar Atributos do Processo"
+
+#: tuna/tuna_gui.glade:140
+msgid "_Just the selected thread"
+msgstr "_Somente a thread selecionada"
+
+#: tuna/tuna_gui.glade:155
+msgid "_All threads of the selected process"
+msgstr "_Todas as threads do processo selecionado"
+
+#: tuna/tuna_gui.glade:172
+msgid "A_ll command lines matching the regex below:"
+msgstr "T_odas as linhas de comando combinando com a expressão regular abaixo:"
+
+#: tuna/tuna_gui.glade:190
+msgid "<b>Set for these processes</b>"
+msgstr "<b>Configure estes processos</b>"
+
+#: tuna/tuna_gui.glade:210
+msgid "_Policy: "
+msgstr "_Política: "
+
+#: tuna/tuna_gui.glade:241
+msgid "_Scheduler priority:"
+msgstr "_Prioridade no escalonador"
+
+#: tuna/tuna_gui.glade:277
+msgid "A_ffinity:"
+msgstr "A_finidade: "
+
+#: tuna/tuna_gui.glade:324
+msgid "Command line rege_x:"
+msgstr "Rege_x para a linha de comando:"
+
+#: tuna/tuna_gui.glade:412
+msgid "Set IRQ Attributes"
+msgstr "Configure atributos desta IRQ"
+
+#: tuna/tuna_gui.glade:489
+msgid "A_ffinity"
+msgstr "A_finidade"
+
+#: tuna/tuna_gui.glade:504
+msgid "_Scheduler priority"
+msgstr "Prioridade no E_scalonador"
+
+#: tuna/tuna_gui.glade:519
+msgid "_Policy"
+msgstr "_Política"
+
+#: tuna/tuna_gui.glade:539
+msgid "<b>Set attributes for this IRQ:</b>"
+msgstr "<b>Configure attributos desta IRQ:</b>"
+
+#: tuna/tuna_gui.py:106
 msgid "Root privilege required"
 msgstr "Privilégios de super usuário são necessários"
 
-#: tuna/tuna_gui.py:103
+#: tuna/tuna_gui.py:107
 msgid "Some functions will not work without root privilege."
 msgstr "Algumas partes não funcionarão sem privilégios de super usuário."
 
-#: tuna/tuna_gui.py:104
+#: tuna/tuna_gui.py:108
 msgid "Do you want to continue?"
 msgstr "Deseja continuar?"
 
@@ -558,46 +618,3 @@ msgstr ""
 #: tuna-cmd.py:476
 msgid "requires a thread list!"
 msgstr "requer uma lista de threads!"
-
-#~ msgid "Set Process Attributes"
-#~ msgstr "Configurar Atributos do Processo"
-
-#~ msgid "_Just the selected thread"
-#~ msgstr "_Somente a thread selecionada"
-
-#~ msgid "_All threads of the selected process"
-#~ msgstr "_Todas as threads do processo selecionado"
-
-#~ msgid "A_ll command lines matching the regex below:"
-#~ msgstr ""
-#~ "T_odas as linhas de comando combinando com a expressão regular abaixo:"
-
-#~ msgid "<b>Set for these processes</b>"
-#~ msgstr "<b>Configure estes processos</b>"
-
-#~ msgid "_Policy: "
-#~ msgstr "_Política: "
-
-#~ msgid "_Scheduler priority:"
-#~ msgstr "_Prioridade no escalonador"
-
-#~ msgid "A_ffinity:"
-#~ msgstr "A_finidade: "
-
-#~ msgid "Command line rege_x:"
-#~ msgstr "Rege_x para a linha de comando:"
-
-#~ msgid "Set IRQ Attributes"
-#~ msgstr "Configure atributos desta IRQ"
-
-#~ msgid "A_ffinity"
-#~ msgstr "A_finidade"
-
-#~ msgid "_Scheduler priority"
-#~ msgstr "Prioridade no E_scalonador"
-
-#~ msgid "_Policy"
-#~ msgstr "_Política"
-
-#~ msgid "<b>Set attributes for this IRQ:</b>"
-#~ msgstr "<b>Configure attributos desta IRQ:</b>"
