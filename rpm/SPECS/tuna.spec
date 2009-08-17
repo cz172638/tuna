@@ -3,14 +3,14 @@
 
 Name: tuna
 Version: 0.9
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: GPLv2
 Summary: Application tuning GUI & command line utility
 Group: Applications/System
 Source: http://userweb.kernel.org/~acme/tuna/%{name}-%{version}.tar.bz2
 URL: http://userweb.kernel.org/~acme/tuna/
 BuildArch: noarch
-BuildRequires: python-devel
+BuildRequires: python-devel, gettext
 Requires: python-ethtool
 Requires: python-linux-procfs >= 0.4.2
 Requires: python-schedutils >= 0.2
@@ -53,10 +53,10 @@ priority is changed, be it using tuna or plain chrt & taskset.
 rm -rf %{buildroot}
 %{__python} setup.py install --skip-build --root %{buildroot}
 mkdir -p %{buildroot}/{%{_bindir},%{_datadir}/tuna/help/kthreads}
-install -m644 tuna/tuna_gui.glade %{buildroot}/%{_datadir}/tuna/
-install -m755 tuna-cmd.py %{buildroot}/%{_bindir}/tuna
-install -m755 oscilloscope-cmd.py %{buildroot}/%{_bindir}/oscilloscope
-install -m644 help/kthreads/* %{buildroot}/%{_datadir}/tuna/help/kthreads/
+install -p -m644 tuna/tuna_gui.glade %{buildroot}/%{_datadir}/tuna/
+install -p -m755 tuna-cmd.py %{buildroot}/%{_bindir}/tuna
+install -p -m755 oscilloscope-cmd.py %{buildroot}/%{_bindir}/oscilloscope
+install -p -m644 help/kthreads/* %{buildroot}/%{_datadir}/tuna/help/kthreads/
 
 # l10n-ed message catalogues
 for lng in `cat po/LINGUAS`; do
@@ -87,5 +87,9 @@ rm -rf %{buildroot}
 %doc docs/oscilloscope+tuna.pdf
 
 %changelog
+* Mon Aug 17 2009 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.9-2
+- Use install -p
+- Add BuildRequires for gettext
+
 * Fri Jul 10 2009 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.9-1
 - Fedora package reviewing changes: introduce ChangeLog file
