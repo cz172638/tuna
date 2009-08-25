@@ -30,6 +30,7 @@ def usage():
 	-f, --field=FIELD		FIELD to plot [Default: 2]
 	-g, --geometry=GEOMETRY         X geometry specification (see "X" man page)
 	-m, --max_value=MAX_VALUE	MAX_VALUE for the scale
+	-M, --sample_multiplier=VALUE	VALUE to multiply each sample
 	-n, --noscale			Do not scale when a sample is > MAX_SCALE
 	-s, --nr_samples_on_screen=NR	Show NR samples on screen
 	-S, --snapshot_samples=NR	Take NR samples, a snapshot and exit
@@ -39,9 +40,10 @@ def usage():
 def main():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
-					   "d:f:g:hm:ns:S:u:",
+					   "d:f:g:hM:m:ns:S:u:",
 					   ("geometry=",
 					    "help", "max_value=",
+					    "sample_multiplier=",
 					    "noscale",
 					    "nr_samples_on_screen=",
 					    "snapshot_samples=",
@@ -52,6 +54,7 @@ def main():
 		sys.exit(2)
 
 	max_value = 250
+	sample_multiplier = 1
 	snapshot_samples = 0
 	delimiter = ':'
 	field = 2
@@ -73,6 +76,8 @@ def main():
 			return
 		elif o in ("-m", "--max_value"):
 			max_value = int(a)
+		elif o in ("-M", "--sample_multiplier"):
+			sample_multiplier = float(a)
 		elif o in ("-n", "--noscale"):
 			scale = False
 		elif o in ("-s", "--nr_samples_on_screen"):
@@ -86,7 +91,8 @@ def main():
 					  nr_samples_on_screen = nr_samples_on_screen,
 					  delimiter = delimiter, field = field,
 					  ylabel = "%s (%s)" % (ylabel, unitlabel),
-					  geometry = geometry, scale = scale)
+					  geometry = geometry, scale = scale,
+					  sample_multiplier = sample_multiplier)
 	o.run()
 	gtk.main()
 

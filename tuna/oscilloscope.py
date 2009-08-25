@@ -30,6 +30,11 @@ class histogram_frame(gtk.Frame):
 		     max_value = 500, nr_entries = 10,
 		     facecolor = "white"):
 		gtk.Frame.__init__(self, title)
+
+		self.fraction = int(max_value / nr_entries)
+		if self.fraction == 0:
+			self.fraction = max_value
+			nr_entries = 1
 		self.max_value = max_value
 		self.nr_entries = nr_entries
 		self.nr_samples = 0
@@ -42,7 +47,6 @@ class histogram_frame(gtk.Frame):
 		self.buckets = [ 0, ] * (nr_entries + 1)
 		self.buckets_bar = [ None, ] * (nr_entries + 1)
 		self.buckets_counter = [ None, ] * (nr_entries + 1)
-		self.fraction = int(self.max_value / self.nr_entries)
 
 		prefix = "<="
 		for bucket in range(self.nr_entries + 1):
@@ -384,7 +388,7 @@ class ftrace_window(gtk.Window):
 class cyclictestoscope(oscilloscope):
 	def __init__(self, max_value, snapshot_samples = 0, nr_samples_on_screen = 500,
 		     delimiter = ':', field = 2, ylabel = "Latency",
-		     geometry = None, scale = True):
+		     geometry = None, scale = True, sample_multiplier = 1):
 		oscilloscope.__init__(self, self.get_sample,
 				      title = "CyclictestoSCOPE",
 				      nr_samples_on_screen = nr_samples_on_screen,
@@ -396,6 +400,7 @@ class cyclictestoscope(oscilloscope):
 
 		self.connect("destroy", self.quit)
 		self.delimiter = delimiter
+		self.sample_multiplier = sample_multiplier
 		self.field = field
 		self.latency_tracer = os.access("/sys/kernel/debug/tracing/trace", os.R_OK)
 		if self.latency_tracer:
@@ -412,7 +417,11 @@ class cyclictestoscope(oscilloscope):
 
 	def get_sample(self):
 		fields = sys.stdin.readline().split(self.delimiter)
-		sample = float(fields[self.field])
+		try:
+			sample = float(fields[self.field]) * self.sample_multiplier
+		except:
+			print "fields=%s, self.field=%s,self.delimiter=%s" % (fields, self.field, self.delimiter)
+			return None
 
 		if self.latency_tracer:
 			del self.traces[0]
