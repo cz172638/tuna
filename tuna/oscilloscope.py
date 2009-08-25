@@ -282,6 +282,8 @@ class oscilloscope(gtk.Window):
 			self.scope.ax.set_ylim(0, self.scope.max_value)
 		self.scope.refresh()
 		self.hist.refresh()
+		while gtk.events_pending():
+			gtk.main_iteration()
 
 	def get_samples(self, fd, condition):
 		try:
