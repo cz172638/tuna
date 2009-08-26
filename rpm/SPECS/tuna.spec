@@ -3,7 +3,7 @@
 
 Name: tuna
 Version: 0.9
-Release: 2%{?dist}
+Release: 3%{?dist}
 License: GPLv2
 Summary: Application tuning GUI & command line utility
 Group: Applications/System
@@ -28,7 +28,7 @@ Can be used as a command line utility without requiring the GUI libraries to be
 installed.
 
 %package -n oscilloscope
-Summary: Generic Oscilloscope
+Summary: Generic graphical signal plotting tool
 Group: Applications/System
 Requires: python-matplotlib
 Requires: python-numeric
@@ -87,6 +87,10 @@ rm -rf %{buildroot}
 %doc docs/oscilloscope+tuna.pdf
 
 %changelog
+* Wed Aug 26 2009 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.9-3
+- Rewrite the oscilloscope package summary
+- Remove the shebang in tuna/oscilloscope.py
+
 * Mon Aug 17 2009 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.9-2
 - Use install -p
 - Add BuildRequires for gettext

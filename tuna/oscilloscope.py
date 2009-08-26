@@ -1,4 +1,7 @@
-#!/usr/bin/python
+# Oscilloscope
+#
+# Copyright 2008-2009 Red Hat, Inc.
+# 
 # Arnaldo Carvalho de Melo <acme@redhat.com>
 #
 # Please check the tuna repository at:
