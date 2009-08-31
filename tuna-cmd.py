@@ -165,15 +165,20 @@ def ps_show_thread(pid, affect_children, ps, cpuinfo, nics,
 	rtprio = int(ps[pid]["stat"]["rt_priority"])
 	cmd = ps[pid]["stat"]["comm"]
 	users = ""
-	if cmd[:4] == "IRQ-":
+	if tuna.is_irq_thread(cmd):
 		try:
 			if not irqs:
 				irqs = procfs.interrupts()
-			users = irqs[cmd[4:]]["users"]
-			for u in users:
+			if cmd[4:] == "IRQ-":
+				users = irqs[tuna.irq_thread_number(cmd)]["users"]
+				for u in users:
+					if u in nics:
+						users[users.index(u)] = "%s(%s)" % (u, ethtool.get_module(u))
+				users = ",".join(users)
+			else:
+				u = cmd[cmd.find('-') + 1:]
 				if u in nics:
-					users[users.index(u)] = "%s(%s)" % (u, ethtool.get_module(u))
-			users = ",".join(users)
+					users = ethtool.get_module(u)
 		except:
 			users = "Not found in /proc/interrupts!"
 

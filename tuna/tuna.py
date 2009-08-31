@@ -1,7 +1,7 @@
 # -*- python -*-
 # -*- coding: utf-8 -*-
 
-import copy, ethtool, os, procfs, schedutils
+import copy, ethtool, os, procfs, re, schedutils
 import help
 
 try:
@@ -54,17 +54,24 @@ def iskthread(pid):
 		return False
 	return True
 	
+def irq_thread_number(cmd):
+	if cmd[:4] == "irq/":
+		return cmd[4:cmd.find('-')]
+	elif cmd[:4] == "IRQ-":
+		return cmd[4:]
+	else:
+		raise LookupError
+
+def is_irq_thread(cmd):
+	return cmd[:4] in ("IRQ-", "irq/")
+
+def threaded_irq_re(irq):
+	return re.compile("(irq/%s-.+|IRQ-%s)" % (irq, irq))
 
 # FIXME: Move to python-linux-procfs
-def has_threaded_irqs(irqs, ps):
-	for sirq in irqs.keys():
-		try:
-			irq = int(sirq)
-			if ps.find_by_name("IRQ-%d" % irq):
-				return True
-		except:
-			pass
-	return False
+def has_threaded_irqs(ps):
+	irq_re = re.compile("(irq/[0-9]+-.+|IRQ-[0-9]+)")
+	return len(ps.find_by_regex(irq_re)) > 0
 
 def set_irq_affinity(irq, bitmasklist):
 	text = ",".join(map(lambda a: "%x" % a, bitmasklist))

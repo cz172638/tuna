@@ -30,7 +30,8 @@ class irq_druid:
 		users = tuna.get_irq_users(irqs, irq)
 		self.affinity_text = tuna.get_irq_affinity_text(irqs, irq)
 
-		pids = ps.find_by_name("IRQ-%d" % irq)
+		irq_re = tuna.threaded_irq_re(irq)
+		pids = self.ps.find_by_regex(irq_re)
 		if pids:
 			pid = pids[0]
 			prio = int(ps[pid]["stat"]["rt_priority"])
@@ -79,7 +80,8 @@ class irq_druid:
 			new_policy = self.sched_policy.get_active()
 			new_prio = int(self.sched_pri.get_value())
 			new_affinity = self.affinity.get_text()
-			pids = self.ps.find_by_name("IRQ-%d" % self.irq)
+			irq_re = tuna.threaded_irq_re(self.irq)
+			pids = self.ps.find_by_regex(irq_re)
 			if pids:
 				if gui.thread_set_attributes(pids[0], self.ps,
 							     new_policy,
@@ -129,7 +131,7 @@ class irqview:
 		self.ps = ps
 		self.treeview = treeview
 		self.gladefile = gladefile
-		self.has_threaded_irqs = tuna.has_threaded_irqs(irqs, ps)
+		self.has_threaded_irqs = tuna.has_threaded_irqs(ps)
 		if not self.has_threaded_irqs:
 			self.nr_columns = 4
 			( self.COL_NUM,
@@ -182,7 +184,8 @@ class irqview:
 		new_value = [ None ] * self.nr_columns
 		users = tuna.get_irq_users(self.irqs, irq, nics)
 		if self.has_threaded_irqs:
-			pids = self.ps.find_by_name("IRQ-%d" % irq)
+			irq_re = tuna.threaded_irq_re(irq)
+			pids = self.ps.find_by_regex(irq_re)
 			if pids:
 				pid = pids[0]
 				prio = int(self.ps[pid]["stat"]["rt_priority"])
