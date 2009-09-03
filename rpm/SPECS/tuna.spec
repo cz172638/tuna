@@ -2,8 +2,8 @@
 %{!?python_ver: %define python_ver %(%{__python} -c "import sys ; print sys.version[:3]")}
 
 Name: tuna
-Version: 0.9
-Release: 3%{?dist}
+Version: 0.9.1
+Release: 1%{?dist}
 License: GPLv2
 Summary: Application tuning GUI & command line utility
 Group: Applications/System
@@ -87,6 +87,9 @@ rm -rf %{buildroot}
 %doc docs/oscilloscope+tuna.pdf
 
 %changelog
+* Thu Sep 03 2009 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.9.1-1
+- New upstream release
+
 * Wed Aug 26 2009 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.9-3
 - Rewrite the oscilloscope package summary
 - Remove the shebang in tuna/oscilloscope.py

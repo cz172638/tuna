@@ -1,4 +1,13 @@
+* Thu Sep  3 2009 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.9-1
+- cmdline: --socket needs an argument
+- tuna: Present more graceful failure mode when machine can't start gui
+- tuna: Handle 2.6.31 style threaded irq names
+
 * Wed May 13 2009 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.9-1
+- tuna: i18n, pt_BR & Japanese
+- oscilloscope: Fix scaling bugs and add --sample_multiplier
+- oscilloscope: properly refresh all widgets
+- oscilloscope: Remove needless shebang and reword the package summary
 - cmdline: add --show_sockets/-n
 
 * Mon Oct 27 2008 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.8.4-1
