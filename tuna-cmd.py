@@ -348,7 +348,7 @@ def main():
 		long = ["cpus=", "affect_children", "filter", "gui", "help",
 			"isolate", "include", "no_kthreads", "move",
 			"show_sockets", "priority=", "show_threads", "irqs=",
-			"save=", "sockets", "threads=", "no_uthreads",
+			"save=", "sockets=", "threads=", "no_uthreads",
 			"version", "what_is", "spread"]
 		if have_inet_diag:
 			short += "n"
