@@ -490,6 +490,10 @@ def main():
 			# gui packages not installed
 			usage()
 			return
+		except RuntimeError:
+			print "tuna: machine needs to be authorized via xhost or ssh -X?"
+			return
+
 		try:
 			cpus_filtered = filter and cpu_list or []
 			app = tuna_gui.main_gui(kthreads, uthreads, cpus_filtered)
