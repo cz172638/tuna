@@ -1,3 +1,5 @@
+- tuna: Ignore non-existing threads in threads_set_priority
+
 * Thu Sep  3 2009 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.9-1
 - cmdline: --socket needs an argument
 - tuna: Present more graceful failure mode when machine can't start gui

@@ -445,11 +445,17 @@ def threads_set_priority(tids, parm, affect_children = False):
 		rtprio = int(parms[0])
 
 	for tid in tids:
-		thread_set_priority(tid, policy, rtprio)
+		try:
+			thread_set_priority(tid, policy, rtprio)
+		except SystemError: # (3, 'No such process')
+			continue
 		if affect_children:
 			for child in [int (a) for a in os.listdir("/proc/%d/task" % tid)]:
 				if child != tid:
-					thread_set_priority(child, policy, rtprio)
+					try:
+						thread_set_priority(child, policy, rtprio)
+					except SystemError: # (3, 'No such process')
+						continue
 
 class sched_tunings:
 	def __init__(self, name, pid, policy, rtprio, affinity, percpu):
