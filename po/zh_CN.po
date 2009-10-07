@@ -1,0 +1,667 @@
+# Simpified Chinese message translations for tuna
+# Copyright (C) 2009 THE tuna'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the tuna package.
+# John Lau <jlau@redhat.com>, 2009.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: tuna 0.8.4\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2009-09-02 15:42+0100\n"
+"PO-Revision-Date: 2009-09-06 23:54+0800\n"
+"Last-Translator: John Lau <jlau@redhat.com>\n"
+"Language-Team: Simplified Chinese <gss-china-list@redhat.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: tuna/tuna_gui.glade:8
+msgid "Tuna"
+msgstr "Tuna"
+
+#: tuna/tuna_gui.glade:111
+msgid "Set Process Attributes"
+msgstr "设置进程属性"
+
+#: tuna/tuna_gui.glade:140
+msgid "_Just the selected thread"
+msgstr "调整选中进程(_J)"
+
+#: tuna/tuna_gui.glade:155
+msgid "_All threads of the selected process"
+msgstr "程序的所有线程(_A)"
+
+#: tuna/tuna_gui.glade:172
+msgid "A_ll command lines matching the regex below:"
+msgstr "所有匹配正则表达式的命令如下(_l):"
+
+#: tuna/tuna_gui.glade:190
+msgid "<b>Set for these processes</b>"
+msgstr "<b>设置这些进程</b>"
+
+#: tuna/tuna_gui.glade:210
+msgid "_Policy: "
+msgstr "规则(_P)"
+
+#: tuna/tuna_gui.glade:241
+msgid "_Scheduler priority:"
+msgstr "调度程序优先级(_S)"
+
+#: tuna/tuna_gui.glade:277
+msgid "A_ffinity:"
+msgstr "Affinity(_f)"
+
+#: tuna/tuna_gui.glade:324
+msgid "Command line rege_x:"
+msgstr "命令行正则表达式(_x)"
+
+#: tuna/tuna_gui.glade:412
+msgid "Set IRQ Attributes"
+msgstr "设置中断请求特征"
+
+#: tuna/tuna_gui.glade:489
+msgid "A_ffinity"
+msgstr "Affinity(_f)"
+
+#: tuna/tuna_gui.glade:504
+msgid "_Scheduler priority"
+msgstr "调度程序优先级(_S)"
+
+#: tuna/tuna_gui.glade:519
+msgid "_Policy"
+msgstr "规则"
+
+#: tuna/tuna_gui.glade:539
+msgid "<b>Set attributes for this IRQ:</b>"
+msgstr "<b>设置这个中断请求的特征</b>"
+
+#: tuna/tuna_gui.py:106
+msgid "Root privilege required"
+msgstr "需要根用户权限"
+
+#: tuna/tuna_gui.py:107
+msgid "Some functions will not work without root privilege."
+msgstr "没有根用户权限不能执行某些功能"
+
+#: tuna/tuna_gui.py:108
+msgid "Do you want to continue?"
+msgstr "您要继续吗？"
+
+#: tuna/tuna.py:24
+#, python-format
+msgid "Kernel Thread %(pid)d (%(cmdline)s):"
+msgstr "内核线程 %(pid)d (%(cmdline)s):"
+
+#: tuna/tuna.py:27
+#, python-format
+msgid "User Thread %(pid)d (%(cmdline)s):"
+msgstr "用户进程 %(pid)d (%(cmdline)s):"
+
+#: tuna/tuna.py:188 tuna/tuna.py:213
+#, python-format
+msgid "could not change %(pid)d affinity to %(new_affinity)s"
+msgstr "不能更改%(pid)d的affinity到%(new_affinity)s"
+
+#: tuna/help.py:10
+msgid ""
+"Used to create kernel threads via kthread_create(). It is the parent of all "
+"the other kernel threads."
+msgstr "用于通过kthread_create()函数创建内核线程,它是所有其他内核线程的Parent"
+
+#: tuna/help.py:11
+msgid ""
+"Per-cpu thread that handles POSIX timer callbacks. Timer callbacks are bound "
+"to a cpu and are handled by these threads as per-cpu data."
+msgstr ""
+"这线程要处理POSIX计时器回调，每CPU一个。计时器回调都是针对特定CPU。"
+
+#: tuna/help.py:12
+msgid ""
+"This cpufreq workqueue runs periodically to sample the idleness of the "
+"system, increasing or reducing the CPU frequency to save power. \n"
+"[One per CPU]"
+msgstr ""
+"这个cpufreq工作队列定期运行对系统空闲进行抽样,增加或减小CPU的频率来节电.\n"
+"【每个CPU一个】"
+
+#: tuna/help.py:13
+msgid ""
+"Pushes the RCU grace period along (if possible) and will handle dereferenced "
+"RCU callbacks, such as freeing structures after a grace period. \n"
+"[One per CPU]"
+msgstr ""
+"延长RCU的等待时间（如可以）和处理dereferenced RCU回调，例如在等待时间后释放的结构。"
+"【每个CPU一个】"
+
+#: tuna/help.py:14
+msgid ""
+"Used to call user mode helpers from the kernel, such as /sbin/bridge-stp, "
+"ocfs2_hb_ctl, pnpbios, poweroff, request-key, etc.\""
+msgstr ""
+"用来从内核调用用户模式助手,例如/sbin/bridge-stp,ocfs2_hb_ctl, pnpbios, "
+"poweroff, request-key，等等\""
+
+#: tuna/help.py:15
+msgid "Scheduler load balance monitoring."
+msgstr "调度程序负载平衡监视器"
+
+#: tuna/help.py:16
+msgid ""
+"Main thread function used to manage a filesystem logging device journal. "
+"This kernel thread is responsible for two things: <b>COMMIT</b>: Every so "
+"often we need to commit the current state of the filesystem to disk.  The "
+"journal thread is responsible for writing all of the metadata buffers to "
+"disk. <b>CHECKPOINT</b>: We cannot reuse a used section of the log file "
+"until all of the data in that part of the log has been rewritten elsewhere "
+"on the disk.  Flushing these old buffers to reclaim space in the log is "
+"known as checkpointing, and this thread is responsible for that job."
+msgstr ""
+"主线程函数用来管理一个记录设备日志的文件系统.这个内核线程负责两件事:<b>COMMIT</"
+"b>:我们常需要将文件系统的当前状态提交到磁盘.日志线程负责将元数据缓冲区中的所有"
+"数据写入磁盘.<b>CHECKPOINT</b>:直到日志文件上被使用的一个段上面的所有数据都已经被重新写回到磁盘上，我们才能重新使用它。"
+"冲刷旧的缓存来回收日志空间，我们把它叫做checkpointing,这个线程就是用来负责这个工作的."
+
+#: tuna/help.py:17
+msgid "Locking arbiter for NFS on the system"
+msgstr "锁定系统上NFS的判优器"
+
+#: tuna/help.py:18
+msgid ""
+"Triggered when a rebalance of tasks is needed to CPU domains. This handles "
+"balancing of SCHED_OTHER tasks across CPUs. RT tasks balancing is done "
+"directly in schedule and wakeup paths.  Runs at prio 1 because it needs to "
+"schedule above all SCHED_OTHER tasks. If the user has the same issue but "
+"doesn\"t mind having latencies against other kernel threads that run here, "
+"then its fine. But it should definitely be documented that PRIO 1 has other "
+"threads on it at boot up. \n"
+"[One per CPU]"
+msgstr ""
+"当CPU域需要任务重新均衡时这个任务被触发.这个线程处理SCHED_OTHER任务在CPU之间的均衡,"
+"实时任务的平衡在进程调度和唤醒时直接完成.这个任务以优先级1来运行，是因为它需要优先於所有"
+"的SCHED_OTHER任务来调度.如果用户有相同的问题，但是并不关心与这里其他运行的内核线程的"
+"潜在关系,那么就没问题.但应明确地写明在启动的时候有另一些线程以优先级1运行"
+"【每个CPU一个】"
+
+#: tuna/help.py:19
+msgid ""
+"This is from a poor attempt to prioritize tasklets. Some tasklets wanted to "
+"run before anything else. Thus there were two tasklet softirqs made. "
+"tasklet_vec and tasklet_hi_vec. A driver writer could put their \"critical\" "
+"tasklets into the tasklet_hi_vec and it would run before other softirqs. "
+"This never really worked as intended. \n"
+"[One per CPU]"
+msgstr ""
+"这是由于按优先级排列tasklet的失败尝试的结果。一些tasklet需要提前运行"
+"因此又有两个tasklet软中断：tasklet_vec和tasklet_hi_vec。一个驱动"
+"复写器可以将它们的\"critical\"tasklet放入tasklet_hi_vec，那么它将运行在其他软"
+"中断之前。这个不会起到预期的作用。【每个CPU一个】"
+
+#: tuna/help.py:20
+msgid ""
+"Workqueue used to process IO requests. Used by IO schedulers and block "
+"device drivers. \n"
+"[One per CPU]"
+msgstr "这是处理IO请求的工作队列。被IO调度器和块设备驱动调用【每个CPU一个】"
+
+#: tuna/help.py:21
+msgid ""
+"When receiving a packet the device will place the packet on a queue with its "
+"hard interrupt (threaded in RT). The sirq-net-rx is responsible for finding "
+"out what to do with the packet. It may forward it to another box if the "
+"current box is used as a router, or it will find the task the packet is for. "
+"If that task is currently waiting for the packet, the softirq might hand it "
+"off to that task and the task will handle the rest of the processing of the "
+"packet. \n"
+"[One per CPU]"
+msgstr ""
+"每当收到一个包，设备就会将这个包和它的硬中断一起放进一个队列。sirq-net-rx "
+"负责决定将要对包做什么处理。如果这个机器被用作一个路由器，它可能被转发，或者它将会发现"
+"包所要做的任务。如果某个任务正在等待某个"
+"包，那么软中断可能将它传送给那个任务，那个任务将会继续处理这个包。【每"
+"个CPU一个】"
+
+#: tuna/help.py:22
+msgid ""
+"This should run at the lowest RT priority. With preemptible RCU, a loaded "
+"system may have tasks that hold RCU locks but have a high nice value. These "
+"tasks may be pushed off for seconds, and if the system is tight on memory, "
+"the RCU deferred freeing may not occur. The result can be drastic.  The "
+"krcupreemptd is a daemon that runs just above SCHED_OTHER and wakes up once "
+"a second and performs a synchronize RCU. With RCU boosting, all those that "
+"hold RCU locks will inherit the priority of the krcupreemptd and wake up and "
+"release the RCU locks.  This is only a concern for loaded systems and "
+"SCHED_OTHER tasks. If there is an issue of RT tasks starving out SCHED_OTHER "
+"tasks and causing problems with freeing memory, then the RT tasks are "
+"designed badly."
+msgstr ""
+"这个应该运行在最低的RT优先级上。因为有先占型的RCU，一个高负荷的系统可能"
+"有高nice值的任务持有RCU锁。这些任务可能被延时几秒钟，如果系统"
+"的内存已经剩余不多，那么RCU延迟的内存释放将引致严重后果。"
+"krcupreemptd是一个守护进程，仅当每秒被唤醒一次时运行在SCHED_OTHER之上，执行一"
+"个同步的RCU。 对已RCU的加速，所有那些管理RCU锁的任务都会"
+"继承krcupreemptd的优先级，唤醒和释放RCU锁。这只是针对对高负载的系统和"
+"SCHED_OTHER任务。如果RT任务因为SCHED_OTHER任务而饿死，以导致内存"
+"释放的问题发生，那么那个RT任务设计就是有问题。【每个CPU一个】"
+
+#: tuna/help.py:23
+msgid ""
+"Activated when under heavy networking activity. Used to avoid monopolizing "
+"the CPUs doing just software interrupt processing. \n"
+"[One per CPU]"
+msgstr "在繁忙的网络上被激活。用于避免软中断独占CPU。"
+
+#: tuna/help.py:24
+msgid ""
+"Basically the timer wheel. Things that add itself to the timer wheel "
+"timeouts will be handled by this softirq. Parts of the kernel that need "
+"timeouts will use this softirq (i.e. network timeouts). The resolution to "
+"these timeouts are defined by the HZ value. \n"
+"[One per CPU]"
+msgstr ""
+"基本的定时器轮转。事物会将自己加入定时器轮转中，超时设定将由软中断处理。那些"
+"需要超时设定的部分内核将使用这个软中断（比如网络超时设定）。对于这些超时设定"
+"的解决方法是由HZ的值定义的。【每个CPU一个】"
+
+#: tuna/help.py:25
+msgid ""
+"Global workqueue, used to schedule work to be done in process context. \n"
+"[One per CPU]"
+msgstr ""
+"全局工作队列用于按照预定的时间将作业完成在进程的上下文中。【每个CPU一个】"
+
+#: tuna/help.py:26
+msgid ""
+"Run briefly once per second to reset the softlockup timestamp.  If this gets "
+"delayed for more than 60 seconds then a message will be printed.  Use /proc/"
+"sys/kernel/hung_task_timeout_secs and /proc/sys/kernel/hung_task_check_count "
+"to control this behaviour.  Setting /proc/sys/kernel/hung_task_timeout_secs "
+"to zero will disable this check. \n"
+"[One per CPU]"
+msgstr ""
+"大约每秒运行一次重置软锁的时间戳。如果它延迟超过60秒，那么就会打印一条信息。"
+"使用/proc/sys/kernel/hung_task_timeout_secs和/proc/sys/kernel/hung_task_ch来"
+"控制它的行为。 设置proc/sys/kernel/hung_task_timeout_secs为0可以关闭检查。"
+"【每个CPU一个】"
+
+#: tuna/help.py:27
+msgid ""
+"This is the network transmit queue. Most of the time the network packets "
+"will be handled by the task that is sending the packets out, and doing so at "
+"the priority of that task. But if the protocol window or the network device "
+"queue is full, then the packets will be pushed off to later. The sirq-net-tx "
+"softirq is responsible for sending out these packets. \n"
+"[One per CPU]"
+msgstr ""
+"这是网络传输的队列。大多数的时间，网络中的包将被发送包的任务处理，并处理在那"
+"个任务的优先级里。但是如果协议窗口或者网络设备队列满了，那么这些包将被延迟处"
+"理。 sirq-net-tx软中断的责任就是发送这些包。【每个CPU一个】"
+
+#: tuna/help.py:28
+msgid ""
+"Called after a completion to a block device is made. Looking further into "
+"this call, I only see a couple of users. The SCSI driver uses this as well "
+"as cciss. \n"
+"[One per CPU]"
+msgstr ""
+"当一个completion请求在块设备完成就会被调用。深入的看，我们只能看到SCSI驱动和cciss使用它。【每个CPU一个】"
+
+#: tuna/help.py:29
+msgid ""
+"Catch all for those devices that couldn\"t use softirqs directly and mostly "
+"made before work queues were around. The difference between a tasklet and a "
+"softirq is that the same tasklet can not run on two different CPUs at the "
+"same time. In this regard it acts like a \"task\" (hence the name \"tasklet"
+"\"). Various devices use tasklets. \n"
+"[One per CPU]"
+msgstr ""
+"获取所有那些不能直接使用软中断和在工作队列出现之前就存在的设备。tasklet机制和"
+"软中断机制的区别在于同样的tasklet不能同时运行在两个不同的CPU上。在这点上，它"
+"像一个\"任务\"（因此叫\"tasklet\"）。不同的设备都会使用tasklet。【每个CPU一个】"
+
+#: tuna/help.py:30
+msgid ""
+"Per USB storage device virtual SCSI controller.  Persistant across device "
+"insertion/removal, as is the SCSI node. This is done so that a device which "
+"is removed can be re-attached and be granted the same /dev node as before, "
+"creating persistance between connections of the target unit.  Gets commands "
+"from the SCSI mid-layer and, after sanity checking several things, sends the "
+"command to the \"protocol\" handler. This handler is responsible for re-"
+"writing the command (if necessary) into a form which the device will accept. "
+"For example, ATAPI devices do not support 6-byte commands. Thus, they must "
+"be re-written into 10-byte variants."
+msgstr ""
+"每一个USB存储设备虚拟了SCSI的控制器。持续的insertion和removal就像SCSI的节点。"
+"这个的实现适应为一个被移除的设备可以重新贴附或者被认为是和以前的/dev节点一样，"
+"在目的单元的连接中创建持续的连接。从SCSI的中间层获得命令，在检查完几个事物后，"
+"将这些命令传送给\"protocol\"处理器。这个处理器的职责就是将这些命令（如"
+"果需要）重新写入设备接收的表中。比如，ATAPI设备不支持6字节的命令。因此他们必"
+"须被重写如10字节的变量里。"
+
+#: tuna/help.py:31
+msgid ""
+"High priority system thread that performs thread migration by bumping thread "
+"off CPU then pushing onto another runqueue. \n"
+"[One per CPU]"
+msgstr ""
+"这是高优先级的系统线程，负责在线程迁移时将其他线程移离CPU，并推到另一个运行的"
+"队列中。【每个CPU一个】"
+
+#: tuna/help.py:32
+msgid ""
+"Handles Sun RPC network messages (mainly for NFS) \n"
+"[One per CPU]"
+msgstr "处理Sun的RPC网络消息（主要是对NFS而言）。【每个CPU一个】"
+
+#: tuna/gui/util.py:50
+msgid "Invalid affinity, specify a list of CPUs!"
+msgstr "无效的affinity，指定一个CPU列表。"
+
+#: tuna/gui/util.py:69
+msgid "Invalid parameters!"
+msgstr "无效参数！"
+
+#: tuna/gui/util.py:76
+#, python-format
+msgid ""
+"couldn't change pid %(pid)d from %(cpol)s(%(cpri)d) to %(npol)s(%(npri)d)!"
+msgstr "不能将pid %(pid)d从%(cpol)s(%(cpri)d)变成%(npol)s(%(npri)d)！"
+
+#: tuna/gui/util.py:110
+#, python-format
+msgid "couldn't change pid %(pid)d from %(caff)s to %(naff)s!"
+msgstr "不能将pid %(pid)d从%(caff)s改为%(naff)s"
+
+#: tuna/gui/cpuview.py:15
+#, python-format
+msgid "Couldn't change the affinity of %(tid)d to %(affinity)s!"
+msgstr "不能将%(tid)d的affinity改为%(affinity)s"
+
+#: tuna/gui/cpuview.py:46
+#, python-format
+msgid "Socket %s"
+msgstr "套接字%s"
+
+#: tuna/gui/cpuview.py:64
+msgid "Filter"
+msgstr "过滤器"
+
+#: tuna/gui/cpuview.py:68
+msgid "CPU"
+msgstr "CPU"
+
+#: tuna/gui/cpuview.py:74 tuna/gui/cpuview.py:78
+msgid "Usage"
+msgstr "利用率"
+
+#: tuna/gui/cpuview.py:197
+msgid "I_nclude CPU"
+msgstr "包含CPU(_n)"
+
+#: tuna/gui/cpuview.py:198
+msgid "_Isolate CPU"
+msgstr "隔离CPU（_I）"
+
+#: tuna/gui/cpuview.py:200
+msgid "I_nclude CPU Socket"
+msgstr "包含CPU插槽（_n）"
+
+#: tuna/gui/cpuview.py:201
+msgid "_Isolate CPU Socket"
+msgstr "隔离CPU插槽（_I）"
+
+#: tuna/gui/cpuview.py:202
+msgid "_Restore CPU"
+msgstr "恢复CPU（_R）"
+
+#: tuna/gui/procview.py:200 tuna/gui/procview.py:220 tuna/gui/irqview.py:120
+msgid "PID"
+msgstr "PID"
+
+#: tuna/gui/procview.py:201 tuna/gui/procview.py:221 tuna/gui/irqview.py:121
+msgid "Policy"
+msgstr "调度策略"
+
+#: tuna/gui/procview.py:202 tuna/gui/procview.py:222 tuna/gui/irqview.py:122
+msgid "Priority"
+msgstr "优先级"
+
+#: tuna/gui/procview.py:203 tuna/gui/procview.py:223 tuna/gui/irqview.py:123
+#: tuna/gui/irqview.py:142
+msgid "Affinity"
+msgstr "Affinity"
+
+#: tuna/gui/procview.py:204
+msgid "VolCtxtSwitch"
+msgstr "VolCtxtSwitch"
+
+#: tuna/gui/procview.py:205
+msgid "NonVolCtxtSwitch"
+msgstr "NonVolCtxtSwitch"
+
+#: tuna/gui/procview.py:206 tuna/gui/procview.py:224
+msgid "Command Line"
+msgstr "命令"
+
+#: tuna/gui/procview.py:284
+msgid "Kernel Thread"
+msgstr "内核线程"
+
+#: tuna/gui/procview.py:470
+msgid "Save As"
+msgstr "另存為"
+
+#: tuna/gui/procview.py:528
+#, python-format
+msgid "Kernel thread tunings saved to %s!"
+msgstr "内核线程调整另存为%s"
+
+#: tuna/gui/procview.py:541
+msgid "_Set process attributes"
+msgstr "设置进程属性（_S）"
+
+#: tuna/gui/procview.py:543
+msgid "Sto_p refreshing the process list"
+msgstr "停止刷新进程列表（_p）"
+
+#: tuna/gui/procview.py:545
+msgid "_Refresh the process list"
+msgstr "刷新进程列表（_R）"
+
+#: tuna/gui/procview.py:548
+msgid "_Hide kernel threads"
+msgstr "隐藏内核线程(_H)"
+
+#: tuna/gui/procview.py:550
+msgid "_Show kernel threads"
+msgstr "显示内核线程（_S）"
+
+#: tuna/gui/procview.py:553
+msgid "_Hide user threads"
+msgstr "隐藏用户线程（_H）"
+
+#: tuna/gui/procview.py:555
+msgid "_Show user threads"
+msgstr "显示用户线程（_S）"
+
+#: tuna/gui/procview.py:557
+msgid "_What is this?"
+msgstr "这是什么？（_W）"
+
+#: tuna/gui/procview.py:559
+#, fuzzy
+msgid "_Save kthreads tunings"
+msgstr "保存内核调整（_S）"
+
+#: tuna/gui/irqview.py:119 tuna/gui/irqview.py:141
+msgid "IRQ"
+msgstr "中断"
+
+#: tuna/gui/irqview.py:124 tuna/gui/irqview.py:143
+msgid "Events"
+msgstr "事件"
+
+#: tuna/gui/irqview.py:125 tuna/gui/irqview.py:144
+msgid "Users"
+msgstr "使用者"
+
+#: tuna/gui/irqview.py:289
+msgid "_Set IRQ attributes"
+msgstr "设置中断属性(_S)"
+
+#: tuna/gui/irqview.py:291
+msgid "Sto_p refreshing the IRQ list"
+msgstr "停止刷新中断列表（_p）"
+
+#: tuna/gui/irqview.py:293
+msgid "_Refresh the IRQ list"
+msgstr "刷新中断列表（_R）"
+
+#: tuna-cmd.py:43
+msgid "Usage: tuna [OPTIONS]"
+msgstr "用法：tuna [选项]"
+
+#: tuna-cmd.py:45
+msgid "Give this help list"
+msgstr "给出帮助列表"
+
+#: tuna-cmd.py:46
+msgid "Start the GUI"
+msgstr "启动图形界面"
+
+#: tuna-cmd.py:47 tuna-cmd.py:48 tuna-cmd.py:52 tuna-cmd.py:54 tuna-cmd.py:57
+#: tuna-cmd.py:79
+msgid "CPU-LIST"
+msgstr "CPU列表"
+
+#: tuna-cmd.py:47
+#, python-format
+msgid "%(cpulist)s affected by commands"
+msgstr "命令影响 %(cpulist)s"
+
+#: tuna-cmd.py:49
+msgid "Operation will affect children threads"
+msgstr "操作将会影响子线程"
+
+#: tuna-cmd.py:50
+msgid "Display filter the selected entities"
+msgstr "显示过滤后的选中实体"
+
+#: tuna-cmd.py:51
+#, python-format
+msgid "Move all threads away from %(cpulist)s"
+msgstr "从 %(cpulist)s 移出所有线程"
+
+#: tuna-cmd.py:53
+#, python-format
+msgid "Allow all threads to run on %(cpulist)s"
+msgstr "允许所有线程运行在 %(cpulist)s 上"
+
+#: tuna-cmd.py:55
+msgid "Operations will not affect kernel threads"
+msgstr "操作将不会影响内核线程"
+
+#: tuna-cmd.py:56
+#, python-format
+msgid "Move selected entities to %(cpulist)s"
+msgstr "移动所有选中实体到 %(cpulist)s"
+
+#: tuna-cmd.py:59
+msgid "Show network sockets in use by threads"
+msgstr "显示被线程使用的网络套接字"
+
+#: tuna-cmd.py:61 tuna-cmd.py:63
+msgid "POLICY"
+msgstr "调度策略"
+
+#: tuna-cmd.py:62 tuna-cmd.py:63
+msgid "RTPRIO"
+msgstr "实时进程"
+
+#: tuna-cmd.py:62
+#, python-format
+msgid "Set thread scheduler tunables: %(policy)s and %(rtprio)s"
+msgstr "设置线程调度器的调整：%(policy)s 和 %(rtprio)s"
+
+#: tuna-cmd.py:64
+msgid "Show thread list"
+msgstr "显示线程列表"
+
+#: tuna-cmd.py:65 tuna-cmd.py:66
+msgid "IRQ-LIST"
+msgstr "中断列表"
+
+#: tuna-cmd.py:65
+#, python-format
+msgid "%(irqlist)s affected by commands"
+msgstr "命令影响 %(irqlist)s"
+
+#: tuna-cmd.py:67 tuna-cmd.py:68
+msgid "FILENAME"
+msgstr "文件名"
+
+#: tuna-cmd.py:67
+#, python-format
+msgid "Save kthreads sched tunables to %(filename)s"
+msgstr "保存内核线程调度参数到 %(filename)s"
+
+#: tuna-cmd.py:70 tuna-cmd.py:71
+msgid "CPU-SOCKET-LIST"
+msgstr "CPU套接字列表"
+
+#: tuna-cmd.py:70
+#, python-format
+msgid "%(cpusocketlist)s affected by commands"
+msgstr "命令影响 %(cpusocketlist)s"
+
+#: tuna-cmd.py:73 tuna-cmd.py:74
+msgid "THREAD-LIST"
+msgstr "线程列表"
+
+#: tuna-cmd.py:73
+#, python-format
+msgid "%(threadlist)s affected by commands"
+msgstr "命令影响 %(threadlist)s "
+
+#: tuna-cmd.py:75
+msgid "Operations will not affect user threads"
+msgstr "操作不会影响用户线程"
+
+#: tuna-cmd.py:76
+msgid "Show version"
+msgstr "显示版本号"
+
+#: tuna-cmd.py:77
+msgid "Provides help about selected entities"
+msgstr "提供有关选中实体的帮助"
+
+#: tuna-cmd.py:78
+#, python-format
+msgid "Spread selected entities over %(cpulist)s"
+msgstr "扩展 %(cpulist)s 上被选中实体"
+
+#: tuna-cmd.py:94
+#, python-format
+msgid "thread %d doesn't exists!"
+msgstr "线程 %d 不存在！"
+
+#: tuna-cmd.py:113
+msgid "thread"
+msgstr "线程"
+
+#: tuna-cmd.py:405 tuna-cmd.py:410 tuna-cmd.py:427
+msgid "requires a cpu list!"
+msgstr "需要一个CPU列表！"
+
+#: tuna-cmd.py:430
+msgid "requires a list of threads/irqs!"
+msgstr "需要一个线程/中断列表！"
+
+#: tuna-cmd.py:456
+#, python-format
+msgid "invalid socket %(socket)s sockets available: %(available)s"
+msgstr "无效的套接字 %(socket)s 可用套接字：%(available)s"
+
+#: tuna-cmd.py:481
+msgid "requires a thread list!"
+msgstr "需要一个线程列表！"
