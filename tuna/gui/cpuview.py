@@ -250,7 +250,7 @@ class cpuview:
 		self.irqview = irqview
 
 		vbox = window.get_child().get_child()
-		socket_ids = self.cpus.sockets.keys()
+		socket_ids = [ int(id) for id in self.cpus.sockets.keys() ]
 		socket_ids.sort()
 
 		self.nr_sockets = len(socket_ids)
@@ -265,7 +265,7 @@ class cpuview:
 		column = 1
 		for socket_id in socket_ids:
 			frame = cpu_socket_frame(socket_id,
-						 self.cpus.sockets[socket_id],
+						 self.cpus.sockets[str(socket_id)],
 						 self)
 			box.pack_start(frame, False, False)
 			self.socket_frames[socket_id] = frame
