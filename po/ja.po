@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: tuna 0.8.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-08-02 23:04-0300\n"
-"PO-Revision-Date: 2009-07-21 15:57+0900\n"
+"POT-Creation-Date: 2009-09-30 13:09+0900\n"
+"PO-Revision-Date: 2009-09-30 14:23+0900\n"
 "Last-Translator: Satoru SATOH <ssato@redhat.com>\n"
 "Language-Team: Japanese <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -130,7 +130,6 @@ msgstr ""
 "[CPU 毎に一つ]"
 
 #: tuna/help.py:13
-#, fuzzy
 msgid ""
 "Pushes the RCU grace period along (if possible) and will handle dereferenced "
 "RCU callbacks, such as freeing structures after a grace period. \n"
@@ -426,9 +425,9 @@ msgid "couldn't change pid %(pid)d from %(caff)s to %(naff)s!"
 msgstr "PID %(pid)d について %(caff)s から %(naff)s に変更できませんでした!"
 
 #: tuna/gui/cpuview.py:15
-#, fuzzy, python-format
+#, python-format
 msgid "Couldn't change the affinity of %(tid)d to %(affinity)s!"
-msgstr "PID %(pid)d について %(caff)s から %(naff)s に変更できませんでした!"
+msgstr "%(tid)d のアフィニティを %(affinity)s に変更できませんでした!"
 
 #: tuna/gui/cpuview.py:46
 #, python-format
@@ -584,7 +583,7 @@ msgstr "GUI を起動"
 #: tuna-cmd.py:47 tuna-cmd.py:48 tuna-cmd.py:52 tuna-cmd.py:54 tuna-cmd.py:57
 #: tuna-cmd.py:79
 msgid "CPU-LIST"
-msgstr ""
+msgstr "CPU-LIST"
 
 #: tuna-cmd.py:47
 #, python-format
@@ -624,11 +623,11 @@ msgstr "スレッドが使用しているネットワークソケットを表示
 
 #: tuna-cmd.py:61 tuna-cmd.py:63
 msgid "POLICY"
-msgstr ""
+msgstr "POLICY"
 
 #: tuna-cmd.py:62 tuna-cmd.py:63
 msgid "RTPRIO"
-msgstr ""
+msgstr "RTPRIO"
 
 #: tuna-cmd.py:62
 #, python-format
@@ -641,7 +640,7 @@ msgstr "スレッドのリストを表示"
 
 #: tuna-cmd.py:65 tuna-cmd.py:66
 msgid "IRQ-LIST"
-msgstr ""
+msgstr "IRQ-LIST"
 
 #: tuna-cmd.py:65
 #, python-format
@@ -650,7 +649,7 @@ msgstr "%(irqlist)s をコマンドの対象とする"
 
 #: tuna-cmd.py:67 tuna-cmd.py:68
 msgid "FILENAME"
-msgstr ""
+msgstr "FILENAME"
 
 #: tuna-cmd.py:67
 #, python-format
@@ -659,7 +658,7 @@ msgstr "カーネルスレッドのスケジューラパラメータ設定を %(
 
 #: tuna-cmd.py:70 tuna-cmd.py:71
 msgid "CPU-SOCKET-LIST"
-msgstr ""
+msgstr "CPU-SOCKET-LIST"
 
 #: tuna-cmd.py:70
 #, python-format
@@ -668,7 +667,7 @@ msgstr "%(cpusocketlist)s をコマンドの対象とする"
 
 #: tuna-cmd.py:73 tuna-cmd.py:74
 msgid "THREAD-LIST"
-msgstr ""
+msgstr "THREAD-LIST"
 
 #: tuna-cmd.py:73
 #, python-format
