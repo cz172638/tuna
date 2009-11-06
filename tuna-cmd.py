@@ -62,6 +62,7 @@ def usage():
 		     _('RTPRIO'),		    _('Set thread scheduler tunables: %(policy)s and %(rtprio)s') % \
 							{"policy": _('POLICY'), "rtprio": _('RTPRIO')})
 	print fmt % ('-P, --show_threads',	    _('Show thread list'))
+	print fmt % ('-Q, --show_irqs',		    _('Show IRQ list'))
 	print fmt % ('-q, --irqs=' + _('IRQ-LIST'), _('%(irqlist)s affected by commands') %
 							{"irqlist": _('IRQ-LIST')})
 	print fmt % ('-s, --save=' + _('FILENAME'), _('Save kthreads sched tunables to %(filename)s') % \
@@ -84,6 +85,15 @@ def get_nr_cpus():
 		return nr_cpus
 	nr_cpus = procfs.cpuinfo().nr_cpus
 	return nr_cpus
+
+nics = None
+
+def get_nics():
+	global nics
+	if nics:
+		return nics
+	nics = ethtool.get_active_devices()
+	return nics
 
 def thread_help(tid):
 	global ps
@@ -149,18 +159,20 @@ def ps_show_sockets(pid, ps, inodes, inode_re, indent = 0):
 		       s.receive_queue(), s.write_queue(),
 		       s.saddr(), s.sport(), s.daddr(), s.dport())
 
-def ps_show_thread(pid, affect_children, ps, cpuinfo, nics,
+def format_affinity(affinity):
+	if len(affinity) <= 4:
+		return ",".join(str(a) for a in affinity)
+
+	return ",".join(str(hex(a)) for a in procfs.hexbitmask(affinity, get_nr_cpus()))
+
+def ps_show_thread(pid, affect_children, ps,
 		   has_ctxt_switch_info, sock_inodes, sock_inode_re):
 	global irqs
 	try:
-		affinity = schedutils.get_affinity(pid)
+		affinity = format_affinity(schedutils.get_affinity(pid))
 	except SystemError: # (3, 'No such process')
 		return
 
-	if len(affinity) <= 4:
-		affinity = ",".join(str(a) for a in affinity)
-	else:
-		affinity = ",".join(str(hex(a)) for a in procfs.hexbitmask(affinity, cpuinfo.nr_cpus))
 	sched = schedutils.schedstr(schedutils.get_scheduler(pid))[6:]
 	rtprio = int(ps[pid]["stat"]["rt_priority"])
 	cmd = ps[pid]["stat"]["comm"]
@@ -172,12 +184,12 @@ def ps_show_thread(pid, affect_children, ps, cpuinfo, nics,
 			if cmd[4:] == "IRQ-":
 				users = irqs[tuna.irq_thread_number(cmd)]["users"]
 				for u in users:
-					if u in nics:
+					if u in get_nics():
 						users[users.index(u)] = "%s(%s)" % (u, ethtool.get_module(u))
 				users = ",".join(users)
 			else:
 				u = cmd[cmd.find('-') + 1:]
-				if u in nics:
+				if u in get_nics():
 					users = ethtool.get_module(u)
 		except:
 			users = "Not found in /proc/interrupts!"
@@ -201,11 +213,11 @@ def ps_show_thread(pid, affect_children, ps, cpuinfo, nics,
 	if affect_children and ps[pid].has_key("threads"):
 		for tid in ps[pid]["threads"].keys():
 			ps_show_thread(tid, False, ps[pid]["threads"],
-				       cpuinfo, nics, has_ctxt_switch_info,
+				       has_ctxt_switch_info,
 				       sock_inodes, sock_inode_re)
 			
 
-def ps_show(ps, affect_children, cpuinfo, thread_list, cpu_list,
+def ps_show(ps, affect_children, thread_list, cpu_list,
 	    irq_list_numbers, show_uthreads, show_kthreads,
 	    has_ctxt_switch_info, sock_inodes, sock_inode_re):
 				
@@ -242,10 +254,8 @@ def ps_show(ps, affect_children, cpuinfo, thread_list, cpu_list,
 
 	ps_list.sort()
 
-	nics = ethtool.get_active_devices()
-
 	for pid in ps_list:
-		ps_show_thread(pid, affect_children, ps, cpuinfo, nics,
+		ps_show_thread(pid, affect_children, ps,
 			       has_ctxt_switch_info, sock_inodes,
 			       sock_inode_re)
 
@@ -277,16 +287,56 @@ def do_ps(thread_list, cpu_list, irq_list, show_uthreads,
 		sock_inodes = load_sockets()
 		sock_inode_re = re.compile(r"socket:\[(\d+)\]")
 	
-	cpuinfo = procfs.cpuinfo()
 	has_ctxt_switch_info = ps[1]["status"].has_key("voluntary_ctxt_switches")
 	try:
 		ps_show_header(has_ctxt_switch_info)
-		ps_show(ps, affect_children, cpuinfo, thread_list,
+		ps_show(ps, affect_children, thread_list,
 			cpu_list, irq_list, show_uthreads, show_kthreads,
 			has_ctxt_switch_info, sock_inodes, sock_inode_re)
 	except IOError:
 		# 'tuna -P | head' for instance
 		pass
+
+def find_drivers_by_users(users):
+	nics = get_nics()
+	drivers = []
+	for u in users:
+		try:
+			idx = u.index('-')
+			u = u[:idx]
+		except:
+			pass
+		if u in nics:
+			driver = ethtool.get_module(u)
+			if driver not in drivers:
+				drivers.append(driver)
+		
+	return drivers
+
+def show_irqs(irq_list):
+	global irqs
+	if not irqs:
+		irqs = procfs.interrupts()
+
+	print "%4s %-16s %8s" % ("#", _("users"), _("affinity"),)
+	sorted_irqs = []
+	for k in irqs.keys():
+		try:
+			sorted_irqs.append(int(k))
+		except:
+			pass
+	sorted_irqs.sort()
+	for irq in sorted_irqs:
+		if irqs[irq].has_key("affinity"):
+			if irq in irq_list:
+				affinity = format_affinity(irqs[irq]["affinity"])
+				users = irqs[irq]["users"]
+				print "%4d %-16s %8s" % (irq, ",".join(users), affinity),
+				drivers = find_drivers_by_users(users)
+				if drivers:
+					print " %s" % ",".join(drivers)
+				else:
+					print
 
 def do_list_op(op, current_list, op_list):
 	if not current_list:
@@ -327,6 +377,7 @@ def irq_mapper(s):
 			irq_list.append(int(i))
 		except:
 			pass
+
 	return irq_list
 
 def pick_op(argument):
@@ -344,10 +395,11 @@ def i18n_init():
 def main():
 	i18n_init()
 	try:
-		short = "c:CfghiIKmp:Pq:s:S:t:UvWx"
+		short = "c:CfghiIKmp:PQq:s:S:t:UvWx"
 		long = ["cpus=", "affect_children", "filter", "gui", "help",
 			"isolate", "include", "no_kthreads", "move",
-			"show_sockets", "priority=", "show_threads", "irqs=",
+			"show_sockets", "priority=", "show_threads",
+			"show_irqs", "irqs=",
 			"save=", "sockets=", "threads=", "no_uthreads",
 			"version", "what_is", "spread"]
 		if have_inet_diag:
@@ -420,6 +472,12 @@ def main():
 					continue
 			do_ps(thread_list, cpu_list, irq_list, uthreads,
 			      kthreads, affect_children, show_sockets)
+		elif o in ("-Q", "--show_irqs"):
+			# If the user specified IRQ names that weren't
+			# resolved to IRQs, don't show all IRQs.
+			if not irq_list and irq_list_str:
+				continue
+			show_irqs(irq_list)
 		elif o in ("-n", "--show_sockets"):
 			show_sockets = True
 		elif o in ("-m", "--move", "-x", "--spread"):
