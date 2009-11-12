@@ -313,7 +313,7 @@ def find_drivers_by_users(users):
 		
 	return drivers
 
-def show_irqs(irq_list):
+def show_irqs(irq_list, cpu_list):
 	global irqs
 	if not irqs:
 		irqs = procfs.interrupts()
@@ -322,21 +322,27 @@ def show_irqs(irq_list):
 	sorted_irqs = []
 	for k in irqs.keys():
 		try:
-			sorted_irqs.append(int(k))
+			irqn = int(k)
+			affinity = irqs[irqn]["affinity"]
 		except:
-			pass
+			continue
+		if irq_list and irqn not in irq_list:
+			continue
+
+		if cpu_list and not set(cpu_list).intersection(set(affinity)):
+			continue
+		sorted_irqs.append(irqn)
+
 	sorted_irqs.sort()
 	for irq in sorted_irqs:
-		if irqs[irq].has_key("affinity"):
-			if irq in irq_list:
-				affinity = format_affinity(irqs[irq]["affinity"])
-				users = irqs[irq]["users"]
-				print "%4d %-16s %8s" % (irq, ",".join(users), affinity),
-				drivers = find_drivers_by_users(users)
-				if drivers:
-					print " %s" % ",".join(drivers)
-				else:
-					print
+		affinity = format_affinity(irqs[irq]["affinity"])
+		users = irqs[irq]["users"]
+		print "%4d %-16s %8s" % (irq, ",".join(users), affinity),
+		drivers = find_drivers_by_users(users)
+		if drivers:
+			print " %s" % ",".join(drivers)
+		else:
+			print
 
 def do_list_op(op, current_list, op_list):
 	if not current_list:
@@ -477,7 +483,7 @@ def main():
 			# resolved to IRQs, don't show all IRQs.
 			if not irq_list and irq_list_str:
 				continue
-			show_irqs(irq_list)
+			show_irqs(irq_list, cpu_list)
 		elif o in ("-n", "--show_sockets"):
 			show_sockets = True
 		elif o in ("-m", "--move", "-x", "--spread"):
