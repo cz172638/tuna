@@ -1,6 +1,10 @@
+* Thu Nov 12 2009 Arnaldo Carvalho de Melo <acme@redhat.com>
+- cmdline: -Q --show_irqs shows IRQs, so that we can see its affinity
+  masks even on non-threaded IRQ kernels
 - tuna: Ignore non-existing threads in threads_set_priority
+- tuna: i18n, Chinese
 
-* Thu Sep  3 2009 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.9-1
+* Thu Sep  3 2009 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.9.1-1
 - cmdline: --socket needs an argument
 - tuna: Present more graceful failure mode when machine can't start gui
 - tuna: Handle 2.6.31 style threaded irq names

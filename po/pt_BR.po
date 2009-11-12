@@ -6,10 +6,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: tuna 0.9\n"
+"Project-Id-Version: tuna 0.9.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-08-02 23:00-0300\n"
-"PO-Revision-Date: 2009-07-15 11:10+BRT\n"
+"POT-Creation-Date: 2009-11-12 13:18-0200\n"
+"PO-Revision-Date: 2009-11-12 13:19+BRT\n"
 "Last-Translator: Arnaldo Carvalho de Melo <acme@redhat.com>\n"
 "Language-Team: pt_BR <pt-br@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -98,7 +98,7 @@ msgstr "Thread do Kernel %(pid)d (%(cmdline)s):"
 msgid "User Thread %(pid)d (%(cmdline)s):"
 msgstr "Thread %(pid)d (%(cmdline)s):"
 
-#: tuna/tuna.py:181 tuna/tuna.py:206
+#: tuna/tuna.py:188 tuna/tuna.py:213
 #, python-format
 msgid "could not change %(pid)d affinity to %(new_affinity)s"
 msgstr "Não foi possível mudar a afinidade de %(pid)d para %(new_affinity)s"
@@ -108,6 +108,8 @@ msgid ""
 "Used to create kernel threads via kthread_create(). It is the parent of all "
 "the other kernel threads."
 msgstr ""
+"Usado para criar threads do kernel via kthread_create. É o pai de todas as "
+"outras threads do kernel."
 
 #: tuna/help.py:11
 msgid ""
@@ -360,20 +362,20 @@ msgstr "_Isole Soquete de CPU"
 msgid "_Restore CPU"
 msgstr "_Restaure CPU"
 
-#: tuna/gui/procview.py:200 tuna/gui/procview.py:220 tuna/gui/irqview.py:118
+#: tuna/gui/procview.py:200 tuna/gui/procview.py:220 tuna/gui/irqview.py:120
 msgid "PID"
 msgstr ""
 
-#: tuna/gui/procview.py:201 tuna/gui/procview.py:221 tuna/gui/irqview.py:119
+#: tuna/gui/procview.py:201 tuna/gui/procview.py:221 tuna/gui/irqview.py:121
 msgid "Policy"
 msgstr "Política"
 
-#: tuna/gui/procview.py:202 tuna/gui/procview.py:222 tuna/gui/irqview.py:120
+#: tuna/gui/procview.py:202 tuna/gui/procview.py:222 tuna/gui/irqview.py:122
 msgid "Priority"
 msgstr "Prioridade"
 
-#: tuna/gui/procview.py:203 tuna/gui/procview.py:223 tuna/gui/irqview.py:121
-#: tuna/gui/irqview.py:140
+#: tuna/gui/procview.py:203 tuna/gui/procview.py:223 tuna/gui/irqview.py:123
+#: tuna/gui/irqview.py:142
 msgid "Affinity"
 msgstr "Afinidade"
 
@@ -444,27 +446,27 @@ msgstr "_O que é isto?"
 msgid "_Save kthreads tunings"
 msgstr "_Salvar"
 
-#: tuna/gui/irqview.py:117 tuna/gui/irqview.py:139
+#: tuna/gui/irqview.py:119 tuna/gui/irqview.py:141
 msgid "IRQ"
 msgstr ""
 
-#: tuna/gui/irqview.py:122 tuna/gui/irqview.py:141
+#: tuna/gui/irqview.py:124 tuna/gui/irqview.py:143
 msgid "Events"
 msgstr "Eventos"
 
-#: tuna/gui/irqview.py:123 tuna/gui/irqview.py:142
+#: tuna/gui/irqview.py:125 tuna/gui/irqview.py:144
 msgid "Users"
 msgstr "Usuários"
 
-#: tuna/gui/irqview.py:286
+#: tuna/gui/irqview.py:289
 msgid "_Set IRQ attributes"
 msgstr "_Configure atributo_s da IRQ"
 
-#: tuna/gui/irqview.py:288
+#: tuna/gui/irqview.py:291
 msgid "Sto_p refreshing the IRQ list"
 msgstr "_Pare de atualizar a lista de IRQs"
 
-#: tuna/gui/irqview.py:290
+#: tuna/gui/irqview.py:293
 msgid "_Refresh the IRQ list"
 msgstr "_Atualize a lista de I_RQs"
 
@@ -481,7 +483,7 @@ msgid "Start the GUI"
 msgstr "Iniciar a interface gráfica"
 
 #: tuna-cmd.py:47 tuna-cmd.py:48 tuna-cmd.py:52 tuna-cmd.py:54 tuna-cmd.py:57
-#: tuna-cmd.py:79
+#: tuna-cmd.py:80
 msgid "CPU-LIST"
 msgstr "LISTA-DE-CPUS"
 
@@ -539,82 +541,94 @@ msgstr ""
 msgid "Show thread list"
 msgstr "Mostra lista de threads"
 
-#: tuna-cmd.py:65 tuna-cmd.py:66
+#: tuna-cmd.py:65
+msgid "Show IRQ list"
+msgstr "Mostra lista de IRQs"
+
+#: tuna-cmd.py:66 tuna-cmd.py:67
 msgid "IRQ-LIST"
 msgstr "LISTA-DE-IRQS"
 
-#: tuna-cmd.py:65
+#: tuna-cmd.py:66
 #, python-format
 msgid "%(irqlist)s affected by commands"
 msgstr "%(irqlist)s afetada por comandos"
 
-#: tuna-cmd.py:67 tuna-cmd.py:68
+#: tuna-cmd.py:68 tuna-cmd.py:69
 msgid "FILENAME"
 msgstr "ARQUIVO"
 
-#: tuna-cmd.py:67
+#: tuna-cmd.py:68
 #, python-format
 msgid "Save kthreads sched tunables to %(filename)s"
 msgstr "Salva opções configuráveis das threads do kernel em %(filename)s"
 
-#: tuna-cmd.py:70 tuna-cmd.py:71
+#: tuna-cmd.py:71 tuna-cmd.py:72
 msgid "CPU-SOCKET-LIST"
 msgstr "LISTA-DE-SOCKETS-DE-CPUS"
 
-#: tuna-cmd.py:70
+#: tuna-cmd.py:71
 #, python-format
 msgid "%(cpusocketlist)s affected by commands"
 msgstr "%(cpusocketlist)s afetada por comandos"
 
-#: tuna-cmd.py:73 tuna-cmd.py:74
+#: tuna-cmd.py:74 tuna-cmd.py:75
 msgid "THREAD-LIST"
 msgstr "LISTA-DE-THREADS"
 
-#: tuna-cmd.py:73
+#: tuna-cmd.py:74
 #, python-format
 msgid "%(threadlist)s affected by commands"
 msgstr "%(threadlist)s afetada por comandos"
 
-#: tuna-cmd.py:75
+#: tuna-cmd.py:76
 msgid "Operations will not affect user threads"
 msgstr "Operações não afetarão threads de usuário"
 
-#: tuna-cmd.py:76
+#: tuna-cmd.py:77
 msgid "Show version"
 msgstr "Mostra número de versão"
 
-#: tuna-cmd.py:77
+#: tuna-cmd.py:78
 msgid "Provides help about selected entities"
 msgstr "Mostra ajuda sobre os elementos selecionados"
 
-#: tuna-cmd.py:78
+#: tuna-cmd.py:79
 #, python-format
 msgid "Spread selected entities over %(cpulist)s"
 msgstr "Espalhe os elementos selecionados em %(cpulist)s"
 
-#: tuna-cmd.py:94
+#: tuna-cmd.py:104
 #, python-format
 msgid "thread %d doesn't exists!"
 msgstr "thread %d não existe!"
 
-#: tuna-cmd.py:113
+#: tuna-cmd.py:123
 msgid "thread"
 msgstr ""
 
-#: tuna-cmd.py:400 tuna-cmd.py:405 tuna-cmd.py:422
+#: tuna-cmd.py:321
+msgid "users"
+msgstr "usuários"
+
+#: tuna-cmd.py:321
+msgid "affinity"
+msgstr "afinidade"
+
+#: tuna-cmd.py:463 tuna-cmd.py:468 tuna-cmd.py:491
 msgid "requires a cpu list!"
 msgstr "exige uma lista de cpus!"
 
-#: tuna-cmd.py:425
+#: tuna-cmd.py:494
 msgid "requires a list of threads/irqs!"
 msgstr "exige uma lista de threads/irqs!"
 
-#: tuna-cmd.py:451
+#: tuna-cmd.py:520
 #, python-format
 msgid "invalid socket %(socket)s sockets available: %(available)s"
 msgstr ""
 "soquete de CPU %(socket)s inválido, soquetes disponíveis: %(available)s"
 
-#: tuna-cmd.py:476
+#: tuna-cmd.py:545
 msgid "requires a thread list!"
 msgstr "requer uma lista de threads!"
