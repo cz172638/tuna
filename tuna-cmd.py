@@ -399,6 +399,8 @@ def i18n_init():
 	gettext.install(app, localedir)
 
 def main():
+	global ps
+
 	i18n_init()
 	try:
 		short = "c:CfghiIKmp:PQq:s:S:t:UvWx"
@@ -423,7 +425,7 @@ def main():
 	cpu_list = None
 	irq_list = None
 	irq_list_str = None
-	thread_list = None
+	thread_list = []
 	thread_list_str = None
 	filter = False
 	affect_children = False
@@ -538,7 +540,17 @@ def main():
 				irq_list_str = do_list_op(op, irq_list_str,
 							  a.split(","))
 			if not op:
-				thread_list = None
+				thread_list = []
+			if not ps:
+				ps = procfs.pidstats()
+			if tuna.has_threaded_irqs(ps):
+				for irq in irq_list:
+					irq_re = tuna.threaded_irq_re(irq)
+					irq_threads = ps.find_by_regex(irq_re)
+					if irq_threads:
+						thread_list += irq_threads
+						irq_list.remove(irq)
+
 		elif o in ("-U", "--no_uthreads"):
 			uthreads = False
 		elif o in ("-v", "--version"):
