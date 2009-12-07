@@ -181,7 +181,7 @@ def ps_show_thread(pid, affect_children, ps,
 		try:
 			if not irqs:
 				irqs = procfs.interrupts()
-			if cmd[4:] == "IRQ-":
+			if cmd[:4] == "IRQ-":
 				users = irqs[tuna.irq_thread_number(cmd)]["users"]
 				for u in users:
 					if u in get_nics():
