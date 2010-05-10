@@ -235,9 +235,16 @@ class irqview:
 				# Was the last one
 				break
 			else:
-				new_irqs.remove(irq)
-				irq_info = self.irqs[irq]
-				self.set_irq_columns(row, irq, irq_info, nics)
+				try:
+					new_irqs.remove(irq)
+					irq_info = self.irqs[irq]
+					self.set_irq_columns(row, irq, irq_info, nics)
+				except:
+					if self.list_store.remove(row):
+						# removed and row now its the next one
+						continue
+					# Was the last one
+					break
 
 			row = self.list_store.iter_next(row)
 
@@ -248,7 +255,10 @@ class irqview:
 				continue
 			row = self.list_store.append()
 			irq_info = self.irqs[irq]
-			self.set_irq_columns(row, irq, irq_info, nics)
+			try:
+				self.set_irq_columns(row, irq, irq_info, nics)
+			except:
+				self.list_store.remove(row)
 
 		self.treeview.show_all()
 
