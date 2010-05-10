@@ -58,7 +58,7 @@ def usage():
 	if have_inet_diag:
 		print fmt % ('-n, --show_sockets',  _('Show network sockets in use by threads'))
 	print fmt % ('-p, --priority=[' +
-		     _('POLICY') + ']:' +
+		     _('POLICY') + ':]' +
 		     _('RTPRIO'),		    _('Set thread scheduler tunables: %(policy)s and %(rtprio)s') % \
 							{"policy": _('POLICY'), "rtprio": _('RTPRIO')})
 	print fmt % ('-P, --show_threads',	    _('Show thread list'))
