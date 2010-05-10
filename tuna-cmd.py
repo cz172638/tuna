@@ -474,7 +474,11 @@ def main():
 			if not thread_list:
 				print ("tuna: %s " % o) + _("requires a thread list!")
 				sys.exit(2)
-			tuna.threads_set_priority(thread_list, a, affect_children)
+			try:
+				tuna.threads_set_priority(thread_list, a, affect_children)
+			except SystemError, err:
+				print "tuna: %s" % err
+				sys.exit(2)
 		elif o in ("-P", "--show_threads"):
 			# If the user specified process names that weren't
 			# resolved to pids, don't show all threads.
