@@ -166,14 +166,18 @@ def move_threads_to_cpu(cpus, pid_list, set_affinity_warning = None,
 		try:
 			try:
 				curr_affinity = schedutils.get_affinity(pid)
-			except SystemError: # (3, 'No such process')
-				continue
+			except SystemError, e:
+				if e[0] == 3: # 'No such process'
+					continue
+				curr_affinity = None
 			if set(curr_affinity) != set(new_affinity):
 				try:
 					schedutils.set_affinity(pid, new_affinity)
 					curr_affinity = schedutils.get_affinity(pid)
-				except SystemError: # (3, 'No such process')
-					continue
+				except SystemError, e:
+					if e[0] == 3: # 'No such process'
+						continue
+					curr_affinity == None
 				if set(curr_affinity) == set(new_affinity):
 					changed = True
 					if is_hardirq_handler(ps, pid):
