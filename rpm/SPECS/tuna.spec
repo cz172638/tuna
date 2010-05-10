@@ -2,7 +2,7 @@
 %{!?python_ver: %define python_ver %(%{__python} -c "import sys ; print sys.version[:3]")}
 
 Name: tuna
-Version: 0.9.2
+Version: 0.9.3
 Release: 1%{?dist}
 License: GPLv2
 Summary: Application tuning GUI & command line utility
@@ -12,7 +12,7 @@ URL: http://userweb.kernel.org/~acme/tuna/
 BuildArch: noarch
 BuildRequires: python-devel, gettext
 Requires: python-ethtool
-Requires: python-linux-procfs >= 0.4.2
+Requires: python-linux-procfs >= 0.4.5
 Requires: python-schedutils >= 0.2
 # This really should be a Suggests...
 # Requires: python-inet_diag
@@ -87,6 +87,9 @@ rm -rf %{buildroot}
 %doc docs/oscilloscope+tuna.pdf
 
 %changelog
+* Thu Nov 12 2009 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.9.3-1
+- New upstream release
+
 * Thu Nov 12 2009 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.9.2-1
 - New upstream release
 

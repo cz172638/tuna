@@ -1,3 +1,21 @@
+* Mon May 10 2010 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.9.3-1
+
+[acme@mica tuna]$ git log v0.9.2.. --format=oneline --abbrev-commit
+7d4f258 cmdline: Emit error when affinity operation can't be performed
+a9e68d1 cmdline: Use tuna.cpustring_to_list in --cpus
+21de19e tuna: Make is_hardirq_handler handle non thread group leaders
+ab01211 cmdline: Handle unknown schedulers in -p/--priority:
+bbdaf5a cmdline: Improve message about thread list being needed by -p/--priority
+427f94c cmdline: Fix --priority error message when no threads are informed
+85bb5d7 cmdline: Fix help line entry for --priority
+6d0288b tuna: Make cpustring_to_list understand 0x prefixed hexadecimal numbers
+7210b53 gui: fix use of cpu ranges
+f2bc415 irqview: Fix some race conditions
+a3e85fe cmdline: On threaded irq kernels, map irqs to threads
+7d33dd1 cmdline: Fix threaded interrupt name bug
+3a71dae cmdline: --priority/-p requires a thread list
+[acme@mica tuna]$
+
 * Thu Nov 12 2009 Arnaldo Carvalho de Melo <acme@redhat.com>
 - cmdline: -Q --show_irqs shows IRQs, so that we can see its affinity
   masks even on non-threaded IRQ kernels
