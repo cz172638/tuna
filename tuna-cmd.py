@@ -472,7 +472,7 @@ def main():
 			tuna.include_cpus(cpu_list, get_nr_cpus())
 		elif o in ("-p", "--priority"):
 			if not thread_list:
-				print "tuna: --priority " + _("requires a thread list!")
+				print ("tuna: %s " % o) + _("requires a thread list!")
 				sys.exit(2)
 			tuna.threads_set_priority(thread_list, a, affect_children)
 		elif o in ("-P", "--show_threads"):
