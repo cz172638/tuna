@@ -437,7 +437,7 @@ def main():
 			return
 		elif o in ("-c", "--cpus"):
 			(op, a) = pick_op(a)
-			op_list = map(lambda cpu: int(cpu), a.split(","))
+			op_list = tuna.cpustring_to_list(a)
 			cpu_list = do_list_op(op, cpu_list, op_list)
 		elif o in ("-C", "--affect_children"):
 			affect_children = True
