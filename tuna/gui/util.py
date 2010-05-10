@@ -1,7 +1,8 @@
 import pygtk
 pygtk.require("2.0")
 
-import gobject, gtk, pango, procfs, schedutils, tuna
+import gobject, gtk, pango, procfs, schedutils
+from tuna import tuna
 
 class list_store_column:
 	def __init__(self, name, type = gobject.TYPE_UINT):
@@ -36,7 +37,7 @@ def on_affinity_text_changed(self):
 			try:
 				new_affinity = tuna.cpustring_to_list(new_affinity_text)
 			except:
-				if len(new_affinity_text) > 0 and new_affinity_text[-1] != "-":
+				if len(new_affinity_text) > 0 and new_affinity_text[-1] != '-' and new_affinity_text[0:2] not in ('0x', '0X'):
 					# print "not a hex number"
 					self.affinity.set_text(self.affinity_text)
 					return
