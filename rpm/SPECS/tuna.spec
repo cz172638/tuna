@@ -2,7 +2,7 @@
 %{!?python_ver: %define python_ver %(%{__python} -c "import sys ; print sys.version[:3]")}
 
 Name: tuna
-Version: 0.9.3
+Version: 0.9.4
 Release: 1%{?dist}
 License: GPLv2
 Summary: Application tuning GUI & command line utility
@@ -87,8 +87,14 @@ rm -rf %{buildroot}
 %doc docs/oscilloscope+tuna.pdf
 
 %changelog
-* Thu Nov 12 2009 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.9.3-1
+* Mon May 17 2010 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.9.3-1
 - New upstream release
+- Fixes the folowing bugzilla.redhat.com tickets:
+- 563355 error in tuna --help output
+- 574950 cannot use cpu ranges in the tuna GUI
+- 559770 tuna backtrace when moving threads
+- 563352 tuna backtrace when no thread list is given for --priority
+- 563350 tuna backtrace when scheduler is mis-typed.
 
 * Thu Nov 12 2009 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.9.2-1
 - New upstream release
