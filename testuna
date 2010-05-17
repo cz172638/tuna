@@ -210,10 +210,10 @@ if [ $NR_CPU_SOCKETS -ge 2 ]; then
 fi
 
 if [ $NR_PROCESSORS -gt 2 ]; then
-	THREAD_PREFIX="watchdog/"
+	THREAD_PREFIX="events/"
 	PID=$(ps h -C ${THREAD_PREFIX}0 -o pid)
 	RTPRIO=$(get_rtprio $PID)
-	NEW_RTPRIO=$((RTPRIO - 1))
+	NEW_RTPRIO=$((RTPRIO + 1))
 	tuna -t $THREAD_PREFIX* -p $NEW_RTPRIO
 	for CPU in $(seq 0 $((NR_PROCESSORS - 1))); do
 		PID=$(ps h -C ${THREAD_PREFIX}$CPU -o pid)
