@@ -571,6 +571,8 @@ def main():
 			from tuna import tuna_gui
 		except ImportError:
 			# gui packages not installed
+			print _('tuna: packages needed for the GUI missing.')
+			print _('      Make sure xauth, pygtk2-libglade are installed.')
 			usage()
 			return
 		except RuntimeError:
