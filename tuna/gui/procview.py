@@ -2,7 +2,7 @@ import pygtk
 pygtk.require("2.0")
 
 from tuna import tuna, gui
-import gobject, gtk, procfs, re, schedutils
+import gobject, gtk, procfs, re, schedutils, perf
 
 def N_(s):
 	"""gettext_noop"""
@@ -212,6 +212,12 @@ class procview:
 		self.treeview = treeview
 		self.nr_cpus = procfs.cpuinfo().nr_cpus
 		self.gladefile = gladefile
+	
+		self.evlist = None
+		try:
+			self.perf_init() 
+		except: # No perf, poll /proc baby, poll
+			pass
 
 		if not ps[1]["status"].has_key("voluntary_ctxt_switches"):
 			self.nr_columns = 5
@@ -221,6 +227,19 @@ class procview:
 					gui.list_store_column(_("Policy"), gobject.TYPE_STRING),
 					gui.list_store_column(_("Priority")),
 					gui.list_store_column(_("Affinity"), gobject.TYPE_STRING),
+					gui.list_store_column(_("Command Line"), gobject.TYPE_STRING))
+		elif self.evlist: # habemus perf, so lets use the metric we're collecting
+			self.nr_columns = 8
+			( self.COL_PID, self.COL_POL, self.COL_PRI,
+			  self.COL_AFF, self.COL_VOLCTXT, self.NONVOLCTXT,
+			  self.COL_PERF, self.COL_CMDLINE ) = range(self.nr_columns)
+			self.columns = (gui.list_store_column(_("PID")),
+					gui.list_store_column(_("Policy"), gobject.TYPE_STRING),
+					gui.list_store_column(_("Priority")),
+					gui.list_store_column(_("Affinity"), gobject.TYPE_STRING),
+				        gui.list_store_column(_("VolCtxtSwitch"), gobject.TYPE_UINT),
+				        gui.list_store_column(_("NonVolCtxtSwitch"), gobject.TYPE_UINT),
+				        gui.list_store_column(_("Cycles"), gobject.TYPE_UINT),
 					gui.list_store_column(_("Command Line"), gobject.TYPE_STRING))
 
 		self.tree_store = gtk.TreeStore(*gui.generate_list_store_columns_with_attr(self.columns))
@@ -259,6 +278,53 @@ class procview:
 		self.show_uthreads = show_uthreads
 		self.cpus_filtered = cpus_filtered
 		self.refreshing = True
+
+	def perf_process_events(self, source, condition):
+		had_events = True
+		while had_events:
+			had_events = False
+			for cpu in self.cpu_map:
+				event = self.evlist.read_on_cpu(cpu)
+				if event:
+					had_events = True
+					if event.type == perf.RECORD_FORK:
+						if event.pid == event.tid:
+							try:
+								self.ps.processes[event.pid] = procfs.process(event.pid)
+							except: # short lived thread
+								pass
+						else:
+							self.ps.processes[event.pid].threads.processes[event.tid] = procfs.process(event.tid)
+					elif event.type == perf.RECORD_EXIT:
+						del self.ps[int(event.tid)]
+					elif event.type == perf.RECORD_SAMPLE:
+						tid = event.sample_tid
+						if self.perf_counter.has_key(tid):
+							self.perf_counter[tid] += event.sample_period
+						else:
+							self.perf_counter[tid] = event.sample_period
+			
+		self.show()
+		return True
+
+	def perf_init(self):
+		self.cpu_map = perf.cpu_map()
+		self.thread_map = perf.thread_map()
+		self.evsel_cycles = perf.evsel(task = 1, comm = 1,
+					       wakeup_events = 1,
+					       sample_period = 1,
+					       sample_id_all = 1,
+					       sample_type = perf.SAMPLE_PERIOD |
+							     perf.SAMPLE_CPU |
+							     perf.SAMPLE_TID)
+		self.evsel_cycles.open(cpus = self.cpu_map, threads = self.thread_map);
+		self.evlist = perf.evlist()
+		self.evlist.add(self.evsel_cycles)
+		self.evlist.mmap(cpus = self.cpu_map, threads = self.thread_map)
+		self.pollfd = self.evlist.get_pollfd()
+		for f in self.pollfd:
+			gobject.io_add_watch(f, gtk.gdk.INPUT_READ, self.perf_process_events)
+		self.perf_counter = {}
 
 	def on_query_tooltip(self, treeview, x, y, keyboard_mode, tooltip):
 		x, y = treeview.convert_widget_to_bin_window_coords(x, y)
@@ -307,6 +373,10 @@ class procview:
 		try:
 			new_value[self.COL_VOLCTXT] = int(thread_info["status"]["voluntary_ctxt_switches"])
 			new_value[self.COL_NONVOLCTXT] = int(thread_info["status"]["nonvoluntary_ctxt_switches"])
+			try:
+				new_value[self.COL_PERF] = self.perf_counter[tid]
+			except:
+				new_value[self.COL_PERF] = 0
 		except:
 			pass
 

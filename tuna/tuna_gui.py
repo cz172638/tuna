@@ -88,10 +88,11 @@ class main_gui:
 		self.procview.show()
 
 	def refresh(self):
-		self.ps.reload()
-		self.ps.reload_threads()
+		if not self.procview.evlist: # Poll, as we don't have perf
+			self.ps.reload()
+			self.ps.reload_threads()
+			self.procview.show()
 		self.irqview.refresh()
-		self.procview.show()
 		return True
 
 	def check_root(self):
