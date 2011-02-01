@@ -318,9 +318,9 @@ class procview:
 							     perf.SAMPLE_CPU |
 							     perf.SAMPLE_TID)
 		self.evsel_cycles.open(cpus = self.cpu_map, threads = self.thread_map);
-		self.evlist = perf.evlist()
+		self.evlist = perf.evlist(self.cpu_map, self.thread_map)
 		self.evlist.add(self.evsel_cycles)
-		self.evlist.mmap(cpus = self.cpu_map, threads = self.thread_map)
+		self.evlist.mmap()
 		self.pollfd = self.evlist.get_pollfd()
 		for f in self.pollfd:
 			gobject.io_add_watch(f, gtk.gdk.INPUT_READ, self.perf_process_events)
