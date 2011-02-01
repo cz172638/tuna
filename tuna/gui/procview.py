@@ -294,7 +294,10 @@ class procview:
 							except: # short lived thread
 								pass
 						else:
-							self.ps.processes[event.pid].threads.processes[event.tid] = procfs.process(event.tid)
+							try:
+								self.ps.processes[event.pid].threads.processes[event.tid] = procfs.process(event.tid)
+							except AttributeError:
+								self.ps.processes[event.pid].threads = procfs.pidstats("/proc/%d/task/" % event.pid)
 					elif event.type == perf.RECORD_EXIT:
 						del self.ps[int(event.tid)]
 					elif event.type == perf.RECORD_SAMPLE:
