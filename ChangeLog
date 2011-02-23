@@ -1,3 +1,11 @@
+* Wed Feb 23 2011 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.10-1
+
+[acme@emilia tuna]$ git log v0.9.4.. --format=oneline --abbrev-commit
+3b54abd perf: Create the threads pidstat member when we notice the first thread
+04f26d1 gui: Fixup perf.evlist constructor call
+00a2aa4 gui: Use perf if available
+f130d84 cmdline: Alert the user when GUI packages are not installed
+
 * Mon May 10 2010 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.9.3-1
 
 [acme@mica tuna]$ git log v0.9.2.. --format=oneline --abbrev-commit

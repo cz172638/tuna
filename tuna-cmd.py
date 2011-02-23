@@ -2,7 +2,7 @@
 # -*- python -*-
 # -*- coding: utf-8 -*-
 #   tuna - Application Tuning GUI
-#   Copyright (C) 2008, 2009 Red Hat Inc.
+#   Copyright (C) 2008, 2009, 2010, 2011 Red Hat Inc.
 #   Arnaldo Carvalho de Melo <acme@redhat.com>
 #
 #   This application is free software; you can redistribute it and/or
@@ -37,7 +37,7 @@ except NameError:
 nr_cpus = None
 ps = None
 irqs = None
-version = "0.9.4"
+version = "0.10"
 
 def usage():
 	print _('Usage: tuna [OPTIONS]')
