@@ -3,6 +3,10 @@ pygtk.require("2.0")
 
 from tuna import tuna, gui
 import gobject, gtk, procfs, re, schedutils
+try:
+	import perf
+except:
+	pass
 
 def N_(s):
 	"""gettext_noop"""
@@ -215,7 +219,6 @@ class procview:
 	
 		self.evlist = None
 		try:
-			import perf
 			self.perf_init() 
 		except: # No perf, poll /proc baby, poll
 			pass
