@@ -552,8 +552,12 @@ def main():
 					irq_re = tuna.threaded_irq_re(irq)
 					irq_threads = ps.find_by_regex(irq_re)
 					if irq_threads:
+						# Change the affinity of the thread too
+						# as we can't rely on changing the irq
+						# affinity changing the affinity of the
+						# thread or vice versa. We need to change
+						# both.
 						thread_list += irq_threads
-						irq_list.remove(irq)
 
 		elif o in ("-U", "--no_uthreads"):
 			uthreads = False
