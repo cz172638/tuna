@@ -31,7 +31,7 @@ installed.
 Summary: Generic graphical signal plotting tool
 Group: Applications/System
 Requires: python-matplotlib
-Requires: python-numeric
+Requires: numpy
 Requires: pygtk2
 Requires: tuna = %{version}-%{release}
 

@@ -26,7 +26,7 @@
 import gobject, gtk, os, sys
 from matplotlib.backends.backend_gtkagg import \
 	FigureCanvasGTKAgg as figure_canvas
-import matplotlib.figure, matplotlib.ticker, Numeric
+import matplotlib.figure, matplotlib.ticker, numpy
 
 class histogram_frame(gtk.Frame):
 	def __init__(self, title = "Statistics", width = 780, height = 100,
@@ -106,7 +106,7 @@ class oscilloscope_frame(gtk.Frame):
 
 		self.max_value = max_value
 		self.nr_samples_on_screen = nr_samples_on_screen
-		self.ind = Numeric.arange(nr_samples_on_screen)
+		self.ind = numpy.arange(nr_samples_on_screen)
 		self.samples = [ 0.0 ] * nr_samples_on_screen
 
 		figure = matplotlib.figure.Figure(figsize = (10, 4), dpi = 100,
