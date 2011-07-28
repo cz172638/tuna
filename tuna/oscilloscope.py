@@ -99,7 +99,7 @@ class oscilloscope_frame(gtk.Frame):
 
 		gtk.Frame.__init__(self, title)
 
-		self.font = { 'fontname'   : 'Bitstream Vera Sans',
+		self.font = { 'fontname'   : 'Liberation Sans',
 			      'color'      : 'b',
 			      'fontweight' : 'bold',
 			      'fontsize'   : 10 }
