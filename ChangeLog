@@ -1,3 +1,16 @@
+* Thu Jul 28 2011 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.10.2-1
+
+[acme@felicio tuna]$ git log v0.10.1.. --format=oneline --abbrev-commit
+ddd2754 oscilloscope: Switch from "Bistream Vera Sans" to "Liberation Sans"
+c5c558c oscilloscope: Switch from Numeric to numpy
+28d87b6 MANIFEST: Add tuna/oscilloscope.py
+4de7144 cmdline: Fix IRQ affinity setting
+40bc92d procview gui: Load perf globally
+
+* Wed Feb 23 2011 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.10.1-1
+
+24f19ce procview gui: Don't assume the perf binding is always available
+
 * Wed Feb 23 2011 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.10-1
 
 [acme@emilia tuna]$ git log v0.9.4.. --format=oneline --abbrev-commit
