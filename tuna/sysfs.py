@@ -31,7 +31,10 @@ class cpu:
 	def reload(self):
 		self.reload_online()
 		if self.online:
-			self.physical_package_id = self.readfile("topology/physical_package_id")
+			try:
+				self.physical_package_id = self.readfile("topology/physical_package_id")
+			except:
+				self.physical_package_id = "0"
 		else:
 			self.physical_package_id = None
 
@@ -74,7 +77,10 @@ class cpus:
 			else:
 				c = cpu(self.basedir, name)
 				self.cpus[name] = c
-				socket = c.physical_package_id
+				try:
+					socket = c.physical_package_id
+				except:
+					socket = "0"
 				if socket in self.sockets:
 					self.sockets[socket].insert(0, c)
 				else:
