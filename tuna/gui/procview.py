@@ -233,17 +233,16 @@ class procview:
 					gui.list_store_column(_("Affinity"), gobject.TYPE_STRING),
 					gui.list_store_column(_("Command Line"), gobject.TYPE_STRING))
 		elif self.evlist: # habemus perf, so lets use the metric we're collecting
-			self.nr_columns = 8
+			self.nr_columns = 7
 			( self.COL_PID, self.COL_POL, self.COL_PRI,
 			  self.COL_AFF, self.COL_VOLCTXT, self.NONVOLCTXT,
-			  self.COL_PERF, self.COL_CMDLINE ) = range(self.nr_columns)
+			  self.COL_CMDLINE ) = range(self.nr_columns)
 			self.columns = (gui.list_store_column(_("PID")),
 					gui.list_store_column(_("Policy"), gobject.TYPE_STRING),
 					gui.list_store_column(_("Priority")),
 					gui.list_store_column(_("Affinity"), gobject.TYPE_STRING),
 				        gui.list_store_column(_("VolCtxtSwitch"), gobject.TYPE_UINT),
 				        gui.list_store_column(_("NonVolCtxtSwitch"), gobject.TYPE_UINT),
-				        gui.list_store_column(_("Cycles"), gobject.TYPE_UINT),
 					gui.list_store_column(_("Command Line"), gobject.TYPE_STRING))
 
 		self.tree_store = gtk.TreeStore(*gui.generate_list_store_columns_with_attr(self.columns))
@@ -319,10 +318,8 @@ class procview:
 		self.thread_map = perf.thread_map()
 		self.evsel_cycles = perf.evsel(task = 1, comm = 1,
 					       wakeup_events = 1,
-					       sample_period = 1,
-					       sample_id_all = 1,
-					       sample_type = perf.SAMPLE_PERIOD |
-							     perf.SAMPLE_CPU |
+					       watermark = 1,
+					       sample_type = perf.SAMPLE_CPU |
 							     perf.SAMPLE_TID)
 		self.evsel_cycles.open(cpus = self.cpu_map, threads = self.thread_map);
 		self.evlist = perf.evlist(self.cpu_map, self.thread_map)
@@ -380,10 +377,6 @@ class procview:
 		try:
 			new_value[self.COL_VOLCTXT] = int(thread_info["status"]["voluntary_ctxt_switches"])
 			new_value[self.COL_NONVOLCTXT] = int(thread_info["status"]["nonvoluntary_ctxt_switches"])
-			try:
-				new_value[self.COL_PERF] = self.perf_counter[tid]
-			except:
-				new_value[self.COL_PERF] = 0
 		except:
 			pass
 
