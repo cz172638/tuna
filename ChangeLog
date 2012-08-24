@@ -1,3 +1,10 @@
+* Fri Aug 24 2012 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.10.3-1
+
+. Fix exception on ARM
+. Remove raw cycles column when perf events are used
+. Don't touch the migration threads
+. Update testuna to work with 3.6.0-rc1
+
 * Thu Jul 28 2011 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.10.2-1
 
 [acme@felicio tuna]$ git log v0.10.1.. --format=oneline --abbrev-commit
