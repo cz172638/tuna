@@ -478,8 +478,13 @@ def get_kthread_sched_tunings(proc = None):
 
 	kthreads = {}
 	for pid in proc.keys():
-		if iskthread(pid):
-			name = proc[pid]["stat"]["comm"]
+		name = proc[pid]["stat"]["comm"]
+		# Trying to set the priority of the migration threads will
+		# fail, at least on 3.6.0-rc1 and doesn't make sense anyway
+		# and this function is only used to save those priorities
+		# to reset them using tools like rtctl, skip those to
+		# avoid sched_setscheduler/chrt to fail
+		if iskthread(pid) and not name.startswith("migration/"):
 			rtprio = int(proc[pid]["stat"]["rt_priority"])
 			try:
 				policy = schedutils.get_scheduler(pid)
