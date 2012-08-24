@@ -107,7 +107,7 @@ rtctl --file $INITIAL reset
 
 die_if_conf_changed "Replaying initial config"
 
-PID=$(ktpidof "migration")
+PID=$(ktpidof "watchdog")
 RTPRIO=$(get_rtprio $PID)
 POLICY=$(get_policy $PID)
 POLICY=$(echo ${POLICY:6:1} | tr 'A-Z' 'a-z')
@@ -129,7 +129,7 @@ chrt -$POLICY -p $RTPRIO $PID
 
 die_if_conf_changed 'Restoring kernel thread sched policy'
 
-PID=$(ktpidof "khelper")
+PID=$(ktpidof "kthreadd")
 AFFINITY=$(get_affinity $PID)
 
 taskset -p 0x2 $PID > /dev/null
@@ -210,10 +210,10 @@ if [ $NR_CPU_SOCKETS -ge 2 ]; then
 fi
 
 if [ $NR_PROCESSORS -gt 2 ]; then
-	THREAD_PREFIX="events/"
+	THREAD_PREFIX="watchdog/"
 	PID=$(ps h -C ${THREAD_PREFIX}0 -o pid)
 	RTPRIO=$(get_rtprio $PID)
-	NEW_RTPRIO=$((RTPRIO + 1))
+	NEW_RTPRIO=$((RTPRIO - 1))
 	tuna -t $THREAD_PREFIX* -p $NEW_RTPRIO
 	for CPU in $(seq 0 $((NR_PROCESSORS - 1))); do
 		PID=$(ps h -C ${THREAD_PREFIX}$CPU -o pid)
