@@ -1,0 +1,78 @@
+.TH TUNA "8" "February 2010" "tuna" "System Administration Utilities"
+.SH NAME
+tuna \- program for tuning running processes
+.SH SYNOPSIS
+.B tuna
+[\fIOPTIONS\fR]
+.SH DESCRIPTION
+This manual page explains the \fBtuna\fR program. The program can be used to change the attributes of application and kernel threads. The \fBtuna\fR can operate on IRQs by name or number, and tasks or threads by process ID or command-line. CPUs and sets of CPUs can be specified by CPU or socket number. IRQ names and process command-lines can include wildcards.
+.PP 
+\fBtuna\fP can change scheduling policy, scheduler priority and processor affinity for processes and process threads. \fBtuna\fR can also change the processor affinity for interrupts.
+When \fBtuna\fR is invoked without any options it starts up in its graphical interface mode. This manual page explains only the command\-line options for \fBtuna\fR
+.SH "OPTIONS"
+\fBtuna\fR has both \fIaction\fR options and \fImodifier\fR options. Modifier options must be specified on the command\-line before the actions they are intended to modify. Any modifier option applies to following actions on the same command-line until it is over-ridden.
+.IP \fIActions\fR
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Print a list of options. \fBtuna\fR will exit after this action, ignoring the remainder of the command-line.
+.TP
+\fB\-g\fR, \fB\-\-gui\fR
+Start the GUI. Actions that follow this on the command-line will be processed without waiting for the GUI to complete.
+.TP
+\fB\-i\fR, \fB\-\-isolate\fR
+Move all threads away from CPU\-LIST. Requires \fB\-c\fR or \fB-S\fR.
+.TP
+\fB\-I\fR, \fB\-\-include\fR
+Allow all threads to run on CPU\-LIST. Requires \fB\-c\fR or \fB-S\fR.
+.TP
+\fB\-m\fR, \fB\-\-move\fR
+Move selected entities to CPU\-LIST. Requires \fB\-c\fR and either \fB-t\fR or \fB-q\fR.
+.TP
+\fB\-p\fR, \fB\-\-priority\fR=\fI[POLICY:]\fRRTPRIO
+Set thread scheduler tunables: POLICY and RTPRIO. POLICY is one of OTHER, FIFO, RR, or BATCH. Requires \fB\-t\fR.
+.TP
+\fB\-P\fR, \fB\-\-show_threads\fR
+Show thread list.
+.TP
+\fB\-s\fR, \fB\-\-save\fR=\fIFILENAME\fR
+Save kthreads sched tunables to FILENAME.
+.TP
+\fB\-v\fR, \fB\-\-version\fR
+Show version
+.TP
+\fB\-W\fR, \fB\-\-what_is\fR
+Provides help about selected entities. Requires \fB-t\fR.
+.TP
+\fB\-x\fR, \fB\-\-spread\fR
+Spread selected entities over CPU\-LIST. Requires at least one of \fB-t\fR or \fB-q\fR. The specified threads and IRQs are each assigned to one cpu in CPU\-LIST.
+.IP \fIModifiers\fR
+.TP
+\fB\-c\fR, \fB\-\-cpus\fR=\fICPU\-LIST\fR
+CPU\-LIST affected by commands. Requires a CPU number or a comma-separated list of CPU numbers.
+.TP
+\fB\-C\fR, \fB\-\-affect_children\fR
+Operation will affect children threads.
+.TP
+\fB\-f\fR, \fB\-\-filter\fR
+Disable display of selected CPUs in \fB--gui\fR. Requires \fB-c\R.
+.TP
+\fB\-K\fR, \fB\-\-no_kthreads\fR
+Operations will not affect kernel threads.
+.TP
+\fB\-q\fR, \fB\-\-irqs\fR=\fIIRQ\-LIST\fR
+IRQ\-LIST affected by commands. Requires an IRQ number or a comma-separated list of IRQ numbers.
+.TP
+\fB\-S\fR, \fB\-\-sockets\fR=\fICPU\-SOCKET\-LIST\fR
+CPU\-SOCKET\-LIST affected by commands. Requires a socket number or a comma-separated list of socket numbers.
+.TP
+\fB\-t\fR, \fB\-\-threads\fR=\fITHREAD\-LIST\fR
+THREAD\-LIST affected by commands. Requires a thread number or thread name, or a comma-separated list of thread numbers and/or names. Thread names may contain wildcards. Be sure to quote or escape any wildcard specifications.
+.TP
+\fB\-U\fR, \fB\-\-no_uthreads\fR
+Operations will not affect user threads.
+.SH USAGE EXAMPLES
+If for instance the Ethernet NICs have multiple queues for both receive and transmit, each with its own IRQ, the Ethernet IRQs can be associated with a CPU socket:
+.TP
+.B tuna -S 2 -i -q 'eth*' -x
+
+Move everything off the CPUs in socket 2, then spread the IRQs for the Ethernet devices acrross those same CPUs.
