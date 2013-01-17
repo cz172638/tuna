@@ -170,7 +170,7 @@ def ps_show_thread(pid, affect_children, ps,
 	global irqs
 	try:
 		affinity = format_affinity(schedutils.get_affinity(pid))
-	except SystemError: # (3, 'No such process')
+	except (SystemError, OSError): # (3, 'No such process') old python-schedutils incorrectly raised SystemError
 		return
 
 	sched = schedutils.schedstr(schedutils.get_scheduler(pid))[6:]
@@ -246,7 +246,7 @@ def ps_show(ps, affect_children, thread_list, cpu_list,
 			continue
 		try:
 			affinity = schedutils.get_affinity(pid)
-		except SystemError: # (3, 'No such process')
+		except (SystemError, OSError): # (3, 'No such process') old python-schedutils incorrectly raised SystemError
 			continue
 		if cpu_list and not set(cpu_list).intersection(set(affinity)):
 			continue
@@ -476,7 +476,7 @@ def main():
 				sys.exit(2)
 			try:
 				tuna.threads_set_priority(thread_list, a, affect_children)
-			except SystemError, err:
+			except (SystemError, OSError) as err: # (3, 'No such process') old python-schedutils incorrectly raised SystemError
 				print "tuna: %s" % err
 				sys.exit(2)
 		elif o in ("-P", "--show_threads"):
