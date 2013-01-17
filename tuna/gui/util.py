@@ -84,8 +84,10 @@ def thread_set_attributes(pid, threads, new_policy, new_prio, new_affinity, nr_c
 
 	try:
 		curr_affinity = schedutils.get_affinity(pid)
-	except (SystemError, OSError): # (3, 'No such process') old python-schedutils incorrectly raised SystemError
-		return False
+	except (SystemError, OSError) as e: # (3, 'No such process') old python-schedutils incorrectly raised SystemError
+		if e[0] == 3:
+			return False
+		raise e
 
 	try:
 		new_affinity = [ int(a) for a in new_affinity.split(",") ]
@@ -105,8 +107,11 @@ def thread_set_attributes(pid, threads, new_policy, new_prio, new_affinity, nr_c
 
 		try:
 			curr_affinity = schedutils.get_affinity(pid)
-		except (SystemError, OSError): # (3, 'No such process') old python-schedutils incorrectly raised SystemError
-			return False
+		except (SystemError, OSError) as e: # (3, 'No such process') old python-schedutils incorrectly raised SystemError
+			if e[0] == 3:
+				return False
+			raise e
+
 		if curr_affinity != new_affinity:
 			print _("couldn't change pid %(pid)d from %(caff)s to %(naff)s!") % \
 			      { 'pid':pid, 'caff':curr_affinity, 'naff':new_affinity }

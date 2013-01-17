@@ -170,8 +170,10 @@ def ps_show_thread(pid, affect_children, ps,
 	global irqs
 	try:
 		affinity = format_affinity(schedutils.get_affinity(pid))
-	except (SystemError, OSError): # (3, 'No such process') old python-schedutils incorrectly raised SystemError
-		return
+	except (SystemError, OSError) as e: # (3, 'No such process') old python-schedutils incorrectly raised SystemError
+		if e[0] == 3:
+			return
+		raise e
 
 	sched = schedutils.schedstr(schedutils.get_scheduler(pid))[6:]
 	rtprio = int(ps[pid]["stat"]["rt_priority"])
@@ -246,8 +248,10 @@ def ps_show(ps, affect_children, thread_list, cpu_list,
 			continue
 		try:
 			affinity = schedutils.get_affinity(pid)
-		except (SystemError, OSError): # (3, 'No such process') old python-schedutils incorrectly raised SystemError
-			continue
+		except (SystemError, OSError) as e: # (3, 'No such process') old python-schedutils incorrectly raised SystemError
+			if e[0] == 3:
+				continue
+			raise e
 		if cpu_list and not set(cpu_list).intersection(set(affinity)):
 			continue
 		ps_list.append(pid)
