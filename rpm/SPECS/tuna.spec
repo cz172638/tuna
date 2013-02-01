@@ -52,11 +52,12 @@ priority is changed, be it using tuna or plain chrt & taskset.
 %install
 rm -rf %{buildroot}
 %{__python} setup.py install --skip-build --root %{buildroot}
-mkdir -p %{buildroot}/{%{_bindir},%{_datadir}/tuna/help/kthreads}
+mkdir -p %{buildroot}/{%{_bindir},%{_datadir}/tuna/help/kthreads,%{_mandir}/man8}
 install -p -m644 tuna/tuna_gui.glade %{buildroot}/%{_datadir}/tuna/
 install -p -m755 tuna-cmd.py %{buildroot}/%{_bindir}/tuna
 install -p -m755 oscilloscope-cmd.py %{buildroot}/%{_bindir}/oscilloscope
 install -p -m644 help/kthreads/* %{buildroot}/%{_datadir}/tuna/help/kthreads/
+install -p -m644 docs/tuna.8 %{buildroot}/%{_mandir}/man8/
 
 # l10n-ed message catalogues
 for lng in `cat po/LINGUAS`; do
@@ -79,6 +80,7 @@ rm -rf %{buildroot}
 %{_bindir}/tuna
 %{_datadir}/tuna/
 %{python_sitelib}/tuna/
+%{_mandir}/man8/tuna.8*
 
 %files -n oscilloscope
 %defattr(-,root,root,-)
