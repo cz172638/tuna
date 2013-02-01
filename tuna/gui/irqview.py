@@ -83,7 +83,7 @@ class irq_druid:
 			irq_re = tuna.threaded_irq_re(self.irq)
 			pids = self.ps.find_by_regex(irq_re)
 			if pids:
-				if gui.thread_set_attributes(pids[0], self.ps,
+				if gui.thread_set_attributes(self.ps[pids[0]],
 							     new_policy,
 							     new_prio,
 							     new_affinity,

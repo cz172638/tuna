@@ -16,11 +16,11 @@ class process_druid:
 
 	( PROCESS_COL_PID, PROCESS_COL_NAME ) = range(2)
 
-	def __init__(self, ps, pid, nr_cpus, gladefile):
+	def __init__(self, ps, pid, pid_info, nr_cpus, gladefile):
 		self.ps = ps
 		self.pid = pid
+		self.pid_info = pid_info
 		self.nr_cpus = nr_cpus
-		pid_info = self.ps[pid]
 		self.window = gtk.glade.XML(gladefile, "set_process_attributes", "tuna")
 		self.dialog = self.window.get_widget("set_process_attributes")
 		pixbuf = self.dialog.render_icon(gtk.STOCK_PREFERENCES,
@@ -52,7 +52,7 @@ class process_druid:
 		self.regex_edit.set_text(cmdline_regex)
 		self.just_this_thread.set_active(True)
 		self.regex_edit.set_sensitive(False)
-		if not ps[pid].has_key("threads"):
+		if not ps.has_key(pid) or not ps[pid].has_key("threads"):
 			self.all_these_threads.hide()
 		self.on_just_this_thread_clicked(None)
 
@@ -106,7 +106,7 @@ class process_druid:
 		self.regex_edit.set_sensitive(False)
 		self.process_list_store.clear()
 		info = self.process_list_store.append()
-		cmdline = procfs.process_cmdline(self.ps[self.pid])
+		cmdline = procfs.process_cmdline(self.pid_info)
 		self.process_list_store.set(info,
 					    self.PROCESS_COL_PID, self.pid,
 					    self.PROCESS_COL_NAME, cmdline)
@@ -145,7 +145,7 @@ class process_druid:
 		changed = False
 		cmdline_regex = re.compile(regex)
 		for match_pid in self.ps.find_by_cmdline_regex(cmdline_regex):
-			if gui.thread_set_attributes(match_pid, self.ps,
+			if gui.thread_set_attributes(self.ps[match_pid],
 						     new_policy, new_prio,
 						     new_affinity,
 						     self.nr_cpus):
@@ -157,7 +157,7 @@ class process_druid:
 		changed = False
 		threads = self.ps[pid]["threads"]
 		for tid in threads.keys():
-			if gui.thread_set_attributes(tid, threads, new_policy,
+			if gui.thread_set_attributes(threads[tid], new_policy,
 						     new_prio, new_affinity,
 						     self.nr_cpus):
 				changed = True
@@ -171,14 +171,13 @@ class process_druid:
 			new_prio = int(self.sched_pri.get_value())
 			new_affinity = self.affinity.get_text()
 			if self.just_this_thread.get_active():
-				changed = gui.thread_set_attributes(self.pid,
-								    self.ps,
+				changed = gui.thread_set_attributes(self.pid_info,
 								    new_policy,
 								    new_prio,
 								    new_affinity,
 								    self.nr_cpus)
 			elif self.all_these_threads.get_active():
-				if gui.thread_set_attributes(self.pid, self.ps,
+				if gui.thread_set_attributes(self.pid_info,
 							     new_policy, new_prio,
 							     new_affinity,
 							     self.nr_cpus):
@@ -494,10 +493,14 @@ class procview:
 			return
 		row = self.tree_store.get_iter(path)
 		pid = self.tree_store.get_value(row, self.COL_PID)
-		if not self.ps.has_key(pid):
-			return
+		if self.ps.has_key(pid):
+			pid_info = self.ps[pid]
+		else:
+			parent = self.tree_store.iter_parent(row)
+			ppid = self.tree_store.get_value(parent, self.COL_PID)
+			pid_info = self.ps[ppid].threads[pid]
 
-		dialog = process_druid(self.ps, pid, self.nr_cpus,
+		dialog = process_druid(self.ps, pid, pid_info, self.nr_cpus,
 				       self.gladefile)
 		if dialog.run():
 			self.refresh()

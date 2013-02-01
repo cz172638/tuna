@@ -53,10 +53,11 @@ def invalid_affinity():
 	dialog.destroy()
 	return False
 
-def thread_set_attributes(pid, threads, new_policy, new_prio, new_affinity, nr_cpus):
+def thread_set_attributes(pid_info, new_policy, new_prio, new_affinity, nr_cpus):
+	pid = pid_info.pid
 	changed = False
 	curr_policy = schedutils.get_scheduler(pid)
-	curr_prio = int(threads[pid]["stat"]["rt_priority"])
+	curr_prio = int(pid_info["stat"]["rt_priority"])
 	if new_policy == schedutils.SCHED_OTHER:
 		new_prio = 0
 	if curr_policy != new_policy or curr_prio != new_prio:
