@@ -2,7 +2,7 @@
 %{!?python_ver: %define python_ver %(%{__python} -c "import sys ; print sys.version[:3]")}
 
 Name: tuna
-Version: 0.10.3
+Version: 0.10.4
 Release: 1%{?dist}
 License: GPLv2
 Summary: Application tuning GUI & command line utility
@@ -89,6 +89,9 @@ rm -rf %{buildroot}
 %doc docs/oscilloscope+tuna.pdf
 
 %changelog
+* Fri Feb  1 2013 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.10.4-1
+- New upstream release
+
 * Fri Aug 24 2012 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.10.3-1
 - New upstream release
 

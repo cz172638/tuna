@@ -1,3 +1,12 @@
+* Fri Feb  1 2013 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.10.4-1
+
+63580be procview: Allow configuring a single thread
+ Fixes https://bugzilla.redhat.com/show_bug.cgi?id=601234
+5d4ee70 tuna: Tighten "No such process" schedutils exception handling
+cca561d tuna: Catch OSError exceptions from python-schedutils
+ Fixes https://bugzilla.redhat.com/show_bug.cgi?id=871598
+07907b3 tuna: Add man page for command line
+
 * Fri Aug 24 2012 Arnaldo Carvalho de Melo <acme@redhat.com> - 0.10.3-1
 
 . Fix exception on ARM
