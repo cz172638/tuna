@@ -2,19 +2,38 @@
 # -*- coding: utf-8 -*-
 
 import copy, ethtool, os, procfs, re, schedutils
-import help
+import help, fnmatch
 
 try:
 	set
 except NameError:
 	from sets import Set as set
 
+try:
+	fntable
+except NameError:
+	fntable = []
 
 def kthread_help(key):
 	if '/' in key:
 		key = key[:key.rfind('/')+1]
 	return help.KTHREAD_HELP.get(key, " ")
 
+def proc_sys_help(key):
+	if not len(fntable):
+		regMatch = ['[', '*', '?']
+		for value in help.PROC_SYS_HELP:
+			for char in regMatch:
+				if char in value:
+					fntable.append(value)
+	temp = help.PROC_SYS_HELP.get(key, "")
+	if len(temp):
+		return key + ":\n" + temp
+	else:
+		for value in fntable:
+			if fnmatch.fnmatch(key, value):
+				return key + ":\n" + help.PROC_SYS_HELP.get(value, "")
+		return key
 
 def kthread_help_plain_text(pid, cmdline):
 	cmdline = cmdline.split(' ')[0]
