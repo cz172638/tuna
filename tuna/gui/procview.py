@@ -198,14 +198,15 @@ class process_druid:
 
 class procview:
 
-	nr_columns = 7
-	( COL_PID, COL_POL, COL_PRI, COL_AFF, COL_VOLCTXT, COL_NONVOLCTXT, COL_CMDLINE ) = range(nr_columns)
+	nr_columns = 8
+	( COL_PID, COL_POL, COL_PRI, COL_AFF, COL_VOLCTXT, COL_NONVOLCTXT, COL_CGROUP, COL_CMDLINE ) = range(nr_columns)
 	columns = (gui.list_store_column(_("PID")),
 		   gui.list_store_column(_("Policy"), gobject.TYPE_STRING),
 		   gui.list_store_column(_("Priority")),
 		   gui.list_store_column(_("Affinity"), gobject.TYPE_STRING),
 		   gui.list_store_column(_("VolCtxtSwitch"), gobject.TYPE_UINT),
 		   gui.list_store_column(_("NonVolCtxtSwitch"), gobject.TYPE_UINT),
+		   gui.list_store_column(_("CGroup"), gobject.TYPE_STRING),
 		   gui.list_store_column(_("Command Line"), gobject.TYPE_STRING))
 
 	def __init__(self, treeview, ps,
@@ -224,25 +225,42 @@ class procview:
 
 		if not ps[1]["status"].has_key("voluntary_ctxt_switches"):
 			self.nr_columns = 5
-			( self.COL_PID, self.COL_POL, self.COL_PRI,
-			  self.COL_AFF, self.COL_CMDLINE ) = range(self.nr_columns)
-			self.columns = (gui.list_store_column(_("PID")),
-					gui.list_store_column(_("Policy"), gobject.TYPE_STRING),
-					gui.list_store_column(_("Priority")),
-					gui.list_store_column(_("Affinity"), gobject.TYPE_STRING),
-					gui.list_store_column(_("Command Line"), gobject.TYPE_STRING))
-		elif self.evlist: # habemus perf, so lets use the metric we're collecting
+		else:
 			self.nr_columns = 7
-			( self.COL_PID, self.COL_POL, self.COL_PRI,
-			  self.COL_AFF, self.COL_VOLCTXT, self.NONVOLCTXT,
-			  self.COL_CMDLINE ) = range(self.nr_columns)
-			self.columns = (gui.list_store_column(_("PID")),
-					gui.list_store_column(_("Policy"), gobject.TYPE_STRING),
-					gui.list_store_column(_("Priority")),
-					gui.list_store_column(_("Affinity"), gobject.TYPE_STRING),
-				        gui.list_store_column(_("VolCtxtSwitch"), gobject.TYPE_UINT),
-				        gui.list_store_column(_("NonVolCtxtSwitch"), gobject.TYPE_UINT),
-					gui.list_store_column(_("Command Line"), gobject.TYPE_STRING))
+		try:
+			if ps[1]["cgroups"]:
+				self.nr_columns = self.nr_columns + 1
+		except:
+			pass
+
+		self.columns = (gui.list_store_column(_("PID")),
+						gui.list_store_column(_("Policy"), gobject.TYPE_STRING),
+						gui.list_store_column(_("Priority")),
+						gui.list_store_column(_("Affinity"), gobject.TYPE_STRING))
+
+		if self.nr_columns==5:
+			( self.COL_PID, self.COL_POL, self.COL_PRI, self.COL_AFF, self.COL_CMDLINE ) = range(self.nr_columns)
+			self.columns = self.columns + (gui.list_store_column(_("Command Line"), gobject.TYPE_STRING))
+
+		elif self.nr_columns==6:
+			( self.COL_PID, self.COL_POL, self.COL_PRI, self.COL_AFF, self.COL_CGROUP, self.COL_CMDLINE ) = range(self.nr_columns)
+			self.columns = self.columns + (gui.list_store_column(_("CGroup"), gobject.TYPE_STRING),
+										   gui.list_store_column(_("Command Line"), gobject.TYPE_STRING))
+
+		elif self.nr_columns==7:
+			( self.COL_PID, self.COL_POL, self.COL_PRI, self.COL_AFF, self.COL_VOLCTXT,
+				self.NONVOLCTXT, self.COL_CMDLINE ) = range(self.nr_columns)
+			self.columns = self.columns + (gui.list_store_column(_("VolCtxtSwitch"), gobject.TYPE_UINT),
+										   gui.list_store_column(_("NonVolCtxtSwitch"), gobject.TYPE_UINT),
+										   gui.list_store_column(_("Command Line"), gobject.TYPE_STRING))
+
+		elif self.nr_columns==8:
+			( self.COL_PID, self.COL_POL, self.COL_PRI, self.COL_AFF, self.COL_VOLCTXT,
+				self.COL_NONVOLCTXT, self.COL_CGROUP, self.COL_CMDLINE ) = range(self.nr_columns)
+			self.columns = self.columns + (gui.list_store_column(_("VolCtxtSwitch"), gobject.TYPE_UINT),
+										   gui.list_store_column(_("NonVolCtxtSwitch"), gobject.TYPE_UINT),
+										   gui.list_store_column(_("CGroup"), gobject.TYPE_STRING),
+										   gui.list_store_column(_("Command Line"), gobject.TYPE_STRING))
 
 		self.tree_store = gtk.TreeStore(*gui.generate_list_store_columns_with_attr(self.columns))
 		self.treeview.set_model(self.tree_store)
@@ -269,11 +287,15 @@ class procview:
 			column.add_attribute(self.renderer, "weight",
 					     col + self.nr_columns)
 			column.set_sort_column_id(col)
+			if(col == self.COL_CGROUP):
+				column.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
+				column.set_fixed_width(130)
 			try:
 				self.treeview.set_tooltip_column(col)
 			except:
 				# old versions of pygtk2+ doesn't have this signal
 				pass
+			column.set_resizable(True)
 			self.treeview.append_column(column)
 
 		self.show_kthreads = show_kthreads
@@ -376,6 +398,7 @@ class procview:
 		try:
 			new_value[self.COL_VOLCTXT] = int(thread_info["status"]["voluntary_ctxt_switches"])
 			new_value[self.COL_NONVOLCTXT] = int(thread_info["status"]["nonvoluntary_ctxt_switches"])
+			new_value[self.COL_CGROUP] = thread_info["cgroups"]
 		except:
 			pass
 
