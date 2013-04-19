@@ -6,6 +6,7 @@ tuna/help.py
 tuna/sysfs.py
 tuna/oscilloscope.py
 tuna/tuna.py
+tuna/config.py
 tuna/tuna_gui.py
 tuna/tuna_gui.glade
 tuna/gui/__init__.py
