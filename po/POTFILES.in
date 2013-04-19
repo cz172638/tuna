@@ -11,5 +11,7 @@ tuna/gui/util.py
 tuna/gui/cpuview.py
 tuna/gui/procview.py
 tuna/gui/irqview.py
+tuna/gui/profileview.py
+tuna/gui/commonview.py
 tuna-cmd.py
 oscilloscope-cmd.py

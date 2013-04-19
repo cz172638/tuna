@@ -6,9 +6,13 @@ pygtk.require("2.0")
 
 import gtk, gobject, os, procfs, sys
 import gtk.glade
+from gtk import ListStore
 from gui.cpuview import cpuview
 from gui.irqview import irqview
 from gui.procview import procview
+from gui.commonview import commonview
+from gui.profileview import profileview
+from config import Config
 
 tuna_glade_dirs = [ ".", "tuna", "/usr/share/tuna" ]
 tuna_glade = None
@@ -44,9 +48,35 @@ class main_gui:
 				       self.wtree.get_widget("cpuview"),
 				       self.procview, self.irqview, cpus_filtered)
 
-		event_handlers = { "on_mainbig_window_delete_event"    : self.on_mainbig_window_delete_event,
-				   "on_processlist_button_press_event" : self.procview.on_processlist_button_press_event,
-				   "on_irqlist_button_press_event"     : self.irqview.on_irqlist_button_press_event }
+		self.config = Config()
+		self.check_env()
+		self.commonview = commonview()
+		self.commonview.contentTable = self.wtree.get_widget("commonTbl")
+		self.commonview.configFileCombo = self.wtree.get_widget("profileSelector")
+
+		self.profileview = profileview()
+		self.profileview.config = self.config
+		self.commonview.config = self.config
+		self.profileview.commonview = self.commonview
+		self.commonview.profileview = self.profileview
+
+		self.profileview.setWtree(self.wtree)
+		self.profileview.init_default_file()
+
+		event_handlers = { "on_mainbig_window_delete_event"		: self.on_mainbig_window_delete_event,
+					"on_processlist_button_press_event"			: self.procview.on_processlist_button_press_event,
+					"on_irqlist_button_press_event"				: self.irqview.on_irqlist_button_press_event,
+					"on_loadProfileButton_clicked"				: self.profileview.on_loadProfileButton_clicked,
+					"on_SaveButton_clicked"						: self.profileview.on_SaveButton_clicked,
+					"on_UpdateButton_clicked"					: self.profileview.on_UpdateButton_clicked,
+					"on_applyChanges_clicked"					: self.commonview.on_applyChanges_clicked,
+					"on_undoChanges_clicked"					: self.commonview.on_undoChanges_clicked,
+					"on_saveSnapshot_clicked"					: self.commonview.on_saveSnapshot_clicked,
+					"on_saveTunedChanges_clicked"				: self.commonview.on_saveTunedChanges_clicked,
+					"on_profileSelector_changed"				: self.commonview.on_profileSelector_changed,
+					"on_profileTree_button_press_event"			: self.profileview.on_profileTree_button_press_event
+		}
+	
 		self.wtree.signal_autoconnect(event_handlers)
 
 		self.ps.reload_threads()
@@ -112,6 +142,19 @@ class main_gui:
 		if ret == gtk.RESPONSE_NO:
 			return True
 		return False
-
+	
+	def check_env(self):
+		if not os.path.exists(self.config.config["root"]):
+			try:
+				os.stat(self.config.config["root"])
+			except (IOError,OSError):
+				os.mkdir(self.config.config["root"])
+		if not os.path.exists("/root/.local/share/"):
+			try:
+				os.stat("/root/.local/share/")
+			except (IOError,OSError):
+				os.mkdir("/root/.local/")
+				os.mkdir("/root/.local/share/")
+	
 	def run(self):
 		gtk.main()
