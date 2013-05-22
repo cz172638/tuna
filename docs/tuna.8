@@ -19,6 +19,12 @@ Print a list of options. \fBtuna\fR will exit after this action, ignoring the re
 \fB\-g\fR, \fB\-\-gui\fR
 Start the GUI. Actions that follow this on the command-line will be processed without waiting for the GUI to complete.
 .TP
+\fB\-a\fR, \fB\-\-config_file_apply=profilename\fR
+Apply changes described in profile
+.TP
+\fB\-l\fR, \fB\-\-config_file_list\fR
+List preloaded profiles
+.TP
 \fB\-i\fR, \fB\-\-isolate\fR
 Move all threads away from CPU\-LIST. Requires \fB\-c\fR or \fB-S\fR.
 .TP
@@ -55,6 +61,9 @@ Operation will affect children threads.
 .TP
 \fB\-f\fR, \fB\-\-filter\fR
 Disable display of selected CPUs in \fB--gui\fR. Requires \fB-c\R.
+.TP
+\fB\-G\fR, \fB\-\-cgroup\fR
+Display the processes with the type of cgroups they are in. Requires \fB-P\R.
 .TP
 \fB\-K\fR, \fB\-\-no_kthreads\fR
 Operations will not affect kernel threads.

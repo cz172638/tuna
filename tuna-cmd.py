@@ -43,7 +43,10 @@ def usage():
 	print _('Usage: tuna [OPTIONS]')
 	fmt = '\t%-40s %s'
 	print fmt % ('-h, --help',		    _('Give this help list'))
+	print fmt % ('-a, --config_file_apply=profilename',		    _('Apply changes described in profile'))
+	print fmt % ('-l, --config_file_list',		    _('List preloaded profiles'))
 	print fmt % ('-g, --gui',		    _('Start the GUI'))
+	print fmt % ('-G, --cgroup',		    _('Display the processes with the type of cgroups they are in'))
 	print fmt % ('-c, --cpus=' + _('CPU-LIST'), _('%(cpulist)s affected by commands') % \
 							{"cpulist": _('CPU-LIST')})
 	print fmt % ('-C, --affect_children',	    _('Operation will affect children threads'))
@@ -118,14 +121,18 @@ def save(cpu_list, thread_list, filename):
 			del kthreads[name]
 	tuna.generate_rtgroups(filename, kthreads, get_nr_cpus())
 
-def ps_show_header(has_ctxt_switch_info):
+def ps_show_header(has_ctxt_switch_info,cgroups = False):
 	print "%7s %6s %5s %7s       %s" % \
 		(" ", " ", " ", _("thread"),
 		 has_ctxt_switch_info and "ctxt_switches" or "")
 	print "%7s %6s %5s %7s%s %15s" % \
 		("pid", "SCHED_", "rtpri", "affinity",
 		 has_ctxt_switch_info and " %9s %12s" % ("voluntary", "nonvoluntary") or "",
-		 "cmd")
+		 "cmd"),
+	if cgroups:
+		print " %7s" % ("cgroup")
+	else:
+		print ""
 
 def ps_show_sockets(pid, ps, inodes, inode_re, indent = 0):
 	header_printed = False
@@ -166,7 +173,7 @@ def format_affinity(affinity):
 	return ",".join(str(hex(a)) for a in procfs.hexbitmask(affinity, get_nr_cpus()))
 
 def ps_show_thread(pid, affect_children, ps,
-		   has_ctxt_switch_info, sock_inodes, sock_inode_re):
+		   has_ctxt_switch_info, sock_inodes, sock_inode_re, cgroups):
 	global irqs
 	try:
 		affinity = format_affinity(schedutils.get_affinity(pid))
@@ -177,6 +184,7 @@ def ps_show_thread(pid, affect_children, ps,
 
 	sched = schedutils.schedstr(schedutils.get_scheduler(pid))[6:]
 	rtprio = int(ps[pid]["stat"]["rt_priority"])
+	cgout = ps[pid]["cgroups"]
 	cmd = ps[pid]["stat"]["comm"]
 	users = ""
 	if tuna.is_irq_thread(cmd):
@@ -208,7 +216,10 @@ def ps_show_thread(pid, affect_children, ps,
 	else:
 		print "  %-5d" % pid,
 	print "%6s %5d %8s%s %15s %s" % (sched, rtprio, affinity,
-					 ctxt_switch_info, cmd, users)
+					 ctxt_switch_info, cmd, users),
+	if cgroups:
+		print " %9s" % cgout,
+	print ""
 	if sock_inodes:
 		ps_show_sockets(pid, ps, sock_inodes, sock_inode_re,
 				affect_children and 3 or 4)
@@ -221,7 +232,7 @@ def ps_show_thread(pid, affect_children, ps,
 
 def ps_show(ps, affect_children, thread_list, cpu_list,
 	    irq_list_numbers, show_uthreads, show_kthreads,
-	    has_ctxt_switch_info, sock_inodes, sock_inode_re):
+	    has_ctxt_switch_info, sock_inodes, sock_inode_re, cgroups):
 				
 	ps_list = []
 	for pid in ps.keys():
@@ -261,7 +272,7 @@ def ps_show(ps, affect_children, thread_list, cpu_list,
 	for pid in ps_list:
 		ps_show_thread(pid, affect_children, ps,
 			       has_ctxt_switch_info, sock_inodes,
-			       sock_inode_re)
+			       sock_inode_re, cgroups)
 
 def load_socktype(socktype, inodes):
 	idiag = inet_diag.create(socktype = socktype)
@@ -280,7 +291,7 @@ def load_sockets():
 	return inodes
 
 def do_ps(thread_list, cpu_list, irq_list, show_uthreads,
-	  show_kthreads, affect_children, show_sockets):
+	  show_kthreads, affect_children, show_sockets, cgroups):
 	ps = procfs.pidstats()
 	if affect_children:
 		ps.reload_threads()
@@ -293,10 +304,10 @@ def do_ps(thread_list, cpu_list, irq_list, show_uthreads,
 	
 	has_ctxt_switch_info = ps[1]["status"].has_key("voluntary_ctxt_switches")
 	try:
-		ps_show_header(has_ctxt_switch_info)
+		ps_show_header(has_ctxt_switch_info, cgroups)
 		ps_show(ps, affect_children, thread_list,
 			cpu_list, irq_list, show_uthreads, show_kthreads,
-			has_ctxt_switch_info, sock_inodes, sock_inode_re)
+			has_ctxt_switch_info, sock_inodes, sock_inode_re, cgroups)
 	except IOError:
 		# 'tuna -P | head' for instance
 		pass
@@ -402,18 +413,49 @@ def i18n_init():
 	gettext.textdomain(app)
 	gettext.install(app, localedir)
 
+def apply_config(filename):
+	from tuna.config import Config
+	config = Config()
+	if os.path.exists(filename):
+		config.config['root'] = os.getcwd() + "/"
+		filename = os.path.basename(filename)
+	else:
+		if not os.path.exists(config.config['root']+filename):
+			print filename + _(" not found!")
+			exit(-1)
+	if config.loadTuna(filename):
+		exit(1)
+	ctrl = 0
+	values = {}
+	values['toapply'] = {}
+	for index in range(len(config.ctlParams)):
+		for opt in config.ctlParams[index]:
+			values['toapply'][ctrl] = {}
+			values['toapply'][ctrl]['label'] = opt
+			values['toapply'][ctrl]['value'] = config.ctlParams[index][opt]
+			ctrl = ctrl + 1
+	config.applyChanges(values)
+
+def list_config():
+	from tuna.config import Config
+	config = Config()
+	print _("Preloaded config files:")
+	for value in config.populate():
+		print value
+	exit(1)
+
 def main():
 	global ps
 
 	i18n_init()
 	try:
-		short = "c:CfghiIKmp:PQq:s:S:t:UvWx"
+		short = "a:c:CfgGhiIKlmp:PQq:s:S:t:UvWx"
 		long = ["cpus=", "affect_children", "filter", "gui", "help",
 			"isolate", "include", "no_kthreads", "move",
 			"show_sockets", "priority=", "show_threads",
 			"show_irqs", "irqs=",
 			"save=", "sockets=", "threads=", "no_uthreads",
-			"version", "what_is", "spread"]
+			"version", "what_is", "spread","cgroup","config_file_apply=","config_file_list="]
 		if have_inet_diag:
 			short += "n"
 			long.append("show_sockets")
@@ -426,6 +468,7 @@ def main():
 	run_gui = not opts
 	kthreads = True
 	uthreads = True
+	cgroups = False
 	cpu_list = None
 	irq_list = None
 	irq_list_str = None
@@ -439,12 +482,18 @@ def main():
 		if o in ("-h", "--help"):
 			usage()
 			return
+		elif o in ("-a", "--config_file_apply"):
+			apply_config(a)
+		elif o in ("-l", "--config_file_list"):
+			list_config()
 		elif o in ("-c", "--cpus"):
 			(op, a) = pick_op(a)
 			op_list = tuna.cpustring_to_list(a)
 			cpu_list = do_list_op(op, cpu_list, op_list)
 		elif o in ("-C", "--affect_children"):
 			affect_children = True
+		elif o in ("-G", "--cgroup"):
+			cgroups = True
 		elif o in ("-t", "--threads"):
 			(op, a) = pick_op(a)
 			op_list = reduce(lambda i, j: i + j,
@@ -490,7 +539,7 @@ def main():
 				if thread_list_str or irq_list_str:
 					continue
 			do_ps(thread_list, cpu_list, irq_list, uthreads,
-			      kthreads, affect_children, show_sockets)
+			      kthreads, affect_children, show_sockets, cgroups)
 		elif o in ("-Q", "--show_irqs"):
 			# If the user specified IRQ names that weren't
 			# resolved to IRQs, don't show all IRQs.
