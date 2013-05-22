@@ -2,6 +2,8 @@ import io, os, re, fnmatch
 import sys, gtk, pygtk
 import codecs, ConfigParser
 from time import localtime, strftime
+from subprocess import Popen, PIPE, STDOUT, call
+TUNED_CONF="""[sysctl]\n"""
 
 class Config:
 	#init config, load /etc/tuna.conf (if not exist, create it)
@@ -45,6 +47,87 @@ class Config:
 			if(self.tuned2Tuna(profileName) < 0):
 				return -1
 		return self.loadTuna(profileName)
+
+	def tuned2Tuna(self,profileName):
+		try:
+			tmp = ConfigParser.RawConfigParser()
+			tmp.read(self.config['root']+profileName)
+			content = tmp.items('sysctl')
+			f = open(self.config['root']+profileName,'w')
+			f.write("[categories]\n")
+			f.write("sysctl=Tuned import\n")
+			f.write("[sysctl]\n")
+			for option,value in content:
+				f.write(option + "=" + value + "\n")
+			f.close()
+			return 0
+		except (ConfigParser.Error, IOError):
+			dialog = gtk.MessageDialog(None, 0, gtk.MESSAGE_ERROR,\
+			 gtk.BUTTONS_OK, "%s\n%s" % \
+			 (_("Corruputed config file: "), _(self.config['root']+profileName)))
+			ret = dialog.run()
+			dialog.destroy()
+			return -1
+
+	def checkTunedDaemon(self):
+		for path in os.environ["PATH"].split(os.pathsep):
+			path = path.strip('"')
+			tFile = os.path.join(path, "tuned")
+			if os.path.isfile(tFile) and os.access(tFile, os.X_OK):
+				return True
+		return False
+
+	def currentActiveProfile(self):
+		proc = Popen(["tuned-adm", "active"], stdout=PIPE, stderr=PIPE)
+		ret = proc.communicate()
+		profile = ret[0]
+		if profile and profile.find("Current active profile: ") == 0:
+			return (profile[len("Current active profile: "):profile.find("\n")],ret[1])
+		return ("unknown",ret[1])
+
+	def setCurrentActiveProfile(self):
+		call("tuned-adm profile tuna", shell=True)
+
+	def saveTuned(self, data):
+		ldir = "/etc/tuned/tuna"
+		profile = self.currentActiveProfile()
+		if profile[1]:
+			raise RuntimeError (_("Can't activate tuna profile in tuned daemon\n%s" % profile[1]))
+			return False
+		if not os.path.exists(ldir):
+			try:
+				os.stat(ldir)
+			except (IOError,OSError):
+				os.mkdir(ldir)
+		f = codecs.open(os.path.join(ldir, "tuned.conf"), "w", "utf-8")
+		f.write(TUNED_CONF)
+		for index in data:
+			for ind in data[index]:
+				f.write(self.aliasToOriginal(data[index][ind]["label"])+"="+data[index][ind]["value"]+"\n")
+		f.close()
+		if profile[0] != "tuna":
+			dialog = gtk.MessageDialog(None,gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+						gtk.MESSAGE_WARNING, gtk.BUTTONS_YES_NO, "%s%s\n%s" % \
+						(_("Current active profile is: "),
+						_(profile[0]),
+						_("Set new created profile as current in tuned daemon?")))
+			ret = dialog.run()
+			dialog.destroy()
+			if ret == gtk.RESPONSE_YES:
+				self.setCurrentActiveProfile()
+				if self.currentActiveProfile()[0] != "tuna":
+					raise RuntimeError ("%s %s\n%s" % \
+						(_("Current active profile is: "),
+						_(profile),
+						_("Setting of new tuned profile failed! Check if tuned is installed and active")))
+					return False
+				else:
+					dialog = gtk.MessageDialog(None,gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+						gtk.MESSAGE_INFO, gtk.BUTTONS_OK, _("Tuna profile is now active in tuned daemon."))
+					ret = dialog.run()
+					dialog.destroy()
+		return True
+
 
 	def loadTuna(self, profileName):
 		err = self.checkConfigFile(self.config['root'] + profileName)
