@@ -43,10 +43,7 @@ class profileview:
 				self.setProfileFileList()
 				self.config.load(value[tmp:len(value)])
 		except Exception as e:
-			dialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-				gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,str(e))
-			ret = dialog.run()
-			dialog.destroy()
+			self.show_mbox_warning(str(e))
 
 	def updateProfileContent(self):
 		try:
@@ -122,13 +119,7 @@ class profileview:
 			self.config.cache = self.profileContentBuffer.get_text(self.profileContentBuffer.get_start_iter(),self.profileContentBuffer.get_end_iter())
 			self.config.cacheToFile(self.config.cacheFileName)
 		except IOError as e:
-			dialog = gtk.MessageDialog(None,
-				gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-					gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
-					_("Cannot write to config file: %s") % \
-					(self.config.cacheFileName))
-			ret = dialog.run()
-			dialog.destroy()
+			self.show_mbox_warning(_("Cannot write to config file: %s") % (self.config.cacheFileName))
 
 	def on_UpdateButton_clicked(self, widget):
 		self.profileContentBuffer = self.profileContent.get_buffer()
@@ -141,11 +132,7 @@ class profileview:
 			else:
 				self.frame.hide()
 		except RuntimeError as e:
-			dialog = gtk.MessageDialog(None,
-				gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-					gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, _(str(e)))
-			ret = dialog.run()
-			dialog.destroy()
+			self.show_mbox_warning(str(e))
 			self.frame.hide()
 
 	def init_default_file(self):
@@ -162,11 +149,7 @@ class profileview:
 			else:
 				self.frame.hide()
 		except RuntimeError as e:
-			dialog = gtk.MessageDialog(None,
-				gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-					gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, _("Default %s" % str(e)))
-			ret = dialog.run()
-			dialog.destroy()
+			self.show_mbox_warning(_("Default %s" % str(e)))
 			self.frame.hide()
 
 	def on_profileTree_button_press_event(self, treeview, event):
@@ -236,12 +219,7 @@ class profileview:
 	def on_menu_new(self, widget):
 		filename = self.get_text_dialog(_("Please enter new filename"))
 		if(filename == None or filename == "" or os.path.exists(self.config.config['root']+filename)):
-			dialog = gtk.MessageDialog(None,
-					gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-					gtk.MESSAGE_WARNING, gtk.BUTTONS_OK,
-					_("Bad or empty filename %s" % (filename)))
-			ret = dialog.run()
-			dialog.destroy()
+			self.show_mbox_warning(_("Bad or empty filename %s" % _(filename)))
 			return False
 		else:
 			f = open(self.config.config['root']+filename,'w')
@@ -269,10 +247,7 @@ class profileview:
 		filename = self.get_current_tree_selection()
 		err = self.config.checkConfigFile(self.config.config['root']+filename)
 		if err != '':
-			dialog = gtk.MessageDialog(None, 0, gtk.MESSAGE_ERROR,\
-			 gtk.BUTTONS_OK, "%s\n%s" % (_("Config file contain errors:"), _(err)))
-			ret = dialog.run()
-			dialog.destroy()
+			self.show_mbox_warning("%s\n%s" % (_("Config file contain errors:"), _(err)))
 			return False
 		else:
 			dialog = gtk.MessageDialog(None, 0, gtk.MESSAGE_INFO,\
@@ -286,12 +261,7 @@ class profileview:
 		old_filename = self.get_current_tree_selection()
 		new_filename = self.get_text_dialog(_("Please enter new name for %s" % (old_filename)))
 		if(new_filename == None or new_filename == ""):
-			dialog = gtk.MessageDialog(None,
-					gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-					gtk.MESSAGE_WARNING, gtk.BUTTONS_OK,
-					_("Bad or empty filename %s" % (new_filename)))
-			ret = dialog.run()
-			dialog.destroy()
+			self.show_mbox_warning(_("Bad or empty filename %s" % _(new_filename)))
 			return False
 		else:
 			os.rename(self.config.config['root']+old_filename, self.config.config['root']+new_filename)
@@ -303,24 +273,13 @@ class profileview:
 		old_filename = self.get_current_tree_selection()
 		new_filename = self.get_text_dialog(_("Please enter name for new file"))
 		if(new_filename == None or new_filename == ""):
-			dialog = gtk.MessageDialog(None,
-					gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-					gtk.MESSAGE_WARNING, gtk.BUTTONS_OK,
-					_("Bad or empty filename %s" % \
-					_(new_filename)))
-			ret = dialog.run()
-			dialog.destroy()
+			self.show_mbox_warning(_("Bad or empty filename %s" % _(new_filename)))
 			return False
 		else:
 			try:
 				shutil.copy2(self.config.config['root']+old_filename, self.config.config['root']+new_filename)
 			except shutil.Error as e:
-				dialog = gtk.MessageDialog(None,
-					gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-					gtk.MESSAGE_WARNING, gtk.BUTTONS_OK,
-					_("%s" % (e)))
-				ret = dialog.run()
-				dialog.destroy()
+				self.show_mbox_warning(str(e))
 			if self.setProfileFileList():
 				self.set_current_tree_selection(new_filename)
 		return True
@@ -359,3 +318,10 @@ class profileview:
 			return text
 		else:
 			return None
+
+	def show_mbox_warning(self, message):
+		dialog = gtk.MessageDialog(None,
+				gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+				gtk.MESSAGE_WARNING, gtk.BUTTONS_OK, _((str(message))))
+		ret = dialog.run()
+		dialog.destroy()
