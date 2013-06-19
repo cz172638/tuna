@@ -329,6 +329,7 @@ class Config:
 		return snapFileName
 
 	def checkConfigFile(self, filename):
+		self.empty = True
 		try:
 			msgStack = ''
 			if not os.path.exists(filename):
@@ -344,12 +345,30 @@ class Config:
 				for opt,val in current:
 					if not os.path.exists("/proc/sys/" + opt.replace(".","/")) and len(self.getFilesByFN("/proc/sys/",opt.replace(".","/"))) == 0:
 						msgStack = "%s%s%s\n" % (msgStack, _("Warning: File not found: /proc/sys/"), opt)
-					#pos = [val.start() for val in re.finditer(',', val)]
-					#if len(pos) > 0 and len(pos) != 2:
-					#	msgStack = msgStack + "Error: slider value format is LOW,HIGH,CURRENT. Value: " + opt + "\n"
+					self.empty = False
+			if self.empty:
+				msgStack = "%s%s" % (msgStack, _("Empty config File"))
 			return msgStack
 		except (ConfigParser.Error, IOError) as e:
 			return "Error {0}".format(str(e))
+
+	def fixConfigFile(self, filename):
+		try:
+			self.checkParser = ConfigParser.RawConfigParser()
+			self.checkParser.read(filename)
+			for option,value in self.checkParser.items('categories'):
+				if not self.checkParser.items(option):
+					self.checkParser.remove_option('categories', option)
+					self.checkParser.set('categories', '#' + option, value)
+				current = self.checkParser.items(option)
+				for opt,val in current:
+					if not os.path.exists("/proc/sys/" + opt.replace(".", "/")) and len(self.getFilesByFN("/proc/sys/", opt.replace(".", "/"))) == 0:
+						self.checkParser.remove_option(option, opt)
+						self.checkParser.set(option, '#' + opt, val)
+		except (ConfigParser.Error, IOError) as e:
+			return "Error {0}".format(str(e))
+		with open(filename, 'w') as configfile:
+			self.checkParser.write(configfile)
 
 	def isFnString(self, string):
 		regMatch = ['[', '*', '?']

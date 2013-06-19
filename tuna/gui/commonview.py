@@ -187,12 +187,36 @@ class commonview:
 		ret = self.get_current_combo_selection()
 		if ret[0] < 0:
 			return False
+		self.restoreConfig = False
 		err = self.config.checkConfigFile(self.config.config['root']+ret[1])
 		if err != '':
-			dialog = gtk.MessageDialog(None, 0, gtk.MESSAGE_ERROR,\
-			 gtk.BUTTONS_OK, (_("Config file contain errors: %s") % (err)))
-			ret = dialog.run()
+			self.restoreConfig = True
+			dialog = gtk.MessageDialog(None,
+				gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+				gtk.MESSAGE_WARNING, gtk.BUTTONS_YES_NO,
+				_("Config file contain errors: \n%s\nRun autocorrect?") % _(err))
+			dlgret = dialog.run()
 			dialog.destroy()
+			if dlgret == gtk.RESPONSE_YES:
+				self.config.fixConfigFile(self.config.config['root'] + ret[1])
+				err = self.config.checkConfigFile(self.config.config['root'] + ret[1])
+				if err != '':
+					dialog = gtk.MessageDialog(None,
+						gtk.DIALOG_DESTROY_WITH_PARENT,
+						gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+						_("Config file contain errors: \n%s\nAutocorrect failed!") % _(err))
+					dialog.run()
+					dialog.destroy()
+					self.restoreConfig = True
+				else:
+					dialog = gtk.MessageDialog(None,
+						gtk.DIALOG_DESTROY_WITH_PARENT,
+						gtk.MESSAGE_INFO, gtk.BUTTONS_OK,
+						_("Autocorrect OK"))
+					dialog.run()
+					dialog.destroy()
+					self.restoreConfig = False
+		if self.restoreConfig:
 			old = self.config.cacheFileName.rfind("/")
 			old = self.config.cacheFileName[old+1:len(self.config.cacheFileName)]
 			cur = self.configFileCombo.get_model()
@@ -211,6 +235,7 @@ class commonview:
 		self.config.loadTuna(ret[1])
 		self.config.updateDefault(ret[1])
 		self.updateCommonView()
+		return True
 
 	def get_current_combo_selection(self):
 		combo_iter = self.configFileCombo.get_active_iter()

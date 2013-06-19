@@ -149,8 +149,25 @@ class profileview:
 			else:
 				self.frame.hide()
 		except RuntimeError as e:
-			self.show_mbox_warning(_("Default %s" % str(e)))
-			self.frame.hide()
+			dialog = gtk.MessageDialog(None,
+				gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+				gtk.MESSAGE_WARNING, gtk.BUTTONS_YES_NO,
+				_("%s\nRun autocorect?") % _(str(e)))
+			dlgret = dialog.run()
+			dialog.destroy()
+			if dlgret == gtk.RESPONSE_YES:
+				if 'lastfile' in self.config.config:
+					self.config.fixConfigFile(self.config.config['root'] + self.config.config['lastfile'])
+					err = self.config.checkConfigFile(self.config.config['root'] + self.config.config['lastfile'])
+					if err != '':
+						self.show_mbox_warning(_("Default %s" % str(err)))
+						self.frame.hide()
+					else:
+						self.init_default_file()
+				else:
+					self.frame.hide()
+			else:
+				self.frame.hide()
 
 	def on_profileTree_button_press_event(self, treeview, event):
 		if event.button == 3:
