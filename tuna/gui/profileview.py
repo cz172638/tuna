@@ -222,25 +222,28 @@ class profileview:
 			self.show_mbox_warning(_("Bad or empty filename %s" % _(filename)))
 			return False
 		else:
-			f = open(self.config.config['root']+filename,'w')
-			f.write("#List of enabled categories\n")
-			f.write("[categories]\n")
-			f.write("#format:\n")
-			f.write("#	category_identifier=Category Name\n")
-			f.write("\n")
-			f.write("#[category_identifier]\n")
-			f.write("#value.name=default\n")
-			f.write("#value.name=slider_min,slider_max,default\n")
-			f.write("\n")
-			f.write("#[guiAlias]\n")
-			f.write("#value.name=Alias\n")
-			f.write("\n")
-			f.write("#[fileDescription]\n")
-			f.write("#text=Description of this profile\n")
-			f.write("\n")
-			f.close()
-			if self.setProfileFileList():
-				self.set_current_tree_selection(filename)
+			try:
+				f = open(self.config.config['root'] + filename, 'w')
+				f.write("#List of enabled categories\n")
+				f.write("[categories]\n")
+				f.write("#format:\n")
+				f.write("#	category_identifier=Category Name\n")
+				f.write("\n")
+				f.write("#[category_identifier]\n")
+				f.write("#value.name=default\n")
+				f.write("#value.name=slider_min,slider_max,default\n")
+				f.write("\n")
+				f.write("#[guiAlias]\n")
+				f.write("#value.name=Alias\n")
+				f.write("\n")
+				f.write("#[fileDescription]\n")
+				f.write("#text=Description of this profile\n")
+				f.write("\n")
+				f.close()
+				if self.setProfileFileList():
+					self.set_current_tree_selection(filename)
+			except IOError as io:
+				self.show_mbox_warning(str(io))
 		return True
 
 	def on_menu_check(self, widget):
@@ -264,9 +267,12 @@ class profileview:
 			self.show_mbox_warning(_("Bad or empty filename %s" % _(new_filename)))
 			return False
 		else:
-			os.rename(self.config.config['root']+old_filename, self.config.config['root']+new_filename)
-			if self.setProfileFileList():
-				self.set_current_tree_selection(new_filename)
+			try:
+				os.rename(self.config.config['root'] + old_filename, self.config.config['root'] + new_filename)
+				if self.setProfileFileList():
+					self.set_current_tree_selection(new_filename)
+			except OSError as io:
+				self.show_mbox_warning(str(io))
 		return True
 
 	def on_menu_copy(self, widget):
@@ -278,7 +284,7 @@ class profileview:
 		else:
 			try:
 				shutil.copy2(self.config.config['root']+old_filename, self.config.config['root']+new_filename)
-			except shutil.Error as e:
+			except (shutil.Error, IOError) as e:
 				self.show_mbox_warning(str(e))
 			if self.setProfileFileList():
 				self.set_current_tree_selection(new_filename)
@@ -293,10 +299,13 @@ class profileview:
 		ret = dialog.run()
 		dialog.destroy()
 		if ret == gtk.RESPONSE_YES:
-			os.unlink(self.config.config['root']+filename)
-			if self.setProfileFileList():
-				self.configFileTree.set_cursor(0)
-			return True
+			try:
+				os.unlink(self.config.config['root'] + filename)
+				if self.setProfileFileList():
+					self.configFileTree.set_cursor(0)
+				return True
+			except OSError as oe:
+				self.show_mbox_warning(str(oe))
 		return False
 
 	def get_text_dialog(self, message, default=''):
