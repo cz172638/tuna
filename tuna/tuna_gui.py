@@ -128,20 +128,9 @@ class main_gui:
 	def check_root(self):
 		if os.getuid() == 0:
 			return False
-
-		dialog = gtk.MessageDialog(None,
-					   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-					   gtk.MESSAGE_WARNING,
-					   gtk.BUTTONS_YES_NO,
-					   "%s\n\n%s\n%s" % \
-					   (_("Root privilege required"),
-					    _("Some functions will not work without root privilege."),
-					    _("Do you want to continue?")))
-		ret = dialog.run()
-		dialog.destroy()
-		if ret == gtk.RESPONSE_NO:
-			return True
-		return False
+		self.binpath = sys.executable.strip(os.path.basename(sys.executable))
+		os.execv(self.binpath + 'pkexec', [sys.executable] + [self.binpath + 'tuna'] + sys.argv[1:])
+		return True
 	
 	def check_env(self):
 		if not os.path.exists(self.config.config["root"]):
