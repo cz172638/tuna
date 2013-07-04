@@ -233,7 +233,7 @@ class profileview:
 		return False
 
 	def on_menu_new(self, widget):
-		filename = self.get_text_dialog(_("Please enter new filename"))
+		filename = self.get_text_dialog(_("Please enter new filename"),"empty.conf")
 		if(filename == None or filename == "" or os.path.exists(self.config.config['root']+filename)):
 			self.show_mbox_warning(_("Bad or empty filename %s" % _(filename)))
 			return False
@@ -279,7 +279,7 @@ class profileview:
 
 	def on_menu_rename(self, widget):
 		old_filename = self.get_current_tree_selection()
-		new_filename = self.get_text_dialog(_("Please enter new name for %s" % (old_filename)))
+		new_filename = self.get_text_dialog(_("Please enter new name for %s" % (old_filename)), old_filename)
 		if(new_filename == None or new_filename == ""):
 			self.show_mbox_warning(_("Bad or empty filename %s" % _(new_filename)))
 			return False
@@ -298,7 +298,7 @@ class profileview:
 
 	def on_menu_copy(self, widget):
 		old_filename = self.get_current_tree_selection()
-		new_filename = self.get_text_dialog(_("Please enter name for new file"))
+		new_filename = self.get_text_dialog(_("Please enter name for new file"), old_filename)
 		if(new_filename == None or new_filename == ""):
 			self.show_mbox_warning(_("Bad or empty filename %s" % _(new_filename)))
 			return False
