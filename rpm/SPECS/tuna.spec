@@ -2,7 +2,7 @@
 %{!?python_ver: %define python_ver %(%{__python} -c "import sys ; print sys.version[:3]")}
 
 Name: tuna
-Version: 0.11
+Version: 0.11.1
 Release: 1%{?dist}
 License: GPLv2
 Summary: Application tuning GUI & command line utility

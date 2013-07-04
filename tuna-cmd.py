@@ -37,7 +37,7 @@ except NameError:
 nr_cpus = None
 ps = None
 irqs = None
-version = "0.11"
+version = "0.11.1"
 
 def usage():
 	print _('Usage: tuna [OPTIONS]')
