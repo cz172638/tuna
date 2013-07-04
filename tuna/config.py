@@ -37,6 +37,7 @@ class Config:
 			self.temp.set('global', 'lastFile', filename)
 			with open(self.configFile, 'wb') as cfgfile:
 				self.temp.write(cfgfile)
+			self.config['lastfile'] = filename
 
 	def load(self, profileName):
 		tmp = ConfigParser.RawConfigParser()
@@ -320,7 +321,11 @@ class Config:
 						tempconfig.set(opt, iopt, ival + out[iopt])
 					else:
 						tempconfig.set(opt, iopt, out[iopt])
-		snapFileName = self.config['root']+'snapshot' +  strftime("%Y-%m-%d-%H:%M:%S", localtime()) + '.conf'
+		if 'lastfile' in self.config:
+			self.name = self.config['lastfile'].replace('.conf', '')
+		else:
+			self.name = 'snapshot'
+		snapFileName = self.config['root'] + self.name + strftime("-%Y-%m-%d-%H:%M:%S", localtime()) + '.conf'
 		try:
 			with open(snapFileName , 'w') as configfile:
 				tempconfig.write(configfile)
