@@ -77,7 +77,6 @@ class profileview:
 			cell = gtk.CellRendererText()
 			self.configFileCombo.pack_start(cell, True)
 			self.configFileCombo.add_attribute(cell, "text", 0)
-			self.comboHandler = self.configFileCombo.connect('changed', self.commonview.on_profileSelector_changed)
 		self.config_store.append([config])
 		self.configs.show()
 		self.combo_store.append([config])
@@ -259,6 +258,7 @@ class profileview:
 				f.close()
 				if self.setProfileFileList():
 					self.set_current_tree_selection(filename)
+					self.frame.hide()
 			except IOError as io:
 				self.show_mbox_warning(str(io))
 		return True
@@ -288,6 +288,10 @@ class profileview:
 				os.rename(self.config.config['root'] + old_filename, self.config.config['root'] + new_filename)
 				if self.setProfileFileList():
 					self.set_current_tree_selection(new_filename)
+				if self.config.checkConfigFile(self.config.config['root'] + new_filename) == '':
+					self.commonview.updateCommonView()
+				else:
+					self.frame.hide()
 			except OSError as io:
 				self.show_mbox_warning(str(io))
 		return True
@@ -305,6 +309,10 @@ class profileview:
 				self.show_mbox_warning(str(e))
 			if self.setProfileFileList():
 				self.set_current_tree_selection(new_filename)
+			if self.config.checkConfigFile(self.config.config['root'] + new_filename) == '':
+				self.commonview.updateCommonView()
+			else:
+				self.frame.hide()
 		return True
 
 	def on_menu_delete(self, widget):
@@ -318,11 +326,17 @@ class profileview:
 		if ret == gtk.RESPONSE_YES:
 			try:
 				os.unlink(self.config.config['root'] + filename)
-				if self.setProfileFileList():
-					self.configFileTree.set_cursor(0)
-				return True
 			except OSError as oe:
 				self.show_mbox_warning(str(oe))
+				return False
+			if self.setProfileFileList():
+				self.configFileTree.set_cursor(0)
+				currentFile = self.get_current_tree_selection()
+			if self.config.checkConfigFile(self.config.config['root'] + currentFile) == '':
+				self.commonview.updateCommonView()
+				return True
+			else:
+				self.frame.hide()
 		return False
 
 	def get_text_dialog(self, message, default=''):

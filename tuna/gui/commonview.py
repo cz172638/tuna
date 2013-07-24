@@ -37,7 +37,15 @@ class commonview:
 			cur = self.profileview.configFileCombo.get_model()
 			for val in cur:
 				if val[0] == self.config.cacheFileName:
-					self.profileview.configFileCombo.set_active(val.path[0])
+					try:
+						self.configFileCombo.handler_block_by_func(self.on_profileSelector_changed)
+					except TypeError as e:
+						pass
+					self.configFileCombo.set_active(val.path[0])
+					try:
+						self.configFileCombo.handler_unblock_by_func(self.on_profileSelector_changed)
+					except TypeError as e:
+						pass
 			while catCntr < catListlenght:
 				frames[catCntr] = gtk.Frame()
 				tLabel = gtk.Label('<b>'+self.config.categories[catCntr]+'</b>')
@@ -154,7 +162,7 @@ class commonview:
 		ret = self.guiSnapshot()
 		self.config.saveSnapshot(self.ret)
 		old_name = self.get_current_combo_selection()
-		if self.profileview.setProfileFileList() and old_name[0] > 0:
+		if self.profileview.setProfileFileList():
 			self.profileview.set_current_tree_selection(old_name[1])
 			self.set_current_combo_selection(old_name[1])
 
