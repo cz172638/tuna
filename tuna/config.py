@@ -235,7 +235,7 @@ class Config:
 		return ret
 
 	def populate(self):
-		return [files for files in os.listdir(self.config['root'])]
+		return [files for files in os.listdir(self.config['root']) if files!="temp-direct-load.conf"]
 	
 	def getSystemValue(self, filename):
 		filename = self.aliasToOriginal(filename)
