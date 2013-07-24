@@ -76,7 +76,7 @@ class commonview:
 						frameContent[catCntr]['texts'][contentCntr] = gtk.Entry(256)
 						frameContent[catCntr]['texts'][contentCntr].set_alignment(0)
 						frameContent[catCntr]['texts'][contentCntr].set_text(self.config.ctlParams[catCntr][val])
-					frameContent[catCntr]['texts'][contentCntr].connect("focus-in-event", self.checkStar, catCntr,contentCntr,val, frameContent[catCntr]['labels'][contentCntr])
+					frameContent[catCntr]['texts'][contentCntr].connect("button-release-event", self.checkStar, catCntr, contentCntr, val, frameContent[catCntr]['labels'][contentCntr])
 					frameContent[catCntr]['texts'][contentCntr].connect("focus-out-event", self.checkStar, catCntr,contentCntr,val, frameContent[catCntr]['labels'][contentCntr])
 					frameContent[catCntr]['table'].attach(frameContent[catCntr]['labels'][contentCntr],0,1,contentCntr,contentCntr+1,gtk.FILL,xpadding=5)
 					frameContent[catCntr]['table'].attach(frameContent[catCntr]['texts'][contentCntr],1,2,contentCntr,contentCntr+1,xpadding=10)
