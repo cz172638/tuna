@@ -227,7 +227,7 @@ def ps_show_thread(pid, affect_children, ps,
 		for tid in ps[pid]["threads"].keys():
 			ps_show_thread(tid, False, ps[pid]["threads"],
 				       has_ctxt_switch_info,
-				       sock_inodes, sock_inode_re)
+				       sock_inodes, sock_inode_re, cgroups)
 			
 
 def ps_show(ps, affect_children, thread_list, cpu_list,
