@@ -1,5 +1,5 @@
 import io, os, re, fnmatch
-import sys, gtk, pygtk
+import sys, pygtk
 import codecs, ConfigParser
 from time import localtime, strftime
 from subprocess import Popen, PIPE, STDOUT, call
