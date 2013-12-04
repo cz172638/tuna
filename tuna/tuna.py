@@ -490,10 +490,14 @@ def thread_set_priority(tid, policy, rtprio):
 
 def threads_set_priority(tids, parm, affect_children = False):
 	parms = parm.split(":")
+	rtprio = 0
 	policy = None
-	if len(parms) != 1:
+	if parms[0].upper() in ["OTHER", "BATCH", "IDLE", "FIFO", "RR"]:
 		policy = schedutils.schedfromstr("SCHED_%s" % parms[0].upper())
-		rtprio = int(parms[1])
+		if len(parms) > 1:
+			rtprio = int(parms[1])
+		elif parms[0].upper() in ["FIFO", "RR"]:
+			rtprio = 1
 	else:
 		rtprio = int(parms[0])
 
