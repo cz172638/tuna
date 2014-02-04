@@ -498,8 +498,11 @@ def threads_set_priority(tids, parm, affect_children = False):
 			rtprio = int(parms[1])
 		elif parms[0].upper() in ["FIFO", "RR"]:
 			rtprio = 1
-	else:
+	elif parms[0].isdigit():
 		rtprio = int(parms[0])
+	else:
+		print "tuna: " + _("\"%s\" is unsupported priority value!") % parms[0]
+		return
 
 	for tid in tids:
 		try:
