@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=tuna
+GenericName=Application Tuner
+Exec=tuna --gui
+Type=Application
+Terminal=false
+Comment=Thread and IRQ attribute management
+Icon=gtk-preferences
+Categories=System;Settings;

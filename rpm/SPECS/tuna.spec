@@ -63,6 +63,7 @@ install -p -m644 docs/tuna.8 %{buildroot}/%{_mandir}/man8/
 install -p -m644 etc/tuna/example.conf %{buildroot}/%{_sysconfdir}/tuna/
 install -p -m644 etc/tuna.conf %{buildroot}/%{_sysconfdir}/
 install -p -m644 org.tuna.policy %{buildroot}/%{_datadir}/polkit-1/actions/
+desktop-file-install --dir=%{buildroot}/%{_datadir}/applications tuna.desktop
 
 # l10n-ed message catalogues
 for lng in `cat po/LINGUAS`; do
@@ -89,6 +90,7 @@ rm -rf %{buildroot}
 %{_sysconfdir}/tuna.conf
 %{_sysconfdir}/tuna/*
 %{_datadir}/polkit-1/actions/org.tuna.policy
+%{_datadir}/applications/tuna.desktop
 
 %files -n oscilloscope
 %defattr(-,root,root,-)
