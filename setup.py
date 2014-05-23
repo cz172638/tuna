@@ -12,7 +12,7 @@ if isfile("MANIFEST"):
 PYTHONLIB = join(get_python_lib(standard_lib=1, prefix=''), 'site-packages')
 
 setup(name="tuna",
-      version = "0.11.1",
+      version = "0.12",
       description = "Application tuning GUI",
       author = "Arnaldo Carvalho de Melo",
       author_email = "acme@redhat.com",
