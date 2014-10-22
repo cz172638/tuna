@@ -58,6 +58,7 @@ def usage():
 	print fmt % ('-K, --no_kthreads',	    _('Operations will not affect kernel threads'))
 	print fmt % ('-m, --move',		    _('Move selected entities to %(cpulist)s') % \
 							{"cpulist": _('CPU-LIST')})
+	print fmt % ('-N, --nohz_full',		    _('CPUs in nohz_full= kernel command line will be affected by operations'))
 	if have_inet_diag:
 		print fmt % ('-n, --show_sockets',  _('Show network sockets in use by threads'))
 	print fmt % ('-p, --priority=[' +
@@ -449,9 +450,9 @@ def main():
 
 	i18n_init()
 	try:
-		short = "a:c:CfgGhiIKlmp:PQq:s:S:t:UvWx"
+		short = "a:c:CfgGhiIKlmNp:PQq:s:S:t:UvWx"
 		long = ["cpus=", "affect_children", "filter", "gui", "help",
-			"isolate", "include", "no_kthreads", "move",
+			"isolate", "include", "no_kthreads", "move", "nohz_full",
 			"show_sockets", "priority=", "show_threads",
 			"show_irqs", "irqs=",
 			"save=", "sockets=", "threads=", "no_uthreads",
@@ -490,6 +491,12 @@ def main():
 			(op, a) = pick_op(a)
 			op_list = tuna.cpustring_to_list(a)
 			cpu_list = do_list_op(op, cpu_list, op_list)
+		elif o in ("-N", "--nohz_full"):
+			try:
+				cpu_list = tuna.nohz_full_list()
+			except:
+				print "tuna: --nohz_full " + _(" needs nohz_full=cpulist on the kernel command line")
+				sys.exit(2)
 		elif o in ("-C", "--affect_children"):
 			affect_children = True
 		elif o in ("-G", "--cgroup"):

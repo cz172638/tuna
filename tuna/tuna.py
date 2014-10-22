@@ -622,3 +622,7 @@ def generate_rtgroups(filename, kthreads, nr_cpus):
 						   schedutils.schedstr(kt.policy)[6].lower(),
 						   kt.rtprio, mask, regex))
 	f.close()
+
+
+def nohz_full_list():
+	return [ int(cpu) for cpu in procfs.cmdline().options["nohz_full"].split(",") ]
