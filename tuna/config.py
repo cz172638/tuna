@@ -30,6 +30,12 @@ class Config:
 			self.config[option] = value
 		self.cacheFileName = ''
 
+	def FileNameToConfigPath(self, filename):
+		return filename.replace(".", "\\.").replace("/", ".")
+
+	def ConfigPathToFileName(self, configpath):
+		return configpath.replace(".", "/").replace("\\/", ".")
+
 	def updateDefault(self, filename):
 		if filename.replace("", "temp-direct-load.conf") != filename:
 			self.temp = ConfigParser.RawConfigParser()
@@ -154,9 +160,9 @@ class Config:
 					tempCfg = []
 					for index in range(len(oldTempCfg)):
 						if self.isFnString(oldTempCfg[index][0]):
-							expanded = self.getFilesByFN("/proc/sys", oldTempCfg[index][0].replace(".", "/"))
+							expanded = self.getFilesByFN("/proc/sys", self.ConfigPathToFileName(oldTempCfg[index][0]))
 							for index2 in range(len(expanded)):
-								expandedData = (expanded[index2].replace("/", "."), oldTempCfg[index][1])
+								expandedData = (self.FileNameToConfigPath(expanded[index2]), oldTempCfg[index][1])
 								tempCfg.append(expandedData)
 						else:
 							tempCfg.append(oldTempCfg[index])
@@ -241,9 +247,9 @@ class Config:
 	def getSystemValue(self, filename):
 		filename = self.aliasToOriginal(filename)
 		try:
-			buffer = open("/proc/sys/" + filename.replace(".", "/"), 'r').read()
+			buffer = open("/proc/sys/" + self.ConfigPathToFileName(filename), 'r').read()
 		except IOError:
-			print _("Invalid item! file: /proc/sys/%s" %(filename.replace(".", "/")))
+			print _("Invalid item! file: /proc/sys/%s" %(self.ConfigPathToFileName(filename)))
 			return ""
 		return buffer.strip()
 
@@ -253,10 +259,10 @@ class Config:
 		if value == "" or old == value:
 			return 0
 		try:
-			fp = open("/proc/sys/" + filename.replace(".", "/"), 'w')
+			fp = open("/proc/sys/" + self.ConfigPathToFileName(filename), 'w')
 			fp.write(value)
 		except IOError:
-			print "%s%s %s %s" % (_("Cant write to file! path: /proc/sys/"), filename.replace(".","/"), _("value:"), value)
+			print "%s%s %s %s" % (_("Cant write to file! path: /proc/sys/"), self.ConfigPathToFileName(filename), _("value:"), value)
 			return -1
 		return 0
 
@@ -302,9 +308,9 @@ class Config:
 			snapcont = []
 			for index in range(len(snapcontPacked)):
 				if self.isFnString(snapcontPacked[index][0]):
-					expanded = self.getFilesByFN("/proc/sys",snapcontPacked[index][0].replace(".","/"))
+					expanded = self.getFilesByFN("/proc/sys",self.ConfigPathToFileName(snapcontPacked[index][0]))
 					for index2 in range(len(expanded)):
-						expandedData = (expanded[index2].replace("/","."),snapcontPacked[index][1])
+						expandedData = (self.FileNameToConfigPath(expanded[index2]),snapcontPacked[index][1])
 						snapcont.append(expandedData)
 				else:
 					snapcont.append(snapcontPacked[index])
@@ -348,7 +354,7 @@ class Config:
 					return msgStack
 				current = self.checkParser.items(option)
 				for opt,val in current:
-					if not os.path.exists("/proc/sys/" + opt.replace(".","/")) and len(self.getFilesByFN("/proc/sys/",opt.replace(".","/"))) == 0:
+					if not os.path.exists("/proc/sys/" + self.ConfigPathToFileName(opt)) and len(self.getFilesByFN("/proc/sys/", self.ConfigPathToFileName(opt))) == 0:
 						msgStack = "%s%s%s\n" % (msgStack, _("Warning: File not found: /proc/sys/"), opt)
 					self.empty = False
 			if self.empty:
@@ -367,7 +373,7 @@ class Config:
 					self.checkParser.set('categories', '#' + option, value)
 				current = self.checkParser.items(option)
 				for opt,val in current:
-					if not os.path.exists("/proc/sys/" + opt.replace(".", "/")) and len(self.getFilesByFN("/proc/sys/", opt.replace(".", "/"))) == 0:
+					if not os.path.exists("/proc/sys/" + self.ConfigPathToFileName(opt)) and len(self.getFilesByFN("/proc/sys/", self.ConfigPathToFileName(opt))) == 0:
 						self.checkParser.remove_option(option, opt)
 						self.checkParser.set(option, '#' + opt, val)
 		except (ConfigParser.Error, IOError) as e:
