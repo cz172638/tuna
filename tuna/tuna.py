@@ -3,6 +3,7 @@
 
 import copy, ethtool, os, procfs, re, schedutils
 import help, fnmatch
+from procfs import utilist
 
 try:
 	set
@@ -92,9 +93,10 @@ def has_threaded_irqs(ps):
 	irq_re = re.compile("(irq/[0-9]+-.+|IRQ-[0-9]+)")
 	return len(ps.find_by_regex(irq_re)) > 0
 
-def set_irq_affinity(irq, bitmasklist):
+def set_irq_affinity_filename(filename, bitmasklist):
+	pathname="/proc/irq/%s" % filename
+	f = file(pathname, "w")
 	text = ",".join(map(lambda a: "%x" % a, bitmasklist))
-	f = file("/proc/irq/%d/smp_affinity" % irq, "w")
 	f.write("%s\n" % text)
 	try:
 		f.close()
@@ -102,6 +104,9 @@ def set_irq_affinity(irq, bitmasklist):
 		# This happens with IRQ 0, for instance
 		return False
 	return True
+
+def set_irq_affinity(irq, bitmasklist):
+	return set_irq_affinity_filename("%d/smp_affinity" % irq, bitmasklist)
 
 def cpustring_to_list(cpustr):
 	"""Convert a string of numbers to an integer list.
@@ -307,6 +312,14 @@ def affinity_remove_cpus(affinity, cpus, nr_cpus):
 		affinity = list(set(affinity) - set(cpus))
 	return affinity
 
+# Shound be moved to python_linux_procfs.interrupts, shared with interrupts.parse_affinity, etc.
+def parse_irq_affinity_filename(filename, nr_cpus):
+	f = file("/proc/irq/%s" % filename)
+	line = f.readline()
+	f.close()
+	return utilist.bitmasklist(line, nr_cpus)
+
+
 def isolate_cpus(cpus, nr_cpus):
 	ps = procfs.pidstats()
 	ps.reload_threads()
@@ -368,6 +381,10 @@ def isolate_cpus(cpus, nr_cpus):
 			set_irq_affinity(int(irq),
 					 procfs.hexbitmask(affinity,
 							   nr_cpus))
+
+	affinity = parse_irq_affinity_filename("default_smp_affinity", nr_cpus)
+	affinity = affinity_remove_cpus(affinity, cpus, nr_cpus)
+	set_irq_affinity_filename("default_smp_affinity", procfs.hexbitmask(affinity, nr_cpus))
 
 	return (previous_pid_affinities, previous_irq_affinities)
 
@@ -431,6 +448,10 @@ def include_cpus(cpus, nr_cpus):
 			affinity = list(set(affinity + cpus))
 			set_irq_affinity(int(irq),
 					 procfs.hexbitmask(affinity, nr_cpus))
+
+	affinity = parse_irq_affinity_filename("default_smp_affinity", nr_cpus)
+	affinity = list(set(affinity + cpus))
+	set_irq_affinity_filename("default_smp_affinity", procfs.hexbitmask(affinity, nr_cpus))
 
 	return (previous_pid_affinities, previous_irq_affinities)
 
