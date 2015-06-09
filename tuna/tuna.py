@@ -171,6 +171,15 @@ def is_hardirq_handler(self, pid):
                 return int(self.processes[pid]["stat"]["flags"]) & \
                        PF_HARDIRQ and True or False
 
+# FIXME: move to python-linux-procfs
+def cannot_set_affinity(self, pid):
+		PF_NO_SETAFFINITY = 0x04000000
+		try:
+			return int(self.processes[pid]["stat"]["flags"]) & \
+				PF_NO_SETAFFINITY and True or False
+		except:
+			return True
+
 def move_threads_to_cpu(cpus, pid_list, set_affinity_warning = None,
 			spread = False):
 	changed = False
@@ -325,7 +334,7 @@ def isolate_cpus(cpus, nr_cpus):
 	ps.reload_threads()
 	previous_pid_affinities = {}
 	for pid in ps.keys():
-		if iskthread(pid):
+		if cannot_set_affinity(ps, pid):
 			continue
 		try:
 			affinity = schedutils.get_affinity(pid)
@@ -347,7 +356,7 @@ def isolate_cpus(cpus, nr_cpus):
 			continue
 		threads = ps[pid]["threads"]
 		for tid in threads.keys():
-			if iskthread(tid):
+			if cannot_set_affinity(ps, tid):
 				continue
 			try:
 				affinity = schedutils.get_affinity(tid)
@@ -393,7 +402,7 @@ def include_cpus(cpus, nr_cpus):
 	ps.reload_threads()
 	previous_pid_affinities = {}
 	for pid in ps.keys():
-		if iskthread(pid):
+		if cannot_set_affinity(ps, pid):
 			continue
 		try:
 			affinity = schedutils.get_affinity(pid)
@@ -415,7 +424,7 @@ def include_cpus(cpus, nr_cpus):
 			continue
 		threads = ps[pid]["threads"]
 		for tid in threads.keys():
-			if iskthread(tid):
+			if cannot_set_affinity(ps, tid):
 				continue
 			try:
 				affinity = schedutils.get_affinity(tid)
