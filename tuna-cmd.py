@@ -305,7 +305,8 @@ def do_ps(thread_list, cpu_list, irq_list, show_uthreads,
 	
 	has_ctxt_switch_info = ps[1]["status"].has_key("voluntary_ctxt_switches")
 	try:
-		ps_show_header(has_ctxt_switch_info, cgroups)
+		if sys.stdout.isatty():
+			ps_show_header(has_ctxt_switch_info, cgroups)
 		ps_show(ps, affect_children, thread_list,
 			cpu_list, irq_list, show_uthreads, show_kthreads,
 			has_ctxt_switch_info, sock_inodes, sock_inode_re, cgroups)
@@ -334,7 +335,8 @@ def show_irqs(irq_list, cpu_list):
 	if not irqs:
 		irqs = procfs.interrupts()
 
-	print "%4s %-16s %8s" % ("#", _("users"), _("affinity"),)
+	if sys.stdout.isatty():
+		print "%4s %-16s %8s" % ("#", _("users"), _("affinity"),)
 	sorted_irqs = []
 	for k in irqs.keys():
 		try:
