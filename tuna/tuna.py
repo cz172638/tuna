@@ -166,10 +166,11 @@ def list_to_cpustring(l):
 # FIXME: move to python-linux-procfs
 def is_hardirq_handler(self, pid):
 		PF_HARDIRQ = 0x08000000
-		if not self.processes.has_key(pid):
+		try:
+			return int(self.processes[pid]["stat"]["flags"]) & \
+				PF_HARDIRQ and True or False
+		except:
 			return False
-                return int(self.processes[pid]["stat"]["flags"]) & \
-                       PF_HARDIRQ and True or False
 
 # FIXME: move to python-linux-procfs
 def cannot_set_affinity(self, pid):
