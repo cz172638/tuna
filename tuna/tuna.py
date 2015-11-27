@@ -181,6 +181,15 @@ def cannot_set_affinity(self, pid):
 		except:
 			return True
 
+# FIXME: move to python-linux-procfs
+def cannot_set_thread_affinity(self, pid, tid):
+		PF_NO_SETAFFINITY = 0x04000000
+		try:
+			return int(self.processes[pid].threads[tid]["stat"]["flags"]) & \
+				PF_NO_SETAFFINITY and True or False
+		except:
+			return True
+
 def move_threads_to_cpu(cpus, pid_list, set_affinity_warning = None,
 			spread = False):
 	changed = False
@@ -357,7 +366,7 @@ def isolate_cpus(cpus, nr_cpus):
 			continue
 		threads = ps[pid]["threads"]
 		for tid in threads.keys():
-			if cannot_set_affinity(ps, tid):
+			if cannot_set_thread_affinity(ps, pid, tid):
 				continue
 			try:
 				affinity = schedutils.get_affinity(tid)
@@ -425,7 +434,7 @@ def include_cpus(cpus, nr_cpus):
 			continue
 		threads = ps[pid]["threads"]
 		for tid in threads.keys():
-			if cannot_set_affinity(ps, tid):
+			if cannot_set_thread_affinity(ps, pid, tid):
 				continue
 			try:
 				affinity = schedutils.get_affinity(tid)
