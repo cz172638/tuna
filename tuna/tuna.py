@@ -271,6 +271,9 @@ def move_threads_to_cpu(cpus, pid_list, set_affinity_warning = None,
 			if e[0] == 3:
 				# process died
 				continue
+			elif e[0] == 22: # (22, EINVAL - unmovable thread)
+				print "thread %(pid)d cannot be moved as requested" %{'pid':pid}
+				continue
 			raise e
 	return changed
 
