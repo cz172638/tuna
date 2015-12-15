@@ -10,7 +10,7 @@ Group: Applications/System
 Source: http://userweb.kernel.org/~acme/tuna/%{name}-%{version}.tar.bz2
 URL: http://userweb.kernel.org/~acme/tuna/
 BuildArch: noarch
-BuildRequires: python-devel, gettext
+BuildRequires: python-devel, gettext, desktop-file-utils
 Requires: python-ethtool
 Requires: python-linux-procfs >= 0.4.5
 Requires: python-schedutils >= 0.2
