@@ -250,7 +250,12 @@ class cpuview:
 		self.irqview = irqview
 
 		vbox = window.get_child().get_child()
-		socket_ids = [ int(id) for id in self.cpus.sockets.keys() ]
+                socket_ids = []
+                for id in self.cpus.sockets.keys():
+                    try:
+                        socket_ids.append(int(id))
+                    except TypeError: # Skip over offline cpus - type None
+                        continue
 		socket_ids.sort()
 
 		self.nr_sockets = len(socket_ids)
