@@ -35,13 +35,16 @@ Allow all threads to run on CPU\-LIST. Requires \fB\-c\fR or \fB-S\fR.
 Move selected entities to CPU\-LIST. Requires \fB\-c\fR and either \fB-t\fR or \fB-q\fR.
 .TP
 \fB\-p\fR, \fB\-\-priority\fR=\fI[POLICY:]\fRRTPRIO
-Set thread scheduler tunables: POLICY and RTPRIO. POLICY is one of OTHER, FIFO, RR, or BATCH. Requires \fB\-t\fR.
+Set thread scheduler tunables: POLICY and RTPRIO. POLICY is one of OTHER, FIFO, RR, or BATCH. If \fB\-t\fR is not set, \fB\-p\fR will act as a Modifier saving the sched tunables for future Actions, for example \fB\-r\fR.
 .TP
 \fB\-P\fR, \fB\-\-show_threads\fR
 Show thread list.
 .TP
 \fB\-s\fR, \fB\-\-save\fR=\fIFILENAME\fR
 Save kthreads sched tunables to FILENAME.
+.TP
+\fB\-r\fR, \fB\-\-run\fR=\fI"COMMAND"\fR
+Run the COMMAND. If arguments are passed, the entire command line must be provided inside "quotes". Modifiers \fB-c\fR and \fB-p\fR can be used to set the affinity and scheduler tunables of the given COMMAND. The arg[0] (i.e. the command) will be set in THREAD\-LIST. Likewise the \fB-t\fR, the COMMAND accepts the prefix \fB+\fR and \fB-\fR as wildcards in order to be appended or removed from THREAD\-LIST, respectively.
 .TP
 \fB\-v\fR, \fB\-\-version\fR
 Show version
@@ -75,7 +78,7 @@ IRQ\-LIST affected by commands. Requires an IRQ number or a comma-separated list
 CPU\-SOCKET\-LIST affected by commands. Requires a socket number or a comma-separated list of socket numbers.
 .TP
 \fB\-t\fR, \fB\-\-threads\fR=\fITHREAD\-LIST\fR
-THREAD\-LIST affected by commands. Requires a thread number or thread name, or a comma-separated list of thread numbers and/or names. Thread names may contain wildcards. Be sure to quote or escape any wildcard specifications.
+THREAD\-LIST affected by commands. Requires a thread number or thread name, or a comma-separated list of thread numbers and/or names. Thread names may contain wildcards. Be sure to quote or escape any wildcard specifications. If only \fB-\fR is passed as argument, the THREAD\-LIST will be cleared.
 .TP
 \fB\-U\fR, \fB\-\-no_uthreads\fR
 Operations will not affect user threads.
