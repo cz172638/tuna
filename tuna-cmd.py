@@ -405,6 +405,8 @@ def irq_mapper(s):
 	return irq_list
 
 def pick_op(argument):
+        if argument == "":
+                return (None, argument)
 	if argument[0] in ('+', '-'):
 		return (argument[0], argument[1:])
 	return (None, argument)
@@ -491,7 +493,11 @@ def main():
 			list_config()
 		elif o in ("-c", "--cpus"):
 			(op, a) = pick_op(a)
-			op_list = tuna.cpustring_to_list(a)
+                        try:
+			    op_list = tuna.cpustring_to_list(a)
+                        except ValueError:
+                            usage()
+                            return
 			cpu_list = do_list_op(op, cpu_list, op_list)
 		elif o in ("-N", "--nohz_full"):
 			try:
