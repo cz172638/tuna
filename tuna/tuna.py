@@ -1,7 +1,7 @@
 # -*- python -*-
 # -*- coding: utf-8 -*-
 
-import copy, ethtool, os, procfs, re, schedutils
+import copy, ethtool, os, procfs, re, schedutils, sys, shlex
 import help, fnmatch
 from procfs import utilist
 
@@ -498,6 +498,22 @@ def get_irq_affinity_text(irqs, irq):
 		# needs root prio to read /proc/irq/<NUM>/smp_affinity
 		return ""
 
+def get_policy_and_rtprio(parm):
+	parms = parm.split(":")
+	rtprio = 0
+	policy = None
+	if parms[0].upper() in ["OTHER", "BATCH", "IDLE", "FIFO", "RR"]:
+		policy = schedutils.schedfromstr("SCHED_%s" % parms[0].upper())
+		if len(parms) > 1:
+			rtprio = int(parms[1])
+		elif parms[0].upper() in ["FIFO", "RR"]:
+			rtprio = 1
+	elif parms[0].isdigit():
+		rtprio = int(parms[0])
+	else:
+		raise ValueError
+	return (policy, rtprio)
+
 def thread_filtered(tid, cpus_filtered, show_kthreads, show_uthreads):
 	if cpus_filtered:
 		try:
@@ -532,18 +548,9 @@ def thread_set_priority(tid, policy, rtprio):
 	schedutils.set_scheduler(tid, policy, rtprio)
 
 def threads_set_priority(tids, parm, affect_children = False):
-	parms = parm.split(":")
-	rtprio = 0
-	policy = None
-	if parms[0].upper() in ["OTHER", "BATCH", "IDLE", "FIFO", "RR"]:
-		policy = schedutils.schedfromstr("SCHED_%s" % parms[0].upper())
-		if len(parms) > 1:
-			rtprio = int(parms[1])
-		elif parms[0].upper() in ["FIFO", "RR"]:
-			rtprio = 1
-	elif parms[0].isdigit():
-		rtprio = int(parms[0])
-	else:
+	try:
+		(policy, rtprio) = get_policy_and_rtprio(parm)
+	except ValueError:
 		print "tuna: " + _("\"%s\" is unsupported priority value!") % parms[0]
 		return
 
@@ -601,6 +608,32 @@ def get_kthread_sched_tunings(proc = None):
 						       percpu)
 
 	return kthreads
+
+def run_command(cmd, policy, rtprio, cpu_list):
+	newpid = os.fork()
+	if newpid == 0:
+		cmd_list = shlex.split(cmd)
+		pid = os.getpid()
+		if rtprio:
+			try:
+				thread_set_priority(pid, policy, rtprio)
+			except (SystemError, OSError) as err:
+				print "tuna: %s" % err
+				sys.exit(2)
+		if cpu_list:
+			try:
+				schedutils.set_affinity(pid, cpu_list)
+			except (SystemError, OSError) as err:
+				print "tuna: %s" % err
+				sys.exit(2)
+
+		try:
+			os.execvp(cmd_list[0], cmd_list)
+		except (SystemError, OSError) as err:
+			print "tuna: %s" % err
+			sys.exit(2)
+	else:
+		os.waitpid(newpid, 0);
 
 def generate_rtgroups(filename, kthreads, nr_cpus):
 	f = file(filename, "w")

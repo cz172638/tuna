@@ -69,6 +69,8 @@ def usage():
 	print fmt % ('-Q, --show_irqs',		    _('Show IRQ list'))
 	print fmt % ('-q, --irqs=' + _('IRQ-LIST'), _('%(irqlist)s affected by commands') %
 							{"irqlist": _('IRQ-LIST')})
+	print fmt % ('-r, --run=' + _('COMMAND'),   _('fork a new process and run the %(command)s') % \
+							{"command": _('COMMAND')})
 	print fmt % ('-s, --save=' + _('FILENAME'), _('Save kthreads sched tunables to %(filename)s') % \
 							{"filename": _('FILENAME')})
 	print fmt % ('-S, --sockets=' +
@@ -377,8 +379,8 @@ def thread_mapper(s):
 		return [ int(s), ]
 	except:
 		pass
-	if not ps:
-		ps = procfs.pidstats()
+
+	ps = procfs.pidstats()
 
 	try:
 		return ps.find_by_regex(re.compile(fnmatch.translate(s)))
@@ -454,13 +456,14 @@ def main():
 
 	i18n_init()
 	try:
-		short = "a:c:CfgGhiIKlmNp:PQq:s:S:t:UvWx"
+		short = "a:c:CfgGhiIKlmNp:PQq:r:s:S:t:UvWx"
 		long = ["cpus=", "affect_children", "filter", "gui", "help",
 			"isolate", "include", "no_kthreads", "move", "nohz_full",
 			"show_sockets", "priority=", "show_threads",
 			"show_irqs", "irqs=",
 			"save=", "sockets=", "threads=", "no_uthreads",
-			"version", "what_is", "spread","cgroup","config_file_apply=","config_file_list="]
+			"version", "what_is", "spread","cgroup","config_file_apply=","config_file_list=",
+			"run=" ]
 		if have_inet_diag:
 			short += "n"
 			long.append("show_sockets")
@@ -477,11 +480,14 @@ def main():
 	cpu_list = None
 	irq_list = None
 	irq_list_str = None
+	rtprio = None
+	policy = None
 	thread_list = []
 	thread_list_str = None
 	filter = False
 	affect_children = False
 	show_sockets = False
+	p_waiting_action = False
 
 	for o, a in opts:
 		if o in ("-h", "--help"):
@@ -510,20 +516,25 @@ def main():
 		elif o in ("-G", "--cgroup"):
 			cgroups = True
 		elif o in ("-t", "--threads"):
-			(op, a) = pick_op(a)
-			op_list = reduce(lambda i, j: i + j,
-					 map(thread_mapper, a.split(",")))
-			op_list = list(set(op_list))
-			thread_list = do_list_op(op, thread_list, op_list)
-			# Check if a process name was especified and no
-			# threads was found, which would result in an empty
-			# thread list, i.e. we would print all the threads
-			# in the system when we should print nothing.
-			if not op_list and type(a) == type(''):
-				thread_list_str = do_list_op(op, thread_list_str,
-							     a.split(","))
-			if not op:
-				irq_list = None
+			# The -t - will reset thread list
+			if a == '-':
+				thread_list = []
+				thread_list_str = ''
+			else:
+				(op, a) = pick_op(a)
+				op_list = reduce(lambda i, j: i + j,
+						 map(thread_mapper, a.split(",")))
+				op_list = list(set(op_list))
+				thread_list = do_list_op(op, thread_list, op_list)
+				# Check if a process name was especified and no
+				# threads was found, which would result in an empty
+				# thread list, i.e. we would print all the threads
+				# in the system when we should print nothing.
+				if not op_list and type(a) == type(''):
+					thread_list_str = do_list_op(op, thread_list_str,
+								     a.split(","))
+				if not op:
+					irq_list = None
 		elif o in ("-f", "--filter"):
 			filter = True
 		elif o in ("-g", "--gui"):
@@ -539,14 +550,17 @@ def main():
 				sys.exit(2)
 			tuna.include_cpus(cpu_list, get_nr_cpus())
 		elif o in ("-p", "--priority"):
+			# Save policy and rtprio for future Actions (e.g. --run).
+			(policy, rtprio) = tuna.get_policy_and_rtprio(a)
 			if not thread_list:
-				print ("tuna: %s " % o) + _("requires a thread list!")
-				sys.exit(2)
-			try:
-				tuna.threads_set_priority(thread_list, a, affect_children)
-			except (SystemError, OSError) as err: # (3, 'No such process') old python-schedutils incorrectly raised SystemError
-				print "tuna: %s" % err
-				sys.exit(2)
+				# For backward compatibility
+				p_waiting_action = True
+			else:
+				try:
+					tuna.threads_set_priority(thread_list, a, affect_children)
+				except (SystemError, OSError) as err: # (3, 'No such process') old python-schedutils incorrectly raised SystemError
+					print "tuna: %s" % err
+					sys.exit(2)
 		elif o in ("-P", "--show_threads"):
 			# If the user specified process names that weren't
 			# resolved to pids, don't show all threads.
@@ -637,6 +651,40 @@ def main():
 				sys.exit(2)
 			for tid in thread_list:
 				thread_help(tid)
+		elif o in ("-r", "--run"):
+			# If -p is set, it will be consumed. So, no backward compatible
+			# error handling action must be taken.
+			p_waiting_action = False
+
+			# pick_op() before run the command: to remove the prefix
+			# + or - from command line.
+			(op, a) = pick_op(a)
+
+			# In order to include the new process, it must run
+			# the command first, and then get the list of pids,
+			tuna.run_command(a, policy, rtprio, cpu_list)
+
+			op_list = reduce(lambda i, j: i + j,
+					 map(thread_mapper, a.split(",")))
+			op_list = list(set(op_list))
+			thread_list = do_list_op(op, thread_list, op_list)
+
+			# Check if a process name was especified and no
+			# threads was found, which would result in an empty
+			# thread list, i.e. we would print all the threads
+			# in the system when we should print nothing.
+			if not op_list and type(a) == type(''):
+				thread_list_str = do_list_op(op, thread_list_str,
+							     a.split(","))
+			if not op:
+				irq_list = None
+
+	# For backward compatibility: when -p used to be only an Action, it
+	# used to exit(2) if no action was taken (i.e. if no threads_list
+	# was set).
+	if p_waiting_action:
+		print ("tuna: -p ") + _("requires a thread list!")
+		sys.exit(2)
 
 	if run_gui:
 		try:
