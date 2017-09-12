@@ -343,6 +343,7 @@ def parse_irq_affinity_filename(filename, nr_cpus):
 
 
 def isolate_cpus(cpus, nr_cpus):
+        fname = sys._getframe(  ).f_code.co_name # Function name
 	ps = procfs.pidstats()
 	ps.reload_threads()
 	previous_pid_affinities = {}
@@ -354,6 +355,9 @@ def isolate_cpus(cpus, nr_cpus):
 		except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
 			if e[0] == errno.ESRCH:
 				continue
+                        elif e[0] == errno.EINVAL:
+                            print >> sys.stderr, "Function:", fname, ",", e.strerror
+                            sys.exit(2)
 			raise e
 		if set(affinity).intersection(set(cpus)):
 			previous_pid_affinities[pid] = copy.copy(affinity)
@@ -363,6 +367,9 @@ def isolate_cpus(cpus, nr_cpus):
 			except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
 				if e[0] == errno.ESRCH:
 					continue
+                                elif e[0] == errno.EINVAL:
+                                    print >> sys.stderr, "Function:", fname, ",", e.strerror
+                                    sys.exit(2)
 				raise e
 
 		if not ps[pid].has_key("threads"):
@@ -376,6 +383,9 @@ def isolate_cpus(cpus, nr_cpus):
 			except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
 				if e[0] == errno.ESRCH:
 					continue
+                                elif e[0] == errno.EINVAL:
+                                    print >> sys.stderr, "Function:", fname, ",", e.strerror
+                                    sys.exit(2)
 				raise e
 			if set(affinity).intersection(set(cpus)):
 				previous_pid_affinities[tid] = copy.copy(affinity)
@@ -385,6 +395,9 @@ def isolate_cpus(cpus, nr_cpus):
 				except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
 					if e[0] == errno.ESRCH:
 						continue
+                                        elif e[0] == errno.EINVAL:
+                                            print >> sys.stderr, "Function:", fname, ",", e.strerror
+                                            sys.exit(2)
 					raise e
 
 	del ps
