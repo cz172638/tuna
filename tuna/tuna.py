@@ -1,7 +1,7 @@
 # -*- python -*-
 # -*- coding: utf-8 -*-
 
-import copy, ethtool, os, procfs, re, schedutils, sys, shlex
+import copy, ethtool, errno, os, procfs, re, schedutils, sys, shlex
 import help, fnmatch
 from procfs import utilist
 
@@ -209,8 +209,8 @@ def move_threads_to_cpu(cpus, pid_list, set_affinity_warning = None,
 		try:
 			try:
 				curr_affinity = schedutils.get_affinity(pid)
-			except (SystemError, OSError) as e: # (3, 'No such process') old python-schedutils incorrectly raised SystemError
-				if e[0] == 3: # 'No such process'
+			except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
+				if e[0] == errno.ESRCH:
 					continue
 				curr_affinity = None
 				raise e
@@ -218,8 +218,8 @@ def move_threads_to_cpu(cpus, pid_list, set_affinity_warning = None,
 				try:
 					schedutils.set_affinity(pid, new_affinity)
 					curr_affinity = schedutils.get_affinity(pid)
-				except (SystemError, OSError) as e: # (3, 'No such process') old python-schedutils incorrectly raised SystemError
-					if e[0] == 3: # 'No such process'
+				except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
+					if e[0] == errno.ESRCH:
 						continue
 					curr_affinity == None
 					raise e
@@ -247,16 +247,16 @@ def move_threads_to_cpu(cpus, pid_list, set_affinity_warning = None,
 			for tid in threads.keys():
 				try:
 					curr_affinity = schedutils.get_affinity(tid)
-				except (SystemError, OSError) as e: # (3, 'No such process') old python-schedutils incorrectly raised SystemError
-					if e[0] == 3:
+				except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
+					if e[0] == errno.ESRCH:
 						continue
 					raise e
 				if set(curr_affinity) != set(new_affinity):
 					try:
 						schedutils.set_affinity(tid, new_affinity)
 						curr_affinity = schedutils.get_affinity(tid)
-					except (SystemError, OSError) as e: # (3, 'No such process') old python-schedutils incorrectly raised SystemError
-						if e[0] == 3:
+					except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
+						if e[0] == errno.ESRCH:
 							continue
 						raise e
 					if set(curr_affinity) == set(new_affinity):
@@ -267,12 +267,12 @@ def move_threads_to_cpu(cpus, pid_list, set_affinity_warning = None,
 						print "move_threads_to_cpu: %s " % \
 						      (_("could not change %(pid)d affinity to %(new_affinity)s") % \
 						       {'pid':pid, 'new_affinity':new_affinity})
-		except (SystemError, OSError) as e: # (3, 'No such process') old python-schedutils incorrectly raised SystemError
-			if e[0] == 3:
+		except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
+			if e[0] == errno.ESRCH:
 				# process died
 				continue
-			elif e[0] == 22: # (22, EINVAL - unmovable thread)
-				print "thread %(pid)d cannot be moved as requested" %{'pid':pid}
+                        elif e[0] == errno.EINVAL: # unmovable thread)
+				print >> stderr, "thread %(pid)d cannot be moved as requested" %{'pid':pid}
 				continue
 			raise e
 	return changed
@@ -317,8 +317,8 @@ def move_irqs_to_cpu(cpus, irq_list, spread = False):
 			pid = int(pid[0])
 			try:
 				schedutils.set_affinity(pid, new_affinity)
-			except (SystemError, OSError) as e: # (3, 'No such process') old python-schedutils incorrectly raised SystemError
-				if e[0] == 3:
+			except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
+				if e[0] == errno.ESRCH:
 					unprocessed.append(i)
 					changed -= 1
 					continue
@@ -351,8 +351,8 @@ def isolate_cpus(cpus, nr_cpus):
 			continue
 		try:
 			affinity = schedutils.get_affinity(pid)
-		except (SystemError, OSError) as e: # (3, 'No such process') old python-schedutils incorrectly raised SystemError
-			if e[0] == 3:
+		except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
+			if e[0] == errno.ESRCH:
 				continue
 			raise e
 		if set(affinity).intersection(set(cpus)):
@@ -360,8 +360,8 @@ def isolate_cpus(cpus, nr_cpus):
 			affinity = affinity_remove_cpus(affinity, cpus, nr_cpus)
 			try:
 				schedutils.set_affinity(pid, affinity)
-			except (SystemError, OSError) as e: # (3, 'No such process') old python-schedutils incorrectly raised SystemError
-				if e[0] == 3:
+			except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
+				if e[0] == errno.ESRCH:
 					continue
 				raise e
 
@@ -373,8 +373,8 @@ def isolate_cpus(cpus, nr_cpus):
 				continue
 			try:
 				affinity = schedutils.get_affinity(tid)
-			except (SystemError, OSError) as e: # (3, 'No such process') old python-schedutils incorrectly raised SystemError
-				if e[0] == 3:
+			except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
+				if e[0] == errno.ESRCH:
 					continue
 				raise e
 			if set(affinity).intersection(set(cpus)):
@@ -382,8 +382,8 @@ def isolate_cpus(cpus, nr_cpus):
 				affinity = affinity_remove_cpus(affinity, cpus, nr_cpus)
 				try:
 					schedutils.set_affinity(tid, affinity)
-				except (SystemError, OSError) as e: # (3, 'No such process') old python-schedutils incorrectly raised SystemError
-					if e[0] == 3:
+				except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
+					if e[0] == errno.ESRCH:
 						continue
 					raise e
 
@@ -419,8 +419,8 @@ def include_cpus(cpus, nr_cpus):
 			continue
 		try:
 			affinity = schedutils.get_affinity(pid)
-		except (SystemError, OSError) as e: # (3, 'No such process') old python-schedutils incorrectly raised SystemError
-			if e[0] == 3:
+		except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
+			if e[0] == errno.ESRCH:
 				continue
 			raise e
 		if set(affinity).intersection(set(cpus)) != set(cpus):
@@ -428,8 +428,8 @@ def include_cpus(cpus, nr_cpus):
 			affinity = list(set(affinity + cpus))
 			try:
 				schedutils.set_affinity(pid, affinity)
-			except (SystemError, OSError) as e: # (3, 'No such process') old python-schedutils incorrectly raised SystemError
-				if e[0] == 3:
+			except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
+				if e[0] == errno.ESRCH:
 					continue
 				raise e
 
@@ -441,8 +441,8 @@ def include_cpus(cpus, nr_cpus):
 				continue
 			try:
 				affinity = schedutils.get_affinity(tid)
-			except (SystemError, OSError) as e: # (3, 'No such process') old python-schedutils incorrectly raised SystemError
-				if e[0] == 3:
+			except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
+				if e[0] == errno.ESRCH:
 					continue
 				raise e
 			if set(affinity).intersection(set(cpus)) != set(cpus):
@@ -450,8 +450,8 @@ def include_cpus(cpus, nr_cpus):
 				affinity = list(set(affinity + cpus))
 				try:
 					schedutils.set_affinity(tid, affinity)
-				except (SystemError, OSError) as e: # (3, 'No such process') old python-schedutils incorrectly raised SystemError
-					if e[0] == 3:
+				except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
+					if e[0] == errno.ESRCH:
 						continue
 					raise e
 
@@ -518,8 +518,8 @@ def thread_filtered(tid, cpus_filtered, show_kthreads, show_uthreads):
 	if cpus_filtered:
 		try:
 			affinity = schedutils.get_affinity(tid)
-		except (SystemError, OSError) as e: # (3, 'No such process') old python-schedutils incorrectly raised SystemError
-			if e[0] == 3:
+		except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
+			if e[0] == errno.ESRCH:
 				return False
 			raise e
 
@@ -557,8 +557,8 @@ def threads_set_priority(tids, parm, affect_children = False):
 	for tid in tids:
 		try:
 			thread_set_priority(tid, policy, rtprio)
-		except (SystemError, OSError) as e: # (3, 'No such process') old python-schedutils incorrectly raised SystemError
-			if e[0] == 3:
+		except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
+			if e[0] == errno.ESRCH:
 				continue
 			raise e
 		if affect_children:
@@ -566,8 +566,8 @@ def threads_set_priority(tids, parm, affect_children = False):
 				if child != tid:
 					try:
 						thread_set_priority(child, policy, rtprio)
-					except (SystemError, OSError) as e: # (3, 'No such process') old python-schedutils incorrectly raised SystemError
-						if e[0] == 3:
+					except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
+						if e[0] == errno.ESRCH:
 							continue
 						raise e
 
@@ -597,8 +597,8 @@ def get_kthread_sched_tunings(proc = None):
 			try:
 				policy = schedutils.get_scheduler(pid)
 				affinity = schedutils.get_affinity(pid)
-			except (SystemError, OSError) as e: # (3, 'No such process') old python-schedutils incorrectly raised SystemError
-				if e[0] == 3:
+			except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
+				if e[0] == errno.ESRCH:
 					continue
 				raise e
 			percpu = iskthread(pid) and \

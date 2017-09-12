@@ -14,7 +14,7 @@
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 #   General Public License for more details.
 
-import getopt, ethtool, fnmatch, os, procfs, re, schedutils, sys
+import getopt, ethtool, fnmatch, errno, os, procfs, re, schedutils, sys
 from tuna import tuna, sysfs
 
 import gettext
@@ -180,8 +180,8 @@ def ps_show_thread(pid, affect_children, ps,
 	global irqs
 	try:
 		affinity = format_affinity(schedutils.get_affinity(pid))
-	except (SystemError, OSError) as e: # (3, 'No such process') old python-schedutils incorrectly raised SystemError
-		if e[0] == 3:
+	except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
+		if e[0] == errno.ESRCH:
 			return
 		raise e
 
@@ -262,8 +262,8 @@ def ps_show(ps, affect_children, thread_list, cpu_list,
 			continue
 		try:
 			affinity = schedutils.get_affinity(pid)
-		except (SystemError, OSError) as e: # (3, 'No such process') old python-schedutils incorrectly raised SystemError
-			if e[0] == 3:
+		except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
+			if e[0] == errno.ESRCH:
 				continue
 			raise e
 		if cpu_list and not set(cpu_list).intersection(set(affinity)):
@@ -558,7 +558,7 @@ def main():
 			else:
 				try:
 					tuna.threads_set_priority(thread_list, a, affect_children)
-				except (SystemError, OSError) as err: # (3, 'No such process') old python-schedutils incorrectly raised SystemError
+				except (SystemError, OSError) as err: # old python-schedutils incorrectly raised SystemError
 					print "tuna: %s" % err
 					sys.exit(2)
 		elif o in ("-P", "--show_threads"):
