@@ -468,7 +468,7 @@ def main():
                 if have_inet_diag:
                         short += "n"
                         int.append("show_sockets")
-                opts, args = getopt.getopt(sys.argv[1:], short, int)
+                opts, args = getopt.getopt(sys.argv[1:], short, long)
         except getopt.GetoptError as err:
                 usage()
                 print(str(err))
