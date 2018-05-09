@@ -433,10 +433,10 @@ class cyclictestoscope(oscilloscope):
 			if sample > self.avg:
 				print(sample)
 				try:
-					f = file("/sys/kernel/debug/tracing/trace")
+					f = open("/sys/kernel/debug/tracing/trace")
 					trace = f.readlines()
 					f.close()
-					f = file("/sys/kernel/debug/tracing/tracing_max_latency", "w")
+					f = open("/sys/kernel/debug/tracing/tracing_max_latency", "w")
 					f.write("0\n")
 					f.close()
 				except:
