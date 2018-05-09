@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # Arnaldo Carvalho de Melo <acme@redhat.com>
 #
 # Please check the tuna repository at:

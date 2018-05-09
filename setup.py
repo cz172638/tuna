@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 from distutils.sysconfig import get_python_lib
 from distutils.core import setup
 from os.path import isfile, join
