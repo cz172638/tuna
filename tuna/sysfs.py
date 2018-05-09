@@ -61,10 +61,10 @@ class cpus:
 		return self.cpus[key]
 
 	def keys(self):
-		return self.cpus.keys()
+		return list(self.cpus.keys())
 
 	def has_key(self, key):
-		return self.cpus.has_key(key)
+		return key in self.cpus
 
 	def reload(self):
 		sockets_to_sort = []
@@ -96,12 +96,12 @@ if __name__ == '__main__':
 
 	cpus = cpus()
 
-	for socket in cpus.sockets.keys():
-		print "Socket %s" % socket
+	for socket in list(cpus.sockets.keys()):
+		print("Socket %s" % socket)
 		for c in cpus.sockets[socket]:
-			print "  %s" % c.name
-			print "    online: %s" % c.online
+			print("  %s" % c.name)
+			print("    online: %s" % c.online)
 			c.set_online(False)
-			print "    online: %s" % c.online
+			print("    online: %s" % c.online)
 			c.set_online()
-			print "    online: %s" % c.online
+			print("    online: %s" % c.online)

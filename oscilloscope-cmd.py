@@ -24,7 +24,7 @@ import getopt, sys, gtk
 from tuna import oscilloscope
 
 def usage():
-	print '''Usage: oscilloscope [OPTIONS]
+	print('''Usage: oscilloscope [OPTIONS]
 	-h, --help			Give this help list
 	-d, --delimiter=CHARACTER	CHARACTER used as a delimiter [Default: :]
 	-f, --field=FIELD		FIELD to plot [Default: 2]
@@ -35,7 +35,7 @@ def usage():
 	-s, --nr_samples_on_screen=NR	Show NR samples on screen
 	-S, --snapshot_samples=NR	Take NR samples, a snapshot and exit
 	-u, --unit=TYPE			Unit TYPE [Default: us]
-'''
+''')
 
 def main():
 	try:
@@ -48,9 +48,9 @@ def main():
 					    "nr_samples_on_screen=",
 					    "snapshot_samples=",
 					    "unit="))
-	except getopt.GetoptError, err:
+	except getopt.GetoptError as err:
 		usage()
-		print str(err)
+		print(str(err))
 		sys.exit(2)
 
 	max_value = 250

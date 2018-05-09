@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import copy, ethtool, errno, os, procfs, re, schedutils, sys, shlex
-import help, fnmatch
+from . import help
+import fnmatch
 from procfs import utilist
 
 try:
@@ -96,7 +97,7 @@ def has_threaded_irqs(ps):
 def set_irq_affinity_filename(filename, bitmasklist):
 	pathname="/proc/irq/%s" % filename
 	f = file(pathname, "w")
-	text = ",".join(map(lambda a: "%x" % a, bitmasklist))
+	text = ",".join(["%x" % a for a in bitmasklist])
 	f.write("%s\n" % text)
 	try:
 		f.close()
@@ -125,7 +126,7 @@ def cpustring_to_list(cpustr):
 		if len(ends) > 2:
 			raise SyntaxError("Syntax error")
 		if len(ends) == 2:
-			cpu_list += range(ends[0], ends[1] + 1)
+			cpu_list += list(range(ends[0], ends[1] + 1))
 		else:
 			cpu_list += [ends[0]]
 	return list(set(cpu_list))
@@ -235,16 +236,16 @@ def move_threads_to_cpu(cpus, pid_list, set_affinity_warning = None,
 				elif set_affinity_warning:
 					set_affinity_warning(pid, new_affinity)
 				else:
-					print "move_threads_to_cpu: %s " % \
+					print("move_threads_to_cpu: %s " % \
 					      (_("could not change %(pid)d affinity to %(new_affinity)s") % \
-					       {'pid':pid, 'new_affinity':new_affinity})
+					       {'pid':pid, 'new_affinity':new_affinity}))
 
 			# See if this is the thread group leader
-			if not ps.has_key(pid):
+			if pid not in ps:
 				continue
 
 			threads = procfs.pidstats("/proc/%d/task" % pid)
-			for tid in threads.keys():
+			for tid in list(threads.keys()):
 				try:
 					curr_affinity = schedutils.get_affinity(tid)
 				except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
@@ -264,15 +265,15 @@ def move_threads_to_cpu(cpus, pid_list, set_affinity_warning = None,
 					elif set_affinity_warning:
 						set_affinity_warning(tid, new_affinity)
 					else:
-						print "move_threads_to_cpu: %s " % \
+						print("move_threads_to_cpu: %s " % \
 						      (_("could not change %(pid)d affinity to %(new_affinity)s") % \
-						       {'pid':pid, 'new_affinity':new_affinity})
+						       {'pid':pid, 'new_affinity':new_affinity}))
 		except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
 			if e[0] == errno.ESRCH:
 				# process died
 				continue
                         elif e[0] == errno.EINVAL: # unmovable thread)
-				print >> stderr, "thread %(pid)d cannot be moved as requested" %{'pid':pid}
+				print("thread %(pid)d cannot be moved as requested" %{'pid':pid}, file=stderr)
 				continue
 			raise e
 	return changed
@@ -330,7 +331,7 @@ def affinity_remove_cpus(affinity, cpus, nr_cpus):
 	# If the cpu being isolated was the only one in the current affinity
 	affinity = list(set(affinity) - set(cpus))
 	if not affinity:
-		affinity = range(nr_cpus)
+		affinity = list(range(nr_cpus))
 		affinity = list(set(affinity) - set(cpus))
 	return affinity
 
@@ -347,7 +348,7 @@ def isolate_cpus(cpus, nr_cpus):
 	ps = procfs.pidstats()
 	ps.reload_threads()
 	previous_pid_affinities = {}
-	for pid in ps.keys():
+	for pid in list(ps.keys()):
 		if cannot_set_affinity(ps, pid):
 			continue
 		try:
@@ -356,7 +357,7 @@ def isolate_cpus(cpus, nr_cpus):
 			if e[0] == errno.ESRCH:
 				continue
                         elif e[0] == errno.EINVAL:
-                            print >> sys.stderr, "Function:", fname, ",", e.strerror
+                            print("Function:", fname, ",", e.strerror, file=sys.stderr)
                             sys.exit(2)
 			raise e
 		if set(affinity).intersection(set(cpus)):
@@ -368,14 +369,14 @@ def isolate_cpus(cpus, nr_cpus):
 				if e[0] == errno.ESRCH:
 					continue
                                 elif e[0] == errno.EINVAL:
-                                    print >> sys.stderr, "Function:", fname, ",", e.strerror
+                                    print("Function:", fname, ",", e.strerror, file=sys.stderr)
                                     sys.exit(2)
 				raise e
 
-		if not ps[pid].has_key("threads"):
+		if "threads" not in ps[pid]:
 			continue
 		threads = ps[pid]["threads"]
-		for tid in threads.keys():
+		for tid in list(threads.keys()):
 			if cannot_set_thread_affinity(ps, pid, tid):
 				continue
 			try:
@@ -384,7 +385,7 @@ def isolate_cpus(cpus, nr_cpus):
 				if e[0] == errno.ESRCH:
 					continue
                                 elif e[0] == errno.EINVAL:
-                                    print >> sys.stderr, "Function:", fname, ",", e.strerror
+                                    print("Function:", fname, ",", e.strerror, file=sys.stderr)
                                     sys.exit(2)
 				raise e
 			if set(affinity).intersection(set(cpus)):
@@ -396,7 +397,7 @@ def isolate_cpus(cpus, nr_cpus):
 					if e[0] == errno.ESRCH:
 						continue
                                         elif e[0] == errno.EINVAL:
-                                            print >> sys.stderr, "Function:", fname, ",", e.strerror
+                                            print("Function:", fname, ",", e.strerror, file=sys.stderr)
                                             sys.exit(2)
 					raise e
 
@@ -405,9 +406,9 @@ def isolate_cpus(cpus, nr_cpus):
 	# Now isolate it from IRQs too
 	irqs = procfs.interrupts()
 	previous_irq_affinities = {}
-	for irq in irqs.keys():
+	for irq in list(irqs.keys()):
 		# LOC, NMI, TLB, etc
-		if not irqs[irq].has_key("affinity"):
+		if "affinity" not in irqs[irq]:
 			continue
 		affinity = irqs[irq]["affinity"]
 		if set(affinity).intersection(set(cpus)):
@@ -427,7 +428,7 @@ def include_cpus(cpus, nr_cpus):
 	ps = procfs.pidstats()
 	ps.reload_threads()
 	previous_pid_affinities = {}
-	for pid in ps.keys():
+	for pid in list(ps.keys()):
 		if cannot_set_affinity(ps, pid):
 			continue
 		try:
@@ -446,10 +447,10 @@ def include_cpus(cpus, nr_cpus):
 					continue
 				raise e
 
-		if not ps[pid].has_key("threads"):
+		if "threads" not in ps[pid]:
 			continue
 		threads = ps[pid]["threads"]
-		for tid in threads.keys():
+		for tid in list(threads.keys()):
 			if cannot_set_thread_affinity(ps, pid, tid):
 				continue
 			try:
@@ -473,9 +474,9 @@ def include_cpus(cpus, nr_cpus):
 	# Now include it in IRQs too
 	irqs = procfs.interrupts()
 	previous_irq_affinities = {}
-	for irq in irqs.keys():
+	for irq in list(irqs.keys()):
 		# LOC, NMI, TLB, etc
-		if not irqs[irq].has_key("affinity"):
+		if "affinity" not in irqs[irq]:
 			continue
 		affinity = irqs[irq]["affinity"]
 		if set(affinity).intersection(set(cpus)) != set(cpus):
@@ -564,7 +565,7 @@ def threads_set_priority(tids, parm, affect_children = False):
 	try:
 		(policy, rtprio) = get_policy_and_rtprio(parm)
 	except ValueError:
-		print "tuna: " + _("\"%s\" is unsupported priority value!") % parms[0]
+		print("tuna: " + _("\"%s\" is unsupported priority value!") % parms[0])
 		return
 
 	for tid in tids:
@@ -598,7 +599,7 @@ def get_kthread_sched_tunings(proc = None):
 		proc = procfs.pidstats()
 
 	kthreads = {}
-	for pid in proc.keys():
+	for pid in list(proc.keys()):
 		name = proc[pid]["stat"]["comm"]
 		# Trying to set the priority of the migration threads will
 		# fail, at least on 3.6.0-rc1 and doesn't make sense anyway
@@ -631,19 +632,19 @@ def run_command(cmd, policy, rtprio, cpu_list):
 			try:
 				thread_set_priority(pid, policy, rtprio)
 			except (SystemError, OSError) as err:
-				print "tuna: %s" % err
+				print("tuna: %s" % err)
 				sys.exit(2)
 		if cpu_list:
 			try:
 				schedutils.set_affinity(pid, cpu_list)
 			except (SystemError, OSError) as err:
-				print "tuna: %s" % err
+				print("tuna: %s" % err)
 				sys.exit(2)
 
 		try:
 			os.execvp(cmd_list[0], cmd_list)
 		except (SystemError, OSError) as err:
-			print "tuna: %s" % err
+			print("tuna: %s" % err)
 			sys.exit(2)
 	else:
 		os.waitpid(newpid, 0);
@@ -677,7 +678,7 @@ def generate_rtgroups(filename, kthreads, nr_cpus):
 	f.write("kthreads:*:1:*:\[.*\]$\n\n")
 
 	per_cpu_kthreads = []
-	names = kthreads.keys()
+	names = list(kthreads.keys())
 	names.sort()
 	for name in names:
 		kt = kthreads[name]

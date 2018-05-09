@@ -7,12 +7,12 @@ pygtk.require("2.0")
 import gtk, gobject, os, procfs, sys
 import gtk.glade
 from gtk import ListStore
-from gui.cpuview import cpuview
-from gui.irqview import irqview
-from gui.procview import procview
-from gui.commonview import commonview
-from gui.profileview import profileview
-from config import Config
+from .gui.cpuview import cpuview
+from .gui.irqview import irqview
+from .gui.procview import procview
+from .gui.commonview import commonview
+from .gui.profileview import profileview
+from .config import Config
 
 tuna_glade_dirs = [ ".", "tuna", "/usr/share/tuna" ]
 tuna_glade = None

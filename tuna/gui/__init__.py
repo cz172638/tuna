@@ -13,4 +13,4 @@ DND_TARGETS = [ ('STRING', 0, DND_TARGET_STRING),
 		('text/plain', 0, DND_TARGET_STRING),
 		('application/x-rootwin-drop', 0, DND_TARGET_ROOTWIN) ]
 
-from util import *
+from .util import *

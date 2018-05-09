@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import pygtk
+from functools import reduce
 pygtk.require("2.0")
 
 from tuna import tuna, gui
@@ -51,7 +52,7 @@ class irq_druid:
 		self.affinity.set_text(self.affinity_text)
 
 	def create_policy_model(self, policy):
-		( COL_TEXT, COL_SCHED ) = range(2)
+		( COL_TEXT, COL_SCHED ) = list(range(2))
 		list_store = gtk.ListStore(gobject.TYPE_STRING,
 					   gobject.TYPE_UINT)
 		renderer = gtk.CellRendererText()
@@ -115,7 +116,7 @@ class irqview:
 
 	nr_columns = 7
 	( COL_NUM, COL_PID, COL_POL, COL_PRI,
-	  COL_AFF, COL_EVENTS, COL_USERS ) = range(nr_columns)
+	  COL_AFF, COL_EVENTS, COL_USERS ) = list(range(nr_columns))
 	columns = (gui.list_store_column(_("IRQ")),
 		   gui.list_store_column(_("PID"), gobject.TYPE_INT),
 		   gui.list_store_column(_("Policy"), gobject.TYPE_STRING),
@@ -137,7 +138,7 @@ class irqview:
 			( self.COL_NUM,
 			  self.COL_AFF,
 			  self.COL_EVENTS,
-			  self.COL_USERS ) = range(self.nr_columns)
+			  self.COL_USERS ) = list(range(self.nr_columns))
 			self.columns = (gui.list_store_column(_("IRQ")),
 					gui.list_store_column(_("Affinity"), gobject.TYPE_STRING),
 					gui.list_store_column(_("Events")),
@@ -207,7 +208,7 @@ class irqview:
 
 	def show(self):
 		new_irqs = []
-		for sirq in self.irqs.keys():
+		for sirq in list(self.irqs.keys()):
 			try:
 				new_irqs.append(int(sirq))
 			except:
@@ -219,7 +220,7 @@ class irqview:
 		while row:
 			irq = self.list_store.get_value(row, self.COL_NUM)
 			# IRQ was unregistered? I.e. driver unloaded?
-			if not self.irqs.has_key(irq):
+			if irq not in self.irqs:
 				if self.list_store.remove(row):
 					# removed and row now its the next one
 					continue
@@ -280,7 +281,7 @@ class irqview:
 			return
 		row = self.list_store.get_iter(path)
 		irq = self.list_store.get_value(row, self.COL_NUM)
-		if not self.irqs.has_key(irq):
+		if irq not in self.irqs:
 			return
 
 		dialog = irq_druid(self.irqs, self.ps, irq, self.gladefile)

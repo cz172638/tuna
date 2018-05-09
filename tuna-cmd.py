@@ -19,6 +19,7 @@ from tuna import tuna, sysfs
 
 import gettext
 import locale
+from functools import reduce
 
 try:
 	import inet_diag
@@ -40,50 +41,50 @@ irqs = None
 version = "0.13.1"
 
 def usage():
-	print _('Usage: tuna [OPTIONS]')
+	print(_('Usage: tuna [OPTIONS]'))
 	fmt = '\t%-40s %s'
-	print fmt % ('-h, --help',		    _('Give this help list'))
-	print fmt % ('-a, --config_file_apply=profilename',		    _('Apply changes described in profile'))
-	print fmt % ('-l, --config_file_list',		    _('List preloaded profiles'))
-	print fmt % ('-g, --gui',		    _('Start the GUI'))
-	print fmt % ('-G, --cgroup',		    _('Display the processes with the type of cgroups they are in'))
-	print fmt % ('-c, --cpus=' + _('CPU-LIST'), _('%(cpulist)s affected by commands') % \
-							{"cpulist": _('CPU-LIST')})
-	print fmt % ('-C, --affect_children',	    _('Operation will affect children threads'))
-	print fmt % ('-f, --filter',		    _('Display filter the selected entities'))
-	print fmt % ('-i, --isolate',		    _('Move all threads away from %(cpulist)s') % \
-							{"cpulist": _('CPU-LIST')})
-	print fmt % ('-I, --include',		    _('Allow all threads to run on %(cpulist)s') % \
-							{"cpulist": _('CPU-LIST')})
-	print fmt % ('-K, --no_kthreads',	    _('Operations will not affect kernel threads'))
-	print fmt % ('-m, --move',		    _('Move selected entities to %(cpulist)s') % \
-							{"cpulist": _('CPU-LIST')})
-	print fmt % ('-N, --nohz_full',		    _('CPUs in nohz_full= kernel command line will be affected by operations'))
+	print(fmt % ('-h, --help',		    _('Give this help list')))
+	print(fmt % ('-a, --config_file_apply=profilename',		    _('Apply changes described in profile')))
+	print(fmt % ('-l, --config_file_list',		    _('List preloaded profiles')))
+	print(fmt % ('-g, --gui',		    _('Start the GUI')))
+	print(fmt % ('-G, --cgroup',		    _('Display the processes with the type of cgroups they are in')))
+	print(fmt % ('-c, --cpus=' + _('CPU-LIST'), _('%(cpulist)s affected by commands') % \
+							{"cpulist": _('CPU-LIST')}))
+	print(fmt % ('-C, --affect_children',	    _('Operation will affect children threads')))
+	print(fmt % ('-f, --filter',		    _('Display filter the selected entities')))
+	print(fmt % ('-i, --isolate',		    _('Move all threads away from %(cpulist)s') % \
+							{"cpulist": _('CPU-LIST')}))
+	print(fmt % ('-I, --include',		    _('Allow all threads to run on %(cpulist)s') % \
+							{"cpulist": _('CPU-LIST')}))
+	print(fmt % ('-K, --no_kthreads',	    _('Operations will not affect kernel threads')))
+	print(fmt % ('-m, --move',		    _('Move selected entities to %(cpulist)s') % \
+							{"cpulist": _('CPU-LIST')}))
+	print(fmt % ('-N, --nohz_full',		    _('CPUs in nohz_full= kernel command line will be affected by operations')))
 	if have_inet_diag:
-		print fmt % ('-n, --show_sockets',  _('Show network sockets in use by threads'))
-	print fmt % ('-p, --priority=[' +
+		print(fmt % ('-n, --show_sockets',  _('Show network sockets in use by threads')))
+	print(fmt % ('-p, --priority=[' +
 		     _('POLICY') + ':]' +
 		     _('RTPRIO'),		    _('Set thread scheduler tunables: %(policy)s and %(rtprio)s') % \
-							{"policy": _('POLICY'), "rtprio": _('RTPRIO')})
-	print fmt % ('-P, --show_threads',	    _('Show thread list'))
-	print fmt % ('-Q, --show_irqs',		    _('Show IRQ list'))
-	print fmt % ('-q, --irqs=' + _('IRQ-LIST'), _('%(irqlist)s affected by commands') %
-							{"irqlist": _('IRQ-LIST')})
-	print fmt % ('-r, --run=' + _('COMMAND'),   _('fork a new process and run the %(command)s') % \
-							{"command": _('COMMAND')})
-	print fmt % ('-s, --save=' + _('FILENAME'), _('Save kthreads sched tunables to %(filename)s') % \
-							{"filename": _('FILENAME')})
-	print fmt % ('-S, --sockets=' +
+							{"policy": _('POLICY'), "rtprio": _('RTPRIO')}))
+	print(fmt % ('-P, --show_threads',	    _('Show thread list')))
+	print(fmt % ('-Q, --show_irqs',		    _('Show IRQ list')))
+	print(fmt % ('-q, --irqs=' + _('IRQ-LIST'), _('%(irqlist)s affected by commands') %
+							{"irqlist": _('IRQ-LIST')}))
+	print(fmt % ('-r, --run=' + _('COMMAND'),   _('fork a new process and run the %(command)s') % \
+							{"command": _('COMMAND')}))
+	print(fmt % ('-s, --save=' + _('FILENAME'), _('Save kthreads sched tunables to %(filename)s') % \
+							{"filename": _('FILENAME')}))
+	print(fmt % ('-S, --sockets=' +
 		     _('CPU-SOCKET-LIST'),	    _('%(cpusocketlist)s affected by commands') % \
-							{"cpusocketlist": _('CPU-SOCKET-LIST')})
-	print fmt % ('-t, --threads=' +
+							{"cpusocketlist": _('CPU-SOCKET-LIST')}))
+	print(fmt % ('-t, --threads=' +
 		     _('THREAD-LIST'),		    _('%(threadlist)s affected by commands') % \
-							{"threadlist": _('THREAD-LIST')})
-	print fmt % ('-U, --no_uthreads',	    _('Operations will not affect user threads'))
-	print fmt % ('-v, --version',		    _('Show version'))
-	print fmt % ('-W, --what_is',		    _('Provides help about selected entities'))
-	print fmt % ('-x, --spread',		    _('Spread selected entities over %(cpulist)s') % \
-							{"cpulist": _('CPU-LIST')})
+							{"threadlist": _('THREAD-LIST')}))
+	print(fmt % ('-U, --no_uthreads',	    _('Operations will not affect user threads')))
+	print(fmt % ('-v, --version',		    _('Show version')))
+	print(fmt % ('-W, --what_is',		    _('Provides help about selected entities')))
+	print(fmt % ('-x, --spread',		    _('Spread selected entities over %(cpulist)s') % \
+							{"cpulist": _('CPU-LIST')}))
 
 def get_nr_cpus():
 	global nr_cpus
@@ -106,18 +107,18 @@ def thread_help(tid):
 	if not ps:
 		ps = procfs.pidstats()
 
-	if not ps.has_key(tid):
-		print "tuna: " + _("thread %d doesn't exists!") % tid
+	if tid not in ps:
+		print("tuna: " + _("thread %d doesn't exists!") % tid)
 		return
 
 	pinfo = ps[tid]
 	cmdline = procfs.process_cmdline(pinfo)
 	help, title = tuna.kthread_help_plain_text(tid, cmdline)
-	print "%s\n\n%s" % (title, _(help))
+	print("%s\n\n%s" % (title, _(help)))
 
 def save(cpu_list, thread_list, filename):
 	kthreads = tuna.get_kthread_sched_tunings()
-	for name in kthreads.keys():
+	for name in list(kthreads.keys()):
 		kt = kthreads[name]
 		if (cpu_list and not set(kt.affinity).intersection(set(cpu_list))) or \
 		   (thread_list and kt.pid not in thread_list) :
@@ -125,17 +126,17 @@ def save(cpu_list, thread_list, filename):
 	tuna.generate_rtgroups(filename, kthreads, get_nr_cpus())
 
 def ps_show_header(has_ctxt_switch_info,cgroups = False):
-	print "%7s %6s %5s %7s       %s" % \
+	print("%7s %6s %5s %7s       %s" % \
 		(" ", " ", " ", _("thread"),
-		 has_ctxt_switch_info and "ctxt_switches" or "")
-	print "%7s %6s %5s %7s%s %15s" % \
+		 has_ctxt_switch_info and "ctxt_switches" or ""))
+	print("%7s %6s %5s %7s%s %15s" % \
 		("pid", "SCHED_", "rtpri", "affinity",
 		 has_ctxt_switch_info and " %9s %12s" % ("voluntary", "nonvoluntary") or "",
-		 "cmd"),
+		 "cmd"), end=' ')
 	if cgroups:
-		print " %7s" % ("cgroup")
+		print(" %7s" % ("cgroup"))
 	else:
-		print ""
+		print("")
 
 def ps_show_sockets(pid, ps, inodes, inode_re, indent = 0):
 	header_printed = False
@@ -155,19 +156,19 @@ def ps_show_sockets(pid, ps, inodes, inode_re, indent = 0):
 		if not inode_match:
 			continue
 		inode = int(inode_match.group(1))
-		if not inodes.has_key(inode):
+		if inode not in inodes:
 			continue
 		if not header_printed:
-			print "%s%-10s %-6s %-6s %15s:%-5s %15s:%-5s" % \
+			print("%s%-10s %-6s %-6s %15s:%-5s %15s:%-5s" % \
 			      (sindent, "State", "Recv-Q", "Send-Q",
 			       "Local Address", "Port",
-			       "Peer Address", "Port")
+			       "Peer Address", "Port"))
 			header_printed = True
 		s = inodes[inode]
-		print "%s%-10s %-6d %-6d %15s:%-5d %15s:%-5d" % \
+		print("%s%-10s %-6d %-6d %15s:%-5d %15s:%-5d" % \
 		      (sindent, s.state(),
 		       s.receive_queue(), s.write_queue(),
-		       s.saddr(), s.sport(), s.daddr(), s.dport())
+		       s.saddr(), s.sport(), s.daddr(), s.dport()))
 
 def format_affinity(affinity):
 	if len(affinity) <= 4:
@@ -215,19 +216,19 @@ def ps_show_thread(pid, affect_children, ps,
 						  nonvoluntary_ctxt_switches)
 	
 	if affect_children:
-		print " %-5d " % pid,
+		print(" %-5d " % pid, end=' ')
 	else:
-		print "  %-5d" % pid,
-	print "%6s %5d %8s%s %15s %s" % (sched, rtprio, affinity,
-					 ctxt_switch_info, cmd, users),
+		print("  %-5d" % pid, end=' ')
+	print("%6s %5d %8s%s %15s %s" % (sched, rtprio, affinity,
+					 ctxt_switch_info, cmd, users), end=' ')
 	if cgroups:
-		print " %9s" % cgout,
-	print ""
+		print(" %9s" % cgout, end=' ')
+	print("")
 	if sock_inodes:
 		ps_show_sockets(pid, ps, sock_inodes, sock_inode_re,
 				affect_children and 3 or 4)
-	if affect_children and ps[pid].has_key("threads"):
-		for tid in ps[pid]["threads"].keys():
+	if affect_children and "threads" in ps[pid]:
+		for tid in list(ps[pid]["threads"].keys()):
 			ps_show_thread(tid, False, ps[pid]["threads"],
 				       has_ctxt_switch_info,
 				       sock_inodes, sock_inode_re, cgroups)
@@ -238,7 +239,7 @@ def ps_show(ps, affect_children, thread_list, cpu_list,
 	    has_ctxt_switch_info, sock_inodes, sock_inode_re, cgroups):
 				
 	ps_list = []
-	for pid in ps.keys():
+	for pid in list(ps.keys()):
 		iskth = tuna.iskthread(pid)
 		if not show_uthreads and not iskth:
 			continue
@@ -305,7 +306,7 @@ def do_ps(thread_list, cpu_list, irq_list, show_uthreads,
 		sock_inodes = load_sockets()
 		sock_inode_re = re.compile(r"socket:\[(\d+)\]")
 	
-	has_ctxt_switch_info = ps[1]["status"].has_key("voluntary_ctxt_switches")
+	has_ctxt_switch_info = "voluntary_ctxt_switches" in ps[1]["status"]
 	try:
 		if sys.stdout.isatty():
 			ps_show_header(has_ctxt_switch_info, cgroups)
@@ -338,9 +339,9 @@ def show_irqs(irq_list, cpu_list):
 		irqs = procfs.interrupts()
 
 	if sys.stdout.isatty():
-		print "%4s %-16s %8s" % ("#", _("users"), _("affinity"),)
+		print("%4s %-16s %8s" % ("#", _("users"), _("affinity"),))
 	sorted_irqs = []
-	for k in irqs.keys():
+	for k in list(irqs.keys()):
 		try:
 			irqn = int(k)
 			affinity = irqs[irqn]["affinity"]
@@ -357,12 +358,12 @@ def show_irqs(irq_list, cpu_list):
 	for irq in sorted_irqs:
 		affinity = format_affinity(irqs[irq]["affinity"])
 		users = irqs[irq]["users"]
-		print "%4d %-16s %8s" % (irq, ",".join(users), affinity),
+		print("%4d %-16s %8s" % (irq, ",".join(users), affinity), end=' ')
 		drivers = find_drivers_by_users(users)
 		if drivers:
-			print " %s" % ",".join(drivers)
+			print(" %s" % ",".join(drivers))
 		else:
-			print
+			print()
 
 def do_list_op(op, current_list, op_list):
 	if not current_list:
@@ -428,7 +429,7 @@ def apply_config(filename):
 		filename = os.path.basename(filename)
 	else:
 		if not os.path.exists(config.config['root']+filename):
-			print filename + _(" not found!")
+			print(filename + _(" not found!"))
 			exit(-1)
 	if config.loadTuna(filename):
 		exit(1)
@@ -446,9 +447,9 @@ def apply_config(filename):
 def list_config():
 	from tuna.config import Config
 	config = Config()
-	print _("Preloaded config files:")
+	print(_("Preloaded config files:"))
 	for value in config.populate():
-		print value
+		print(value)
 	exit(1)
 
 def main():
@@ -466,11 +467,11 @@ def main():
 			"run=" ]
 		if have_inet_diag:
 			short += "n"
-			long.append("show_sockets")
-		opts, args = getopt.getopt(sys.argv[1:], short, long)
-	except getopt.GetoptError, err:
+			int.append("show_sockets")
+		opts, args = getopt.getopt(sys.argv[1:], short, int)
+	except getopt.GetoptError as err:
 		usage()
-		print str(err)
+		print(str(err))
 		sys.exit(2)
 
 	run_gui = not opts
@@ -509,7 +510,7 @@ def main():
 			try:
 				cpu_list = tuna.nohz_full_list()
 			except:
-				print "tuna: --nohz_full " + _(" needs nohz_full=cpulist on the kernel command line")
+				print("tuna: --nohz_full " + _(" needs nohz_full=cpulist on the kernel command line"))
 				sys.exit(2)
 		elif o in ("-C", "--affect_children"):
 			affect_children = True
@@ -523,7 +524,7 @@ def main():
 			else:
 				(op, a) = pick_op(a)
 				op_list = reduce(lambda i, j: i + j,
-						 map(thread_mapper, a.split(",")))
+						 list(map(thread_mapper, a.split(","))))
 				op_list = list(set(op_list))
 				thread_list = do_list_op(op, thread_list, op_list)
 				# Check if a process name was especified and no
@@ -541,12 +542,12 @@ def main():
 			run_gui = True
 		elif o in ("-i", "--isolate"):
 			if not cpu_list:
-				print "tuna: --isolate " + _("requires a cpu list!")
+				print("tuna: --isolate " + _("requires a cpu list!"))
 				sys.exit(2)
 			tuna.isolate_cpus(cpu_list, get_nr_cpus())
 		elif o in ("-I", "--include"):
 			if not cpu_list:
-				print "tuna: --include " + _("requires a cpu list!")
+				print("tuna: --include " + _("requires a cpu list!"))
 				sys.exit(2)
 			tuna.include_cpus(cpu_list, get_nr_cpus())
 		elif o in ("-p", "--priority"):
@@ -559,7 +560,7 @@ def main():
 				try:
 					tuna.threads_set_priority(thread_list, a, affect_children)
 				except (SystemError, OSError) as err: # old python-schedutils incorrectly raised SystemError
-					print "tuna: %s" % err
+					print("tuna: %s" % err)
 					sys.exit(2)
 		elif o in ("-P", "--show_threads"):
 			# If the user specified process names that weren't
@@ -579,10 +580,10 @@ def main():
 			show_sockets = True
 		elif o in ("-m", "--move", "-x", "--spread"):
 			if not cpu_list:
-				print "tuna: --move " + _("requires a cpu list!")
+				print("tuna: --move " + _("requires a cpu list!"))
 				sys.exit(2)
 			if not (thread_list or irq_list):
-				print "tuna: --move " + _("requires a list of threads/irqs!")
+				print("tuna: --move " + _("requires a list of threads/irqs!"))
 				sys.exit(2)
 
 			spread = o in ("-x", "--spread")
@@ -598,7 +599,7 @@ def main():
 			save(cpu_list, thread_list, a)
 		elif o in ("-S", "--sockets"):
 			(op, a) = pick_op(a)
-			sockets = map(lambda socket: socket, a.split(","))
+			sockets = [socket for socket in a.split(",")]
 
 			if not cpu_list:
 				cpu_list = []
@@ -606,11 +607,11 @@ def main():
 			cpu_info = sysfs.cpus()
 			op_list = []
 			for socket in sockets:
-				if not cpu_info.sockets.has_key(socket):
-					print "tuna: %s" % \
+				if socket not in cpu_info.sockets:
+					print("tuna: %s" % \
 					      (_("invalid socket %(socket)s sockets available: %(available)s") % \
 					      {"socket": socket,
-					       "available": ",".join(cpu_info.sockets.keys())})
+					       "available": ",".join(list(cpu_info.sockets.keys()))}))
 					sys.exit(2)
 				op_list += [ int(cpu.name[3:]) for cpu in cpu_info.sockets[socket] ]
 			cpu_list = do_list_op(op, cpu_list, op_list)
@@ -619,7 +620,7 @@ def main():
 		elif o in ("-q", "--irqs"):
 			(op, a) = pick_op(a)
 			op_list = reduce(lambda i, j: i + j,
-					 map(irq_mapper, list(set(a.split(",")))))
+					 list(map(irq_mapper, list(set(a.split(","))))))
 			irq_list = do_list_op(op, irq_list, op_list)
 			# See comment above about thread_list_str
 			if not op_list and type(a) == type(''):
@@ -644,10 +645,10 @@ def main():
 		elif o in ("-U", "--no_uthreads"):
 			uthreads = False
 		elif o in ("-v", "--version"):
-			print version
+			print(version)
 		elif o in ("-W", "--what_is"):
 			if not thread_list:
-				print "tuna: --what_is " + _("requires a thread list!")
+				print("tuna: --what_is " + _("requires a thread list!"))
 				sys.exit(2)
 			for tid in thread_list:
 				thread_help(tid)
@@ -665,7 +666,7 @@ def main():
 			tuna.run_command(a, policy, rtprio, cpu_list)
 
 			op_list = reduce(lambda i, j: i + j,
-					 map(thread_mapper, a.split(",")))
+					 list(map(thread_mapper, a.split(","))))
 			op_list = list(set(op_list))
 			thread_list = do_list_op(op, thread_list, op_list)
 
@@ -683,7 +684,7 @@ def main():
 	# used to exit(2) if no action was taken (i.e. if no threads_list
 	# was set).
 	if p_waiting_action:
-		print ("tuna: -p ") + _("requires a thread list!")
+		print(("tuna: -p ") + _("requires a thread list!"))
 		sys.exit(2)
 
 	if run_gui:
@@ -691,12 +692,12 @@ def main():
 			from tuna import tuna_gui
 		except ImportError:
 			# gui packages not installed
-			print _('tuna: packages needed for the GUI missing.')
-			print _('      Make sure xauth, pygtk2-libglade are installed.')
+			print(_('tuna: packages needed for the GUI missing.'))
+			print(_('      Make sure xauth, pygtk2-libglade are installed.'))
 			usage()
 			return
 		except RuntimeError:
-			print "tuna: machine needs to be authorized via xhost or ssh -X?"
+			print("tuna: machine needs to be authorized via xhost or ssh -X?")
 			return
 
 		try:

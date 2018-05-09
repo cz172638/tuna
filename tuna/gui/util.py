@@ -75,11 +75,11 @@ def thread_set_attributes(pid_info, new_policy, new_prio, new_affinity, nr_cpus)
 
 		curr_policy = schedutils.get_scheduler(pid)
 		if curr_policy != new_policy:
-			print _("couldn't change pid %(pid)d from %(cpol)s(%(cpri)d) to %(npol)s(%(npri)d)!") % \
+			print(_("couldn't change pid %(pid)d from %(cpol)s(%(cpri)d) to %(npol)s(%(npri)d)!") % \
 			      { 'pid': pid, 'cpol': schedutils.schedstr(curr_policy),
 				'cpri': curr_prio,
 				'npol': schedutils.schedstr(new_policy),
-				'npri': new_prio}
+				'npri': new_prio})
 		else:
 			changed = True
 
@@ -114,8 +114,8 @@ def thread_set_attributes(pid_info, new_policy, new_prio, new_affinity, nr_cpus)
 			raise e
 
 		if curr_affinity != new_affinity:
-			print _("couldn't change pid %(pid)d from %(caff)s to %(naff)s!") % \
-			      { 'pid':pid, 'caff':curr_affinity, 'naff':new_affinity }
+			print(_("couldn't change pid %(pid)d from %(caff)s to %(naff)s!") % \
+			      { 'pid':pid, 'caff':curr_affinity, 'naff':new_affinity })
 		else:
 			changed = True
 

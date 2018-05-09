@@ -1,6 +1,6 @@
 import io, os, re, fnmatch
 import sys, gtk
-import codecs, ConfigParser
+import codecs, configparser
 from time import localtime, strftime
 from subprocess import Popen, PIPE, STDOUT, call
 TUNED_CONF="""[sysctl]\n"""
@@ -13,10 +13,10 @@ class Config:
 		self.configFile = "/etc/tuna.conf"
 
 		try:
-			self.configParser = ConfigParser.RawConfigParser()
+			self.configParser = configparser.RawConfigParser()
 			self.configParser.read(self.configFile)
 			cfg = self.configParser.items('global')
-		except ConfigParser.Error:
+		except configparser.Error:
 			f = open(self.configFile,'w')
 			f.write("[global]\n")
 			f.write("root=/etc/tuna/\n")
@@ -38,7 +38,7 @@ class Config:
 
 	def updateDefault(self, filename):
 		if filename.replace("", "temp-direct-load.conf") != filename:
-			self.temp = ConfigParser.RawConfigParser()
+			self.temp = configparser.RawConfigParser()
 			self.temp.read(self.configFile)
 			self.temp.set('global', 'lastFile', filename)
 			with open(self.configFile, 'wb') as cfgfile:
@@ -46,18 +46,18 @@ class Config:
 			self.config['lastfile'] = filename
 
 	def load(self, profileName):
-		tmp = ConfigParser.RawConfigParser()
+		tmp = configparser.RawConfigParser()
 		tmp.read(self.config['root'] + profileName)
 		try:
 			check = tmp.items('categories')
-		except ConfigParser.NoSectionError:
+		except configparser.NoSectionError:
 			if(self.tuned2Tuna(profileName) < 0):
 				return -1
 		return self.loadTuna(profileName)
 
 	def tuned2Tuna(self,profileName):
 		try:
-			tmp = ConfigParser.RawConfigParser()
+			tmp = configparser.RawConfigParser()
 			tmp.read(self.config['root']+profileName)
 			content = tmp.items('sysctl')
 			f = open(self.config['root']+profileName,'w')
@@ -68,7 +68,7 @@ class Config:
 				f.write(option + "=" + value + "\n")
 			f.close()
 			return 0
-		except (ConfigParser.Error, IOError):
+		except (configparser.Error, IOError):
 			dialog = gtk.MessageDialog(None, 0, gtk.MESSAGE_ERROR,\
 			 gtk.BUTTONS_OK, "%s\n%s" % \
 			 (_("Corruputed config file: "), _(self.config['root']+profileName)))
@@ -142,7 +142,7 @@ class Config:
 			raise RuntimeError(_("Config file contain errors: ") + _(err))
 			return -1
 		try:
-			self.configParser = ConfigParser.RawConfigParser()
+			self.configParser = configparser.RawConfigParser()
 			self.configParser.read(self.config['root'] + profileName)
 			tempCategories = self.configParser.items('categories')
 			self.catIndex = 0
@@ -187,26 +187,26 @@ class Config:
 					self.categories[self.catIndex] = value
 					self.categoriesOrigin[self.catIndex] = option
 					self.catIndex = self.catIndex + 1
-		except (ConfigParser.Error, IOError):
-			print _("Config file is corrupted")
+		except (configparser.Error, IOError):
+			print(_("Config file is corrupted"))
 			return -1
 		try:
 			self.aliasList = self.configParser.items('guiAlias')
-		except ConfigParser.Error:
+		except configparser.Error:
 			self.aliasList = []
 		self.aliasReverse = []
 		return 0
 
 	def updateDescription(self, filename):
 		try:
-			self.temp = ConfigParser.RawConfigParser()
+			self.temp = configparser.RawConfigParser()
 			self.temp.read(self.config['root'] + filename)
 			self.description = self.temp.items('fileDescription')
 			self.description = dict(self.description)['text']
-		except ConfigParser.Error as e:
+		except configparser.Error as e:
 			self.description = _("Description for this profile not found")
-			if e != ConfigParser.NoSectionError:
-				print e
+			if e != configparser.NoSectionError:
+				print(e)
 		return self.description
 
 	def fileToCache(self, profileName):
@@ -228,7 +228,7 @@ class Config:
 			f.write(self.cache)
 			f.close()
 		except IOError:
-			print _("Cant write to config file: %s" % (self.config['root'] + profileName))
+			print(_("Cant write to config file: %s" % (self.config['root'] + profileName)))
 
 	def loadDirect(self, data):
 		try:
@@ -249,7 +249,7 @@ class Config:
 		try:
 			buffer = open("/proc/sys/" + self.ConfigPathToFileName(filename), 'r').read()
 		except IOError:
-			print _("Invalid item! file: /proc/sys/%s" %(self.ConfigPathToFileName(filename)))
+			print(_("Invalid item! file: /proc/sys/%s" %(self.ConfigPathToFileName(filename))))
 			return ""
 		return buffer.strip()
 
@@ -262,7 +262,7 @@ class Config:
 			fp = open("/proc/sys/" + self.ConfigPathToFileName(filename), 'w')
 			fp.write(value)
 		except IOError:
-			print "%s%s %s %s" % (_("Cant write to file! path: /proc/sys/"), self.ConfigPathToFileName(filename), _("value:"), value)
+			print("%s%s %s %s" % (_("Cant write to file! path: /proc/sys/"), self.ConfigPathToFileName(filename), _("value:"), value))
 			return -1
 		return 0
 
@@ -294,7 +294,7 @@ class Config:
 		return string
 
 	def saveSnapshot(self,data):
-		tempconfig = ConfigParser.RawConfigParser()
+		tempconfig = configparser.RawConfigParser()
 		tempconfig.readfp(io.BytesIO(self.cache))
 		snapcat = tempconfig.items('categories')
 		out = {}
@@ -336,7 +336,7 @@ class Config:
 			with open(snapFileName , 'w') as configfile:
 				tempconfig.write(configfile)
 		except IOError:
-			print _("Cant save snapshot")
+			print(_("Cant save snapshot"))
 		return snapFileName
 
 	def checkConfigFile(self, filename):
@@ -346,7 +346,7 @@ class Config:
 			if not os.path.exists(filename):
 				msgStack = "%s%s %s %s" % (msgStack, _("Error: File"), filename, _("not found\n"))
 				return msgStack
-			self.checkParser = ConfigParser.RawConfigParser()
+			self.checkParser = configparser.RawConfigParser()
 			self.checkParser.read(filename)
 			for option,value in self.checkParser.items('categories'):
 				if not self.checkParser.items(option):
@@ -360,12 +360,12 @@ class Config:
 			if self.empty:
 				msgStack = "%s%s" % (msgStack, _("Empty config File"))
 			return msgStack
-		except (ConfigParser.Error, IOError) as e:
+		except (configparser.Error, IOError) as e:
 			return "Error {0}".format(str(e))
 
 	def fixConfigFile(self, filename):
 		try:
-			self.checkParser = ConfigParser.RawConfigParser()
+			self.checkParser = configparser.RawConfigParser()
 			self.checkParser.read(filename)
 			for option,value in self.checkParser.items('categories'):
 				if not self.checkParser.items(option):
@@ -376,7 +376,7 @@ class Config:
 					if not os.path.exists("/proc/sys/" + self.ConfigPathToFileName(opt)) and len(self.getFilesByFN("/proc/sys/", self.ConfigPathToFileName(opt))) == 0:
 						self.checkParser.remove_option(option, opt)
 						self.checkParser.set(option, '#' + opt, val)
-		except (ConfigParser.Error, IOError) as e:
+		except (configparser.Error, IOError) as e:
 			return "Error {0}".format(str(e))
 		with open(filename, 'w') as configfile:
 			self.checkParser.write(configfile)

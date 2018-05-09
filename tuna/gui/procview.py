@@ -14,7 +14,7 @@ def N_(s):
 
 class process_druid:
 
-	( PROCESS_COL_PID, PROCESS_COL_NAME ) = range(2)
+	( PROCESS_COL_PID, PROCESS_COL_NAME ) = list(range(2))
 
 	def __init__(self, ps, pid, pid_info, nr_cpus, gladefile):
 		self.ps = ps
@@ -52,7 +52,7 @@ class process_druid:
 		self.regex_edit.set_text(cmdline_regex)
 		self.just_this_thread.set_active(True)
 		self.regex_edit.set_sensitive(False)
-		if not ps.has_key(pid) or not ps[pid].has_key("threads"):
+		if pid not in ps or "threads" not in ps[pid]:
 			self.all_these_threads.hide()
 		self.on_just_this_thread_clicked(None)
 
@@ -81,7 +81,7 @@ class process_druid:
 		processes.set_model(self.process_list_store)
 
 	def create_policy_model(self, policy):
-		( COL_TEXT, COL_SCHED ) = range(2)
+		( COL_TEXT, COL_SCHED ) = list(range(2))
 		list_store = gtk.ListStore(gobject.TYPE_STRING,
 					   gobject.TYPE_UINT)
 		renderer = gtk.CellRendererText()
@@ -123,7 +123,7 @@ class process_druid:
 		self.process_list_store.set(info,
 					    self.PROCESS_COL_PID, self.pid,
 					    self.PROCESS_COL_NAME, cmdline)
-		for tid in self.ps[self.pid]["threads"].keys():
+		for tid in list(self.ps[self.pid]["threads"].keys()):
 			child = self.process_list_store.append()
 			self.process_list_store.set(child,
 						    self.PROCESS_COL_PID, tid,
@@ -156,7 +156,7 @@ class process_druid:
 	def set_attributes_for_threads(self, pid, new_policy, new_prio, new_affinity):
 		changed = False
 		threads = self.ps[pid]["threads"]
-		for tid in threads.keys():
+		for tid in list(threads.keys()):
 			if gui.thread_set_attributes(threads[tid], new_policy,
 						     new_prio, new_affinity,
 						     self.nr_cpus):
@@ -199,7 +199,7 @@ class process_druid:
 class procview:
 
 	nr_columns = 8
-	( COL_PID, COL_POL, COL_PRI, COL_AFF, COL_VOLCTXT, COL_NONVOLCTXT, COL_CGROUP, COL_CMDLINE ) = range(nr_columns)
+	( COL_PID, COL_POL, COL_PRI, COL_AFF, COL_VOLCTXT, COL_NONVOLCTXT, COL_CGROUP, COL_CMDLINE ) = list(range(nr_columns))
 	columns = (gui.list_store_column(_("PID")),
 		   gui.list_store_column(_("Policy"), gobject.TYPE_STRING),
 		   gui.list_store_column(_("Priority")),
@@ -223,7 +223,7 @@ class procview:
 		except: # No perf, poll /proc baby, poll
 			pass
 
-		if not ps[1]["status"].has_key("voluntary_ctxt_switches"):
+		if "voluntary_ctxt_switches" not in ps[1]["status"]:
 			self.nr_columns = 5
 		else:
 			self.nr_columns = 7
@@ -239,24 +239,24 @@ class procview:
 						gui.list_store_column(_("Affinity"), gobject.TYPE_STRING))
 
 		if self.nr_columns==5:
-			( self.COL_PID, self.COL_POL, self.COL_PRI, self.COL_AFF, self.COL_CMDLINE ) = range(self.nr_columns)
+			( self.COL_PID, self.COL_POL, self.COL_PRI, self.COL_AFF, self.COL_CMDLINE ) = list(range(self.nr_columns))
 			self.columns = self.columns + (gui.list_store_column(_("Command Line"), gobject.TYPE_STRING))
 
 		elif self.nr_columns==6:
-			( self.COL_PID, self.COL_POL, self.COL_PRI, self.COL_AFF, self.COL_CGROUP, self.COL_CMDLINE ) = range(self.nr_columns)
+			( self.COL_PID, self.COL_POL, self.COL_PRI, self.COL_AFF, self.COL_CGROUP, self.COL_CMDLINE ) = list(range(self.nr_columns))
 			self.columns = self.columns + (gui.list_store_column(_("CGroup"), gobject.TYPE_STRING),
 										   gui.list_store_column(_("Command Line"), gobject.TYPE_STRING))
 
 		elif self.nr_columns==7:
 			( self.COL_PID, self.COL_POL, self.COL_PRI, self.COL_AFF, self.COL_VOLCTXT,
-				self.NONVOLCTXT, self.COL_CMDLINE ) = range(self.nr_columns)
+				self.NONVOLCTXT, self.COL_CMDLINE ) = list(range(self.nr_columns))
 			self.columns = self.columns + (gui.list_store_column(_("VolCtxtSwitch"), gobject.TYPE_UINT),
 										   gui.list_store_column(_("NonVolCtxtSwitch"), gobject.TYPE_UINT),
 										   gui.list_store_column(_("Command Line"), gobject.TYPE_STRING))
 
 		elif self.nr_columns==8:
 			( self.COL_PID, self.COL_POL, self.COL_PRI, self.COL_AFF, self.COL_VOLCTXT,
-				self.COL_NONVOLCTXT, self.COL_CGROUP, self.COL_CMDLINE ) = range(self.nr_columns)
+				self.COL_NONVOLCTXT, self.COL_CGROUP, self.COL_CMDLINE ) = list(range(self.nr_columns))
 			self.columns = self.columns + (gui.list_store_column(_("VolCtxtSwitch"), gobject.TYPE_UINT),
 										   gui.list_store_column(_("NonVolCtxtSwitch"), gobject.TYPE_UINT),
 										   gui.list_store_column(_("CGroup"), gobject.TYPE_STRING),
@@ -326,7 +326,7 @@ class procview:
 						del self.ps[int(event.tid)]
 					elif event.type == perf.RECORD_SAMPLE:
 						tid = event.sample_tid
-						if self.perf_counter.has_key(tid):
+						if tid in self.perf_counter:
 							self.perf_counter[tid] += event.sample_period
 						else:
 							self.perf_counter[tid] = event.sample_period
@@ -418,7 +418,7 @@ class procview:
 		self.treeview.show_all()
 
 	def update_rows(self, threads, row, parent_row):
-		new_tids = threads.keys()
+		new_tids = list(threads.keys())
 		previous_row = None
 		while row:
 			tid = self.tree_store.get_value(row, self.COL_PID)
@@ -427,7 +427,7 @@ class procview:
 				if previous_tid == tid:
 					# print "WARNING: tree_store dup %d, fixing..." % tid
 					self.tree_store.remove(previous_row)
-			if not threads.has_key(tid):
+			if tid not in threads:
 				if self.tree_store.remove(row):
 					# removed and now row is the next one
 					continue
@@ -453,7 +453,7 @@ class procview:
 					try:
 						self.set_thread_columns(row, tid, threads[tid])
 
-						if threads[tid].has_key("threads"):
+						if "threads" in threads[tid]:
 							children = threads[tid]["threads"]
 						else:
 							children = {}
@@ -488,9 +488,9 @@ class procview:
 				self.tree_store.remove(row)
 				continue
 
-			if threads[tid].has_key("threads"):
+			if "threads" in threads[tid]:
 				children = threads[tid]["threads"]
-				children_list = children.keys()
+				children_list = list(children.keys())
 				children_list.sort()
 				for child in children_list:
 					child_row = self.tree_store.append(row)
@@ -516,7 +516,7 @@ class procview:
 			return
 		row = self.tree_store.get_iter(path)
 		pid = self.tree_store.get_value(row, self.COL_PID)
-		if self.ps.has_key(pid):
+		if pid in self.ps:
 			pid_info = self.ps[pid]
 		else:
 			parent = self.tree_store.iter_parent(row)
@@ -545,7 +545,7 @@ class procview:
 			return
 		row = self.tree_store.get_iter(path)
 		pid = self.tree_store.get_value(row, self.COL_PID)
-		if not self.ps.has_key(pid):
+		if pid not in self.ps:
 			return
 
 		cmdline = self.tree_store.get_value(row, self.COL_CMDLINE)

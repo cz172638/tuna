@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import pygtk
+from functools import reduce
 pygtk.require("2.0")
 
 import gtk, gobject, math, os, procfs, schedutils
@@ -26,7 +27,7 @@ def drop_handler_move_threads_to_cpu(new_affinity, data):
 def drop_handler_move_irqs_to_cpu(cpus, data):
 	irq_list = [ int(irq) for irq in data.split(",") ]
 	new_affinity = [ reduce(lambda a, b: a | b,
-			      map(lambda cpu: 1 << cpu, cpus)), ]
+			      [1 << cpu for cpu in cpus]), ]
 
 	for irq in irq_list:
 		tuna.set_irq_affinity(irq, new_affinity)
@@ -38,7 +39,7 @@ def drop_handler_move_irqs_to_cpu(cpus, data):
 
 class cpu_socket_frame(gtk.Frame):
 
-	( COL_FILTER, COL_CPU, COL_USAGE ) = range(3)
+	( COL_FILTER, COL_CPU, COL_USAGE ) = list(range(3))
 
 	def __init__(self, socket, cpus, creator):
 
@@ -103,11 +104,11 @@ class cpu_socket_frame(gtk.Frame):
 		# pid list, a irq list, etc
 		source, data = selection.data.split(":")
 
-		if self.drop_handlers.has_key(source):
+		if source in self.drop_handlers:
 			if self.drop_handlers[source][0](cpus, data):
 				self.drop_handlers[source][1].refresh()
 		else:
-			print "cpu_socket_frame: unhandled drag source '%s'" % source
+			print("cpu_socket_frame: unhandled drag source '%s'" % source)
 
 	def on_drag_data_received_data(self, treeview, context, x, y,
 				       selection, info, etime):
@@ -125,11 +126,11 @@ class cpu_socket_frame(gtk.Frame):
 			# Move to all CPUs in this socket
 			cpus = [ int(cpu.name[3:]) for cpu in self.cpus ]
 
-		if self.drop_handlers.has_key(source):
+		if source in self.drop_handlers:
 			if self.drop_handlers[source][0](cpus, data):
 				self.drop_handlers[source][1].refresh()
 		else:
-			print "cpu_socket_frame: unhandled drag source '%s'" % source
+			print("cpu_socket_frame: unhandled drag source '%s'" % source)
 
 	def refresh(self):
 		self.list_store.clear()
@@ -251,7 +252,7 @@ class cpuview:
 
 		vbox = window.get_child().get_child()
                 socket_ids = []
-                for id in self.cpus.sockets.keys():
+                for id in list(self.cpus.sockets.keys()):
                     try:
                         socket_ids.append(int(id))
                     except TypeError: # Skip over offline cpus - type None
@@ -328,14 +329,14 @@ class cpuview:
 			self.previous_irq_affinities):
 			return
 		affinities = self.previous_pid_affinities
-		for pid in affinities.keys():
+		for pid in list(affinities.keys()):
 			try:
 				schedutils.set_affinity(pid, affinities[pid])
 			except:
 				pass
 
 		affinities = self.previous_irq_affinities
-		for irq in affinities.keys():
+		for irq in list(affinities.keys()):
 			tuna.set_irq_affinity(int(irq),
 					      procfs.hexbitmask(affinities[irq],
 								self.cpus.nr_cpus))
@@ -356,6 +357,6 @@ class cpuview:
 
 	def refresh(self):
 		self.cpustats.reload()
-		for frame in self.socket_frames.keys():
+		for frame in list(self.socket_frames.keys()):
 			self.socket_frames[frame].refresh()
 		return True

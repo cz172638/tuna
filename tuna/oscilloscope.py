@@ -309,7 +309,7 @@ class oscilloscope(gtk.Window):
 				self.snapshot()
 				gtk.main_quit()
 		except:
-			print "invalid sample, check the input format"
+			print("invalid sample, check the input format")
 			pass
 		return self.getting_samples
 
@@ -351,7 +351,7 @@ class oscilloscope(gtk.Window):
 
 class ftrace_window(gtk.Window):
 
-	(COL_FUNCTION, ) = range(1)
+	(COL_FUNCTION, ) = list(range(1))
 
 	def __init__(self, trace, parent = None):
 		gtk.Window.__init__(self)
@@ -425,13 +425,13 @@ class cyclictestoscope(oscilloscope):
 		try:
 			sample = float(fields[self.field]) * self.sample_multiplier
 		except:
-			print "fields=%s, self.field=%s,self.delimiter=%s" % (fields, self.field, self.delimiter)
+			print("fields=%s, self.field=%s,self.delimiter=%s" % (fields, self.field, self.delimiter))
 			return None
 
 		if self.latency_tracer:
 			del self.traces[0]
 			if sample > self.avg:
-				print sample
+				print(sample)
 				try:
 					f = file("/sys/kernel/debug/tracing/trace")
 					trace = f.readlines()
@@ -442,7 +442,7 @@ class cyclictestoscope(oscilloscope):
 				except:
 					trace = None
 			else:
-				print "-"
+				print("-")
 				trace = None
 
 			self.traces.append(trace)
