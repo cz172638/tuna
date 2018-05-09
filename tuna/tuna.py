@@ -123,7 +123,7 @@ def cpustring_to_list(cpustr):
 	for field in fields:
 		ends = [ int(a, 0) for a in field.split("-") ]
 		if len(ends) > 2:
-			raise "Syntax error"
+			raise SyntaxError("Syntax error")
 		if len(ends) == 2:
 			cpu_list += range(ends[0], ends[1] + 1)
 		else:
