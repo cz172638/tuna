@@ -9,6 +9,9 @@ class cpu:
 		self.dir = "%s/%s" % (basedir, name)
 		self.reload()
 
+	def __lt__(self, other):
+		self.name < other.name
+
 	def readfile(self, name):
 		try:
 			f = open("%s/%s" % (self.dir, name))
