@@ -182,7 +182,7 @@ def ps_show_thread(pid, affect_children, ps,
         try:
                 affinity = format_affinity(schedutils.get_affinity(pid))
         except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
-                if e[0] == errno.ESRCH:
+                if e.args[0] == errno.ESRCH:
                         return
                 raise e
 
@@ -264,7 +264,7 @@ def ps_show(ps, affect_children, thread_list, cpu_list,
                 try:
                         affinity = schedutils.get_affinity(pid)
                 except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
-                        if e[0] == errno.ESRCH:
+                        if e.args[0] == errno.ESRCH:
                                 continue
                         raise e
                 if cpu_list and not set(cpu_list).intersection(set(affinity)):

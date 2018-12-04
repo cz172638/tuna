@@ -193,7 +193,7 @@ def move_threads_to_cpu(cpus, pid_list, set_affinity_warning = None,
                         try:
                                 curr_affinity = schedutils.get_affinity(pid)
                         except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
-                                if e[0] == errno.ESRCH:
+                                if e.args[0] == errno.ESRCH:
                                         continue
                                 curr_affinity = None
                                 raise e
@@ -202,7 +202,7 @@ def move_threads_to_cpu(cpus, pid_list, set_affinity_warning = None,
                                         schedutils.set_affinity(pid, new_affinity)
                                         curr_affinity = schedutils.get_affinity(pid)
                                 except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
-                                        if e[0] == errno.ESRCH:
+                                        if e.args[0] == errno.ESRCH:
                                                 continue
                                         curr_affinity == None
                                         raise e
@@ -231,7 +231,7 @@ def move_threads_to_cpu(cpus, pid_list, set_affinity_warning = None,
                                 try:
                                         curr_affinity = schedutils.get_affinity(tid)
                                 except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
-                                        if e[0] == errno.ESRCH:
+                                        if e.args[0] == errno.ESRCH:
                                                 continue
                                         raise e
                                 if set(curr_affinity) != set(new_affinity):
@@ -239,7 +239,7 @@ def move_threads_to_cpu(cpus, pid_list, set_affinity_warning = None,
                                                 schedutils.set_affinity(tid, new_affinity)
                                                 curr_affinity = schedutils.get_affinity(tid)
                                         except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
-                                                if e[0] == errno.ESRCH:
+                                                if e.args[0] == errno.ESRCH:
                                                         continue
                                                 raise e
                                         if set(curr_affinity) == set(new_affinity):
@@ -251,10 +251,10 @@ def move_threads_to_cpu(cpus, pid_list, set_affinity_warning = None,
                                                       (_("could not change %(pid)d affinity to %(new_affinity)s") % \
                                                        {'pid':pid, 'new_affinity':new_affinity}))
                 except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
-                        if e[0] == errno.ESRCH:
+                        if e.args[0] == errno.ESRCH:
                                 # process died
                                 continue
-                        elif e[0] == errno.EINVAL: # unmovable thread)
+                        elif e.args[0] == errno.EINVAL: # unmovable thread)
                                 print("thread %(pid)d cannot be moved as requested" %{'pid':pid}, file=stderr)
                                 continue
                         raise e
@@ -301,7 +301,7 @@ def move_irqs_to_cpu(cpus, irq_list, spread = False):
                         try:
                                 schedutils.set_affinity(pid, new_affinity)
                         except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
-                                if e[0] == errno.ESRCH:
+                                if e.args[0] == errno.ESRCH:
                                         unprocessed.append(i)
                                         changed -= 1
                                         continue
@@ -336,9 +336,9 @@ def isolate_cpus(cpus, nr_cpus):
                 try:
                         affinity = schedutils.get_affinity(pid)
                 except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
-                        if e[0] == errno.ESRCH:
+                        if e.args[0] == errno.ESRCH:
                                 continue
-                        elif e[0] == errno.EINVAL:
+                        elif e.args[0] == errno.EINVAL:
                             print("Function:", fname, ",", e.strerror, file=sys.stderr)
                             sys.exit(2)
                         raise e
@@ -348,9 +348,9 @@ def isolate_cpus(cpus, nr_cpus):
                         try:
                                 schedutils.set_affinity(pid, affinity)
                         except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
-                                if e[0] == errno.ESRCH:
+                                if e.args[0] == errno.ESRCH:
                                         continue
-                                elif e[0] == errno.EINVAL:
+                                elif e.args[0] == errno.EINVAL:
                                     print("Function:", fname, ",", e.strerror, file=sys.stderr)
                                     sys.exit(2)
                                 raise e
@@ -364,9 +364,9 @@ def isolate_cpus(cpus, nr_cpus):
                         try:
                                 affinity = schedutils.get_affinity(tid)
                         except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
-                                if e[0] == errno.ESRCH:
+                                if e.args[0] == errno.ESRCH:
                                         continue
-                                elif e[0] == errno.EINVAL:
+                                elif e.args[0] == errno.EINVAL:
                                     print("Function:", fname, ",", e.strerror, file=sys.stderr)
                                     sys.exit(2)
                                 raise e
@@ -376,9 +376,9 @@ def isolate_cpus(cpus, nr_cpus):
                                 try:
                                         schedutils.set_affinity(tid, affinity)
                                 except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
-                                        if e[0] == errno.ESRCH:
+                                        if e.args[0] == errno.ESRCH:
                                                 continue
-                                        elif e[0] == errno.EINVAL:
+                                        elif e.args[0] == errno.EINVAL:
                                             print("Function:", fname, ",", e.strerror, file=sys.stderr)
                                             sys.exit(2)
                                         raise e
@@ -416,7 +416,7 @@ def include_cpus(cpus, nr_cpus):
                 try:
                         affinity = schedutils.get_affinity(pid)
                 except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
-                        if e[0] == errno.ESRCH:
+                        if e.args[0] == errno.ESRCH:
                                 continue
                         raise e
                 if set(affinity).intersection(set(cpus)) != set(cpus):
@@ -425,7 +425,7 @@ def include_cpus(cpus, nr_cpus):
                         try:
                                 schedutils.set_affinity(pid, affinity)
                         except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
-                                if e[0] == errno.ESRCH:
+                                if e.args[0] == errno.ESRCH:
                                         continue
                                 raise e
 
@@ -438,7 +438,7 @@ def include_cpus(cpus, nr_cpus):
                         try:
                                 affinity = schedutils.get_affinity(tid)
                         except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
-                                if e[0] == errno.ESRCH:
+                                if e.args[0] == errno.ESRCH:
                                         continue
                                 raise e
                         if set(affinity).intersection(set(cpus)) != set(cpus):
@@ -447,7 +447,7 @@ def include_cpus(cpus, nr_cpus):
                                 try:
                                         schedutils.set_affinity(tid, affinity)
                                 except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
-                                        if e[0] == errno.ESRCH:
+                                        if e.args[0] == errno.ESRCH:
                                                 continue
                                         raise e
 
@@ -515,7 +515,7 @@ def thread_filtered(tid, cpus_filtered, show_kthreads, show_uthreads):
                 try:
                         affinity = schedutils.get_affinity(tid)
                 except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
-                        if e[0] == errno.ESRCH:
+                        if e.args[0] == errno.ESRCH:
                                 return False
                         raise e
 
@@ -554,7 +554,7 @@ def threads_set_priority(tids, parm, affect_children = False):
                 try:
                         thread_set_priority(tid, policy, rtprio)
                 except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
-                        if e[0] == errno.ESRCH:
+                        if e.args[0] == errno.ESRCH:
                                 continue
                         raise e
                 if affect_children:
@@ -563,7 +563,7 @@ def threads_set_priority(tids, parm, affect_children = False):
                                         try:
                                                 thread_set_priority(child, policy, rtprio)
                                         except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
-                                                if e[0] == errno.ESRCH:
+                                                if e.args[0] == errno.ESRCH:
                                                         continue
                                                 raise e
 
@@ -594,7 +594,7 @@ def get_kthread_sched_tunings(proc = None):
                                 policy = schedutils.get_scheduler(pid)
                                 affinity = schedutils.get_affinity(pid)
                         except (SystemError, OSError) as e: # old python-schedutils incorrectly raised SystemError
-                                if e[0] == errno.ESRCH:
+                                if e.args[0] == errno.ESRCH:
                                         continue
                                 raise e
                         percpu = iskthread(pid) and \
