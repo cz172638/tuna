@@ -20,7 +20,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
 # USA
 
-import getopt, sys, gtk
+import getopt, sys
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk as gtk
 from tuna import oscilloscope
 
 def usage():
