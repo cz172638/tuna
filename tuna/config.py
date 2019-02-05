@@ -42,7 +42,7 @@ class Config:
 			self.temp = configparser.RawConfigParser()
 			self.temp.read(self.configFile)
 			self.temp.set('global', 'lastFile', filename)
-			with open(self.configFile, 'wb') as cfgfile:
+			with open(self.configFile, 'w') as cfgfile:
 				self.temp.write(cfgfile)
 			self.config['lastfile'] = filename
 
