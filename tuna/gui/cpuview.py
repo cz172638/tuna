@@ -1,18 +1,21 @@
 # -*- python -*-
 # -*- coding: utf-8 -*-
 
-import pygtk
 from functools import reduce
-pygtk.require("2.0")
 
-import gtk, gobject, math, os, procfs, schedutils
+import math, os, procfs, schedutils, gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk as gtk
+from gi.repository import Gdk as gdk
+from gi.repository import GObject as gobject
+
 from tuna import sysfs, tuna, gui
 
 def set_affinity_warning(tid, affinity):
         dialog = gtk.MessageDialog(None,
-                                   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                                   gtk.MESSAGE_WARNING,
-                                   gtk.BUTTONS_OK,
+                                   gtk.DialogFlags.MODAL | gtk.DialogFlags.DESTROY_WITH_PARENT,
+                                   gtk.MessageType.WARNING,
+                                   gtk.ButtonsType.OK,
                                    _("Couldn't change the affinity of %(tid)d to %(affinity)s!") % \
                                         {"tid": tid, "affinity": affinity})
         dialog.run()
@@ -83,7 +86,7 @@ class cpu_socket_frame(gtk.Frame):
                 self.add(self.treeview)
 
                 self.treeview.enable_model_drag_dest(gui.DND_TARGETS,
-                                                     gtk.gdk.ACTION_DEFAULT)
+                                                     gdk.DragAction.DEFAULT)
                 self.treeview.connect("drag_data_received",
                                        self.on_drag_data_received_data)
                 self.treeview.connect("button_press_event",
@@ -92,8 +95,8 @@ class cpu_socket_frame(gtk.Frame):
                 self.drop_handlers = { "pid": (drop_handler_move_threads_to_cpu, self.creator.procview),
                                        "irq": (drop_handler_move_irqs_to_cpu, self.creator.irqview), }
 
-                self.drag_dest_set(gtk.DEST_DEFAULT_ALL, gui.DND_TARGETS,
-                                   gtk.gdk.ACTION_DEFAULT | gtk.gdk.ACTION_MOVE)
+                self.drag_dest_set(gtk.DestDefaults.ALL, [],
+                                   gdk.DragAction.DEFAULT | gdk.DragAction.MOVE)
                 self.connect("drag_data_received",
                              self.on_frame_drag_data_received_data)
 
@@ -187,7 +190,7 @@ class cpu_socket_frame(gtk.Frame):
                 self.creator.include_cpus(cpus)
 
         def on_cpu_socket_frame_button_press_event(self, treeview, event):
-                if event.type != gtk.gdk.BUTTON_PRESS or event.button != 3:
+                if event.type != gdk.EventType.BUTTON_PRESS or event.button != 3:
                         return
 
                 self.last_x = int(event.x)
@@ -195,12 +198,12 @@ class cpu_socket_frame(gtk.Frame):
 
                 menu = gtk.Menu()
 
-                include = gtk.MenuItem(_("I_nclude CPU"))
-                isolate = gtk.MenuItem(_("_Isolate CPU"))
+                include = gtk.MenuItem(_("I_nclude CPU"), use_underline=True)
+                isolate = gtk.MenuItem(_("_Isolate CPU"), use_underline=True)
                 if self.creator.nr_sockets > 1:
-                        include_socket = gtk.MenuItem(_("I_nclude CPU Socket"))
-                        isolate_socket = gtk.MenuItem(_("_Isolate CPU Socket"))
-                restore = gtk.MenuItem(_("_Restore CPU"))
+                        include_socket = gtk.MenuItem(_("I_nclude CPU Socket"), use_underline=True)
+                        isolate_socket = gtk.MenuItem(_("_Isolate CPU Socket"), use_underline=True)
+                restore = gtk.MenuItem(_("_Restore CPU"), use_underline=True)
 
                 menu.add(include)
                 menu.add(isolate)
@@ -226,7 +229,7 @@ class cpu_socket_frame(gtk.Frame):
                         isolate_socket.show()
                 restore.show()
 
-                menu.popup(None, None, None, event.button, event.time)
+                menu.popup(None, None, None, None, event.button, event.time)
 
         def filter_toggled(self, cell, path, model):
                 # get toggled iter
@@ -264,7 +267,7 @@ class cpuview:
                         columns = math.ceil(math.sqrt(self.nr_sockets))
                         rows = math.ceil(self.nr_sockets / columns)
                         box = gtk.HBox()
-                        vbox.pack_start(box, True, True)
+                        vbox.pack_start(box, True, True, 0)
                 else:
                         box = vbox
 
@@ -273,12 +276,12 @@ class cpuview:
                         frame = cpu_socket_frame(socket_id,
                                                  self.cpus.sockets[str(socket_id)],
                                                  self)
-                        box.pack_start(frame, False, False)
+                        box.pack_start(frame, False, False, 0)
                         self.socket_frames[socket_id] = frame
                         if self.nr_sockets > 1:
                                 if column == columns:
                                         box = gtk.HBox()
-                                        vbox.pack_start(box, True, True)
+                                        vbox.pack_start(box, True, True, 0)
                                         column = 1
                                 else:
                                         column += 1
@@ -294,8 +297,8 @@ class cpuview:
                 req = frame.size_request()
                 # FIXME: what is the slack we have
                 # to add to every row and column?
-                width = req[0] + 16
-                height = req[1] + 20
+                width = req.width + 16
+                height = req.height + 20
                 if self.nr_sockets > 1:
                         width *= columns
                         height *= rows

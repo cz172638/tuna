@@ -1,12 +1,13 @@
 # -*- python -*-
 # -*- coding: utf-8 -*-
 
-import pygtk
-pygtk.require("2.0")
+import os, procfs, sys, gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk as gtk
+from gi.repository import Gdk as gdk
+from gi.repository import GObject as gobject
 
-import gtk, gobject, os, procfs, sys
-import gtk.glade
-from gtk import ListStore
+# from gtk import ListStore
 from .gui.cpuview import cpuview
 from .gui.irqview import irqview
 from .gui.procview import procview
@@ -23,36 +24,37 @@ class main_gui:
 		global tuna_glade
 
 		(app, localedir) = ('tuna', '/usr/share/locale')
-		gtk.glade.bindtextdomain(app, localedir)
-		gtk.glade.textdomain(app)
+		# gtk.glade.bindtextdomain(app, localedir)
+		# gtk.glade.textdomain(app)
 
 		if self.check_root():
 			sys.exit(1)
 		for dir in tuna_glade_dirs:
-			tuna_glade = "%s/tuna_gui.glade" % dir
+			tuna_glade = "%s/tuna_gui.ui" % dir
 			if os.access(tuna_glade, os.F_OK):
 				break
-		self.wtree = gtk.glade.XML(tuna_glade, "mainbig_window", "tuna")
+		self.wtree = gtk.Builder()
+		self.wtree.add_from_file(tuna_glade)
 		self.ps = procfs.pidstats()
 		self.irqs = procfs.interrupts()
-		self.window = self.wtree.get_widget("mainbig_window")
+		self.window = self.wtree.get_object("mainbig_window")
 
-		self.procview = procview(self.wtree.get_widget("processlist"),
+		self.procview = procview(self.wtree.get_object("processlist"),
 					 self.ps, show_kthreads, show_uthreads,
-					 cpus_filtered, tuna_glade)
-		self.irqview = irqview(self.wtree.get_widget("irqlist"),
+					 cpus_filtered, self.wtree)
+		self.irqview = irqview(self.wtree.get_object("irqlist"),
 				       self.irqs, self.ps, cpus_filtered,
-				       tuna_glade)
-		self.cpuview = cpuview(self.wtree.get_widget("vpaned1"),
-				       self.wtree.get_widget("hpaned2"),
-				       self.wtree.get_widget("cpuview"),
+				       self.wtree)
+		self.cpuview = cpuview(self.wtree.get_object("vpaned1"),
+				       self.wtree.get_object("hpaned2"),
+				       self.wtree.get_object("cpuview"),
 				       self.procview, self.irqview, cpus_filtered)
 
 		self.config = Config()
 		self.check_env()
 		self.commonview = commonview()
-		self.commonview.contentTable = self.wtree.get_widget("commonTbl")
-		self.commonview.configFileCombo = self.wtree.get_widget("profileSelector")
+		self.commonview.contentTable = self.wtree.get_object("commonTbl")
+		self.commonview.configFileCombo = self.wtree.get_object("profileSelector")
 
 		self.profileview = profileview()
 		self.profileview.config = self.config
@@ -63,7 +65,7 @@ class main_gui:
 		self.profileview.setWtree(self.wtree)
 		self.profileview.init_default_file()
 
-		event_handlers = { "on_mainbig_window_delete_event"		: self.on_mainbig_window_delete_event,
+		event_handlers = { "on_mainbig_window_delete_event"		: self.on_mainbig_window_destroy_event,
 					"on_processlist_button_press_event"			: self.procview.on_processlist_button_press_event,
 					"on_irqlist_button_press_event"				: self.irqview.on_irqlist_button_press_event,
 					"on_loadProfileButton_clicked"				: self.profileview.on_loadProfileButton_clicked,
@@ -77,7 +79,7 @@ class main_gui:
 					"on_profileTree_button_press_event"			: self.profileview.on_profileTree_button_press_event
 		}
 	
-		self.wtree.signal_autoconnect(event_handlers)
+		self.wtree.connect_signals(event_handlers)
 
 		self.ps.reload_threads()
 		self.show()
@@ -90,7 +92,7 @@ class main_gui:
 			# Old pygtk2
 			pass
 		pixbuf = self.window.render_icon(gtk.STOCK_PREFERENCES,
-						 gtk.ICON_SIZE_SMALL_TOOLBAR)
+						 gtk.IconSize.SMALL_TOOLBAR)
 		self.window.set_icon(pixbuf)
 
 	def on_status_icon_activate(self, status_icon):
@@ -102,14 +104,14 @@ class main_gui:
 	def on_status_icon_popup_menu(self, icon, event_button, event_time):
 		menu = gtk.Menu()
 
-		quit = gtk.MenuItem("_Quit")
+		quit = gtk.MenuItem("_Quit", use_underline=True)
 		menu.add(quit)
 		quit.connect_object('activate', self.on_mainbig_window_delete_event, icon)
 		quit.show()
 
 		menu.popup(None, None, None, event_button, event_time)
 
-	def on_mainbig_window_delete_event(self, obj, event = None):
+	def on_mainbig_window_destroy_event(self, obj, event = None):
 		gtk.main_quit()
 
 	def show(self):

@@ -1,33 +1,32 @@
-import pygtk
-import gtk
+import os, shutil, gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk as gtk
 
 from tuna import tuna, gui
-
-import os, shutil
 
 class profileview:
 	def on_loadProfileButton_clicked(self, button):
 		self.dialog = gtk.FileChooserDialog("Open...", None,
-			gtk.FILE_CHOOSER_ACTION_OPEN, (gtk.STOCK_CANCEL,
-			gtk.RESPONSE_CANCEL, gtk.STOCK_OPEN, gtk.RESPONSE_OK))
-		self.dialog.set_default_response(gtk.RESPONSE_OK)
+			gtk.FileChooserAction.OPEN, (gtk.STOCK_CANCEL,
+			gtk.ResponseType.CANCEL, gtk.STOCK_OPEN, gtk.ResponseType.OK))
+		self.dialog.set_default_response(gtk.ResponseType.OK)
 		filter = gtk.FileFilter()
 		filter.set_name("All files")
 		filter.add_pattern("*")
 		self.dialog.add_filter(filter)
 		self.dialog.set_current_folder(self.config.config["root"])
 		self.response = self.dialog.run()
-		if self.response == gtk.RESPONSE_OK:
+		if self.response == gtk.ResponseType.OK:
 			self.addFile(self.dialog.get_filename())
 			self.setProfileFileList()
 		self.dialog.destroy()
 
 	def setWtree(self, wtree):
-		self.configFileTree = wtree.get_widget("profileTree")
-		self.profileContent = wtree.get_widget("profileContent")
-		self.configFileCombo = wtree.get_widget("profileSelector")
-		self.profileDescription = wtree.get_widget("profileDescriptionText")
-		self.frame = wtree.get_widget("TunableFramesw")
+		self.configFileTree = wtree.get_object("profileTree")
+		self.profileContent = wtree.get_object("profileContent")
+		self.configFileCombo = wtree.get_object("profileSelector")
+		self.profileDescription = wtree.get_object("profileDescriptionText")
+		self.frame = wtree.get_object("TunableFramesw")
 
 	def setProfileFileList(self):
 		self.clearConfig()
@@ -88,19 +87,19 @@ class profileview:
 			temp = f.read()
 			f.close()
 			self.profileContentBuffer = self.profileContent.get_buffer()
-			buff = self.profileContentBuffer.get_text(self.profileContentBuffer.get_start_iter(),self.profileContentBuffer.get_end_iter())
+			buff = self.profileContentBuffer.get_text(self.profileContentBuffer.get_start_iter(),self.profileContentBuffer.get_end_iter(), False)
 			if temp != buff:
 				dialog = gtk.MessageDialog(None,
-					gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-						gtk.MESSAGE_WARNING,
-						gtk.BUTTONS_YES_NO,
+					gtk.DialogFlags.MODAL | gtk.DialogFlags.DESTROY_WITH_PARENT,
+						gtk.MessageType.WARNING,
+						gtk.ButtonsType.YES_NO,
 						"%s\n\n%s\n%s" % \
 						(_("Config file was changed!"),
 						_("All changes will be lost"),
 						_("Realy continue?"),))
 				ret = dialog.run()
 				dialog.destroy()
-				if ret == gtk.RESPONSE_NO:
+				if ret == gtk.ResponseType.NO:
 					old = self.config.cacheFileName.rfind("/")
 					old = self.config.cacheFileName[old+1:len(self.config.cacheFileName)]
 					self.set_current_tree_selection(old)
@@ -115,14 +114,14 @@ class profileview:
 	def on_SaveButton_clicked(self, widget):
 		try:
 			self.profileContentBuffer = self.profileContent.get_buffer()
-			self.config.cache = self.profileContentBuffer.get_text(self.profileContentBuffer.get_start_iter(),self.profileContentBuffer.get_end_iter())
+			self.config.cache = self.profileContentBuffer.get_text(self, self.profileContentBuffer.get_start_iter(),self.profileContentBuffer.get_end_iter())
 			self.config.cacheToFile(self.config.cacheFileName)
 		except IOError as e:
 			self.show_mbox_warning(_("Cannot write to config file: %s") % (self.config.cacheFileName))
 
 	def on_UpdateButton_clicked(self, widget):
 		self.profileContentBuffer = self.profileContent.get_buffer()
-		self.temp = self.profileContentBuffer.get_text(self.profileContentBuffer.get_start_iter(),self.profileContentBuffer.get_end_iter())
+		self.temp = self.profileContentBuffer.get_text(self.profileContentBuffer.get_start_iter(), self.profileContentBuffer.get_end_iter(), False)
 		try:
 			if not self.config.loadDirect(self.temp):
 				self.commonview.updateCommonView()
@@ -149,12 +148,12 @@ class profileview:
 				self.frame.hide()
 		except RuntimeError as e:
 			dialog = gtk.MessageDialog(None,
-				gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-				gtk.MESSAGE_WARNING, gtk.BUTTONS_YES_NO,
+				gtk.DialogFlags.MODAL | gtk.DialogFlags.DESTROY_WITH_PARENT,
+				gtk.MessageType.WARNING, gtk.ButtonsType.YES_NO,
 				_("%s\nRun autocorect?") % _(str(e)))
 			dlgret = dialog.run()
 			dialog.destroy()
-			if dlgret == gtk.RESPONSE_YES:
+			if dlgret == gtk.ResponseType.YES:
 				if 'lastfile' in self.config.config:
 					self.config.fixConfigFile(self.config.config['root'] + self.config.config['lastfile'])
 					err = self.config.checkConfigFile(self.config.config['root'] + self.config.config['lastfile'])
@@ -182,35 +181,35 @@ class profileview:
 
 				item = gtk.ImageMenuItem(_("New profile"))
 				item.connect("activate", self.on_menu_new)
-				img = gtk.image_new_from_stock(gtk.STOCK_NEW, gtk.ICON_SIZE_MENU)
+				img = gtk.image_new_from_stock(gtk.STOCK_NEW, gtk.IconSize.MENU)
 				img.show()
 				item.set_image(img)
 				context.append(item)
 
 				item = gtk.ImageMenuItem(_("Rename"))
 				item.connect("activate", self.on_menu_rename)
-				img = gtk.image_new_from_stock(gtk.STOCK_FILE, gtk.ICON_SIZE_MENU)
+				img = gtk.image_new_from_stock(gtk.STOCK_FILE, gtk.IconSize.MENU)
 				img.show()
 				item.set_image(img)
 				context.append(item)
 
 				item = gtk.ImageMenuItem(_("Copy"))
 				item.connect("activate", self.on_menu_copy)
-				img = gtk.image_new_from_stock(gtk.STOCK_COPY, gtk.ICON_SIZE_MENU)
+				img = gtk.image_new_from_stock(gtk.STOCK_COPY, gtk.IconSize.MENU)
 				img.show()
 				item.set_image(img)
 				context.append(item)
 
 				item = gtk.ImageMenuItem(_("Delete"))
 				item.connect("activate", self.on_menu_delete)
-				img = gtk.image_new_from_stock(gtk.STOCK_DELETE, gtk.ICON_SIZE_MENU)
+				img = gtk.image_new_from_stock(gtk.STOCK_DELETE, gtk.IconSize.MENU)
 				img.show()
 				item.set_image(img)
 				context.append(item)
 
 				item = gtk.ImageMenuItem(_("Check"))
 				item.connect("activate", self.on_menu_check)
-				img = gtk.image_new_from_stock(gtk.STOCK_SPELL_CHECK, gtk.ICON_SIZE_MENU)
+				img = gtk.image_new_from_stock(gtk.STOCK_SPELL_CHECK, gtk.IconSize.MENU)
 				img.show()
 				item.set_image(img)
 				context.append(item)
@@ -270,8 +269,8 @@ class profileview:
 			self.show_mbox_warning("%s\n%s" % (_("Config file contain errors:"), _(err)))
 			return False
 		else:
-			dialog = gtk.MessageDialog(None, 0, gtk.MESSAGE_INFO,\
-			 gtk.BUTTONS_OK, "%s\n" % (_("Config file looks OK")))
+			dialog = gtk.MessageDialog(None, 0, gtk.MessageType.INFO,\
+			 gtk.ButtonsType.OK, "%s\n" % (_("Config file looks OK")))
 			ret = dialog.run()
 			dialog.destroy()
 		self.set_current_tree_selection(filename)
@@ -318,12 +317,12 @@ class profileview:
 	def on_menu_delete(self, widget):
 		filename = self.get_current_tree_selection()
 		dialog = gtk.MessageDialog(None,
-			   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-			   gtk.MESSAGE_WARNING, gtk.BUTTONS_YES_NO,
+			   gtk.DialogFlags.MODAL | gtk.DialogFlags.DESTROY_WITH_PARENT,
+			   gtk.MessageType.WARNING, gtk.ButtonsType.YES_NO,
 			   _("Profile %s will be deleted!\nReally?" % (filename)))
 		ret = dialog.run()
 		dialog.destroy()
-		if ret == gtk.RESPONSE_YES:
+		if ret == gtk.ResponseType.YES:
 			try:
 				os.unlink(self.config.config['root'] + filename)
 			except OSError as oe:
@@ -341,27 +340,27 @@ class profileview:
 
 	def get_text_dialog(self, message, default=''):
 		d = gtk.MessageDialog(None,
-			gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-			gtk.MESSAGE_QUESTION,
-			gtk.BUTTONS_OK_CANCEL,
+			gtk.DialogFlags.MODAL | gtk.DialogFlags.DESTROY_WITH_PARENT,
+			gtk.MessageType.QUESTION,
+			gtk.ButtonsType.OK_CANCEL,
 			message)
 		entry = gtk.Entry()
 		entry.set_text(default)
 		entry.show()
 		d.vbox.pack_end(entry)
-		entry.connect('activate', lambda _: d.response(gtk.RESPONSE_OK))
-		d.set_default_response(gtk.RESPONSE_OK)
+		entry.connect('activate', lambda _: d.response(gtk.ResponseType.OK))
+		d.set_default_response(gtk.ResponseType.OK)
 		r = d.run()
 		text = entry.get_text().decode('utf8')
 		d.destroy()
-		if r == gtk.RESPONSE_OK:
+		if r == gtk.ResponseType.OK:
 			return text
 		else:
 			return None
 
 	def show_mbox_warning(self, message):
 		dialog = gtk.MessageDialog(None,
-				gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-				gtk.MESSAGE_WARNING, gtk.BUTTONS_OK, _((str(message))))
+				gtk.DialogFlags.MODAL | gtk.DialogFlags.DESTROY_WITH_PARENT,
+				gtk.MessageType.WARNING, gtk.ButtonsType.OK, _((str(message))))
 		ret = dialog.run()
 		dialog.destroy()

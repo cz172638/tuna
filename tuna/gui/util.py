@@ -1,7 +1,12 @@
-import pygtk
-pygtk.require("2.0")
+import gi
+gi.require_version('Gtk', '3.0')
 
-import gobject, gtk, pango, procfs, schedutils
+from gi.repository import Gtk as gtk
+from gi.repository import Gdk as gdk
+from gi.repository import GObject as gobject
+from gi.repository import Pango as pango
+
+import procfs, schedutils
 from tuna import tuna
 
 class list_store_column:
@@ -21,9 +26,9 @@ def set_store_columns(store, row, new_value):
 		col_weight = col + nr_columns
 		cur_value = store.get_value(row, col)
 		if cur_value == new_value[col]:
-			new_weight = pango.WEIGHT_NORMAL
+			new_weight = pango.Weight.NORMAL
 		else:
-			new_weight = pango.WEIGHT_BOLD
+			new_weight = pango.Weight.BOLD
 
 		store.set(row, col, new_value[col], col_weight, new_weight)
 
@@ -45,9 +50,9 @@ def on_affinity_text_changed(self):
 
 def invalid_affinity():
 	dialog = gtk.MessageDialog(None,
-				   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-				   gtk.MESSAGE_WARNING,
-				   gtk.BUTTONS_OK,
+				   gtk.DialogFlags.MODAL | gtk.DialogFlags.DESTROY_WITH_PARENT,
+				   gtk.MessageType.WARNING,
+				   gtk.ButtonsType.OK,
 				   _("Invalid affinity, specify a list of CPUs!"))
 	dialog.run()
 	dialog.destroy()
@@ -65,9 +70,9 @@ def thread_set_attributes(pid_info, new_policy, new_prio, new_affinity, nr_cpus)
 			schedutils.set_scheduler(pid, new_policy, new_prio)
 		except:
 			dialog = gtk.MessageDialog(None,
-						   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-						   gtk.MESSAGE_WARNING,
-						   gtk.BUTTONS_OK,
+						   gtk.DialogFlags.MODAL | gtk.DialogFlags.DESTROY_WITH_PARENT,
+						   gtk.MessageType.WARNING,
+						   gtk.ButtonsType.OK,
 						   _("Invalid parameters!"))
 			dialog.run()
 			dialog.destroy()

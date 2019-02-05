@@ -1,8 +1,10 @@
-import pygtk
-pygtk.require("2.0")
+import procfs, re, schedutils, gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk as gtk
+from gi.repository import Gdk as gdk
+from gi.repository import GObject as gobject
 
 from tuna import tuna, gui
-import gobject, gtk, procfs, re, schedutils
 try:
 	import perf
 except:
@@ -16,15 +18,15 @@ class process_druid:
 
 	( PROCESS_COL_PID, PROCESS_COL_NAME ) = list(range(2))
 
-	def __init__(self, ps, pid, pid_info, nr_cpus, gladefile):
+	def __init__(self, ps, pid, pid_info, nr_cpus, wtree):
 		self.ps = ps
 		self.pid = pid
 		self.pid_info = pid_info
 		self.nr_cpus = nr_cpus
-		self.window = gtk.glade.XML(gladefile, "set_process_attributes", "tuna")
-		self.dialog = self.window.get_widget("set_process_attributes")
+		self.wtree = wtree
+		self.dialog = self.wtree.get_object("set_process_attributes")
 		pixbuf = self.dialog.render_icon(gtk.STOCK_PREFERENCES,
-						 gtk.ICON_SIZE_SMALL_TOOLBAR)
+						 gtk.IconSize.SMALL_TOOLBAR)
 		self.dialog.set_icon(pixbuf)
 		event_handlers = { "on_cmdline_regex_changed" : self.on_cmdline_regex_changed,
 				   "on_affinity_text_changed" : self.on_affinity_text_changed,
@@ -32,15 +34,15 @@ class process_druid:
 				   "on_command_regex_clicked" : self.on_command_regex_clicked,
 				   "on_all_these_threads_clicked" : self.on_all_these_threads_clicked,
 				   "on_just_this_thread_clicked" : self.on_just_this_thread_clicked }
-		self.window.signal_autoconnect(event_handlers)
+		self.window.connect_signals(event_handlers)
 
-		self.sched_pri = self.window.get_widget("sched_pri_spin")
-		self.sched_policy = self.window.get_widget("sched_policy_combo")
-		self.regex_edit = self.window.get_widget("cmdline_regex")
-		self.affinity = self.window.get_widget("affinity_text")
-		self.just_this_thread = self.window.get_widget("just_this_thread")
-		self.all_these_threads = self.window.get_widget("all_these_threads")
-		processes = self.window.get_widget("matching_process_list")
+		self.sched_pri = self.window.get_object("sched_pri_spin")
+		self.sched_policy = self.window.get_object("sched_policy_combo")
+		self.regex_edit = self.window.get_object("cmdline_regex")
+		self.affinity = self.window.get_object("affinity_text")
+		self.just_this_thread = self.window.get_object("just_this_thread")
+		self.all_these_threads = self.window.get_object("all_these_threads")
+		processes = self.window.get_object("matching_process_list")
 
 		self.sched_pri.set_value(int(pid_info["stat"]["rt_priority"]))
 		cmdline_regex = procfs.process_cmdline(pid_info)
@@ -166,7 +168,7 @@ class process_druid:
 
 	def run(self):
 		changed = False
-		if self.dialog.run() == gtk.RESPONSE_OK:
+		if self.dialog.run() == gtk.ResponseType.OK:
 			new_policy = int(self.sched_policy.get_active())
 			new_prio = int(self.sched_pri.get_value())
 			new_affinity = self.affinity.get_text()
@@ -267,12 +269,12 @@ class procview:
 
 		# Allow selecting multiple rows
 		selection = treeview.get_selection()
-		selection.set_mode(gtk.SELECTION_MULTIPLE)
+		selection.set_mode(gtk.SelectionMode.MULTIPLE)
 
 		# Allow enable drag and drop of rows
-		self.treeview.enable_model_drag_source(gtk.gdk.BUTTON1_MASK,
+		self.treeview.enable_model_drag_source(gdk.ModifierType.BUTTON1_MASK,
 						       gui.DND_TARGETS,
-						       gtk.gdk.ACTION_DEFAULT | gtk.gdk.ACTION_MOVE)
+						       gdk.DragAction.DEFAULT | gdk.DragAction.MOVE)
 		self.treeview.connect("drag_data_get", self.on_drag_data_get_data)
 		try:
 			self.treeview.connect("query-tooltip", self.on_query_tooltip)
@@ -288,7 +290,7 @@ class procview:
 					     col + self.nr_columns)
 			column.set_sort_column_id(col)
 			if(col == self.COL_CGROUP):
-				column.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
+				column.set_sizing(gtk.TreeViewColumnSizing.FIXED)
 				column.set_fixed_width(130)
 			try:
 				self.treeview.set_tooltip_column(col)
@@ -348,7 +350,7 @@ class procview:
 		self.evlist.mmap()
 		self.pollfd = self.evlist.get_pollfd()
 		for f in self.pollfd:
-			gobject.io_add_watch(f, gtk.gdk.INPUT_READ, self.perf_process_events)
+			gobject.io_add_watch(f, gtk.INPUT_READ, self.perf_process_events)
 		self.perf_counter = {}
 
 	def on_query_tooltip(self, treeview, x, y, keyboard_mode, tooltip):
@@ -552,9 +554,9 @@ class procview:
 		help, title = tuna.kthread_help_plain_text(pid, cmdline)
 
 		dialog = gtk.MessageDialog(None,
-					   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-					   gtk.MESSAGE_INFO,
-					   gtk.BUTTONS_OK, _(help))
+					   gtk.DialogFlags.MODAL | gtk.DialogFlags.DESTROY_WITH_PARENT,
+					   gtk.MessageType.INFO,
+					   gtk.ButtonsType.OK, _(help))
 		dialog.set_title(title)
 		ret = dialog.run()
 		dialog.destroy()
@@ -565,10 +567,10 @@ class procview:
 	def save_kthreads_tunings(self, a):
 		dialog = gtk.FileChooserDialog(_("Save As"),
 					       None,
-					       gtk.FILE_CHOOSER_ACTION_SAVE,
-					       (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-						gtk.STOCK_OK, gtk.RESPONSE_OK))
-		dialog.set_default_response(gtk.RESPONSE_OK)
+					       gtk.FileChooserAction.SAVE,
+					       (gtk.STOCK_CANCEL, gtk.ResponseType.CANCEL,
+						gtk.STOCK_OK, gtk.ResponseType.OK))
+		dialog.set_default_response(gtk.ResponseType.OK)
 
 		try:
 			dialog.set_do_overwrite_confirmation(True)
@@ -592,7 +594,7 @@ class procview:
 		filename = dialog.get_filename()
 		dialog.destroy()
 
-		if response != gtk.RESPONSE_OK:
+		if response != gtk.ResponseType.OK:
 			return
 
 		self.refresh()
@@ -601,9 +603,9 @@ class procview:
 
 		if filename != "/etc/rtgroups":
 			dialog = gtk.MessageDialog(None,
-						   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-						   gtk.MESSAGE_INFO,
-						   gtk.BUTTONS_YES_NO,
+						   gtk.DialogFlags.MODAL | gtk.DialogFlags.DESTROY_WITH_PARENT,
+						   gtk.MessageType.INFO,
+						   gtk.ButtonsType.YES_NO,
 						   "Kernel thread tunings saved!\n\n"
 						   "Now you can use it with rtctl:\n\n"
 						   "rtctl --file %s reset\n\n"
@@ -613,20 +615,20 @@ class procview:
 						   "Do you want to do that now?" % (filename, filename))
 			response = dialog.run()
 			dialog.destroy()
-			if response == gtk.RESPONSE_YES:
+			if response == gtk.ResponseType.YES:
 				filename = "/etc/rtgroups"
 				tuna.generate_rtgroups(filename, kthreads, self.nr_cpus)
 
 		dialog = gtk.MessageDialog(None,
-					   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-					   gtk.MESSAGE_INFO,
-					   gtk.BUTTONS_OK,
+					   gtk.DialogFlags.MODAL | gtk.DialogFlags.DESTROY_WITH_PARENT,
+					   gtk.MessageType.INFO,
+					   gtk.ButtonsType.OK,
 					   _("Kernel thread tunings saved to %s!") % filename)
 		dialog.run()
 		dialog.destroy()
 
 	def on_processlist_button_press_event(self, treeview, event):
-		if event.type != gtk.gdk.BUTTON_PRESS or event.button != 3:
+		if event.type != gdk.EventType.BUTTON_PRESS or event.button != 3:
 			return
 
 		self.last_x = int(event.x)
@@ -634,25 +636,25 @@ class procview:
 
 		menu = gtk.Menu()
 
-		setattr = gtk.MenuItem(_("_Set process attributes"))
+		setattr = gtk.MenuItem(_("_Set process attributes"), use_underline=True)
 		if self.refreshing:
-			refresh = gtk.MenuItem(_("Sto_p refreshing the process list"))
+			refresh = gtk.MenuItem(_("Sto_p refreshing the process list"), use_underline=True)
 		else:
-			refresh = gtk.MenuItem(_("_Refresh the process list"))
+			refresh = gtk.MenuItem(_("_Refresh the process list"), use_underline=True)
 
 		if self.show_kthreads:
-			kthreads = gtk.MenuItem(_("_Hide kernel threads"))
+			kthreads = gtk.MenuItem(_("_Hide kernel threads"), use_underline=True)
 		else:
-			kthreads = gtk.MenuItem(_("_Show kernel threads"))
+			kthreads = gtk.MenuItem(_("_Show kernel threads"), use_underline=True)
 
 		if self.show_uthreads:
-			uthreads = gtk.MenuItem(_("_Hide user threads"))
+			uthreads = gtk.MenuItem(_("_Hide user threads"), use_underline=True)
 		else:
-			uthreads = gtk.MenuItem(_("_Show user threads"))
+			uthreads = gtk.MenuItem(_("_Show user threads"), use_underline=True)
 
-		help = gtk.MenuItem(_("_What is this?"))
+		help = gtk.MenuItem(_("_What is this?"), use_underline=True)
 
-		save_kthreads_tunings = gtk.MenuItem(_("_Save kthreads tunings"))
+		save_kthreads_tunings = gtk.MenuItem(_("_Save kthreads tunings"), use_underline=True)
 
 		menu.add(save_kthreads_tunings)
 		menu.add(setattr)
@@ -676,7 +678,7 @@ class procview:
 		uthreads.show()
 		help.show()
 
-		menu.popup(None, None, None, event.button, event.time)
+		menu.popup(None, None, None, None, event.button, event.time)
 
 	def toggle_mask_cpu(self, cpu, enabled):
 		if not enabled:

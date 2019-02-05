@@ -1,5 +1,7 @@
-import pygtk
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk as gtk
+
 from tuna import tuna, gui
 
 class commonview:
@@ -152,8 +154,8 @@ class commonview:
 			self.updateCommonView()
 		except:
 			dialog = gtk.MessageDialog(None,
-					gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-					gtk.MESSAGE_WARNING, gtk.BUTTONS_OK,
+					gtk.DialogFlags.MODAL | gtk.DialogFlags.DESTROY_WITH_PARENT,
+					gtk.MessageType.WARNING, gtk.ButtonsType.OK,
 					_("Backup not found, this button is useable after click on apply"))
 			ret = dialog.run()
 			dialog.destroy()
@@ -168,25 +170,25 @@ class commonview:
 
 	def on_saveTunedChanges_clicked(self,widget):
 		if not self.config.checkTunedDaemon():
-			dialog = gtk.MessageDialog(None,gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-						gtk.MESSAGE_WARNING, gtk.BUTTONS_OK, _("Tuned daemon undetected!\nFor this function you must have installed Tuned daemon."))
+			dialog = gtk.MessageDialog(None,gtk.DialogFlags.MODAL | gtk.DialogFlags.DESTROY_WITH_PARENT,
+						gtk.MessageType.WARNING, gtk.ButtonsType.OK, _("Tuned daemon undetected!\nFor this function you must have installed Tuned daemon."))
 			ret = dialog.run()
 			dialog.destroy()
 			return False
 		dialog = gtk.MessageDialog(None,
-			   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-			   gtk.MESSAGE_WARNING, gtk.BUTTONS_YES_NO,
+			   gtk.DialogFlags.MODAL | gtk.DialogFlags.DESTROY_WITH_PARENT,
+			   gtk.MessageType.WARNING, gtk.ButtonsType.YES_NO,
 			   _("This function can create new profile for tuned daemon and apply config permanently after reboot.\nProfile will be permanently saved and rewrite all old profiles created by tuna!\nUsing this only if you know that config cant corrupt your system!\nRealy can do it?"))
 		ret = dialog.run()
 		dialog.destroy()
-		if ret == gtk.RESPONSE_NO:
+		if ret == gtk.ResponseType.NO:
 			return False
 		try:
 			ret = self.guiSnapshot()
 			self.config.saveTuned(ret)
 		except RuntimeError as e:
-			dialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-				gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,str(e))
+			dialog = gtk.MessageDialog(None, gtk.DialogFlags.MODAL | gtk.DialogFlags.DESTROY_WITH_PARENT,
+				gtk.MessageType.ERROR, gtk.ButtonsType.OK,str(e))
 			ret = dialog.run()
 			dialog.destroy()
 		self.profileview.setProfileFileList()
@@ -200,26 +202,26 @@ class commonview:
 		if err != '':
 			self.restoreConfig = True
 			dialog = gtk.MessageDialog(None,
-				gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-				gtk.MESSAGE_WARNING, gtk.BUTTONS_YES_NO,
+				gtk.DialogFlags.MODAL | gtk.DialogFlags.DESTROY_WITH_PARENT,
+				gtk.MessageType.WARNING, gtk.ButtonsType.YES_NO,
 				_("Config file contain errors: \n%s\nRun autocorrect?") % _(err))
 			dlgret = dialog.run()
 			dialog.destroy()
-			if dlgret == gtk.RESPONSE_YES:
+			if dlgret == gtk.ResponseType.YES:
 				self.config.fixConfigFile(self.config.config['root'] + ret[1])
 				err = self.config.checkConfigFile(self.config.config['root'] + ret[1])
 				if err != '':
 					dialog = gtk.MessageDialog(None,
-						gtk.DIALOG_DESTROY_WITH_PARENT,
-						gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+						gtk.DialogFlags.DESTROY_WITH_PARENT,
+						gtk.MessageType.ERROR, gtk.ButtonsType.OK,
 						_("Config file contain errors: \n%s\nAutocorrect failed!") % _(err))
 					dialog.run()
 					dialog.destroy()
 					self.restoreConfig = True
 				else:
 					dialog = gtk.MessageDialog(None,
-						gtk.DIALOG_DESTROY_WITH_PARENT,
-						gtk.MESSAGE_INFO, gtk.BUTTONS_OK,
+						gtk.DialogFlags.DESTROY_WITH_PARENT,
+						gtk.MessageType.INFO, gtk.ButtonsType.OK,
 						_("Autocorrect OK"))
 					dialog.run()
 					dialog.destroy()

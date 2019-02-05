@@ -1,6 +1,7 @@
-import io, os, re, fnmatch
-import sys, gtk
-import codecs, configparser
+import io, os, re, fnmatch, codecs, configparser, sys, gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk as gtk
+
 from time import localtime, strftime
 from subprocess import Popen, PIPE, STDOUT, call
 TUNED_CONF="""[sysctl]\n"""
@@ -69,8 +70,8 @@ class Config:
 			f.close()
 			return 0
 		except (configparser.Error, IOError):
-			dialog = gtk.MessageDialog(None, 0, gtk.MESSAGE_ERROR,\
-			 gtk.BUTTONS_OK, "%s\n%s" % \
+			dialog = gtk.MessageDialog(None, 0, gtk.MessageType.ERROR,\
+			 gtk.ButtonsType.OK, "%s\n%s" % \
 			 (_("Corruputed config file: "), _(self.config['root']+profileName)))
 			ret = dialog.run()
 			dialog.destroy()
@@ -113,14 +114,14 @@ class Config:
 				f.write(self.aliasToOriginal(data[index][ind]["label"])+"="+data[index][ind]["value"]+"\n")
 		f.close()
 		if profile[0] != "tuna":
-			dialog = gtk.MessageDialog(None,gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-						gtk.MESSAGE_WARNING, gtk.BUTTONS_YES_NO, "%s%s\n%s" % \
+			dialog = gtk.MessageDialog(None,gtk.DialogFlags.MODAL | gtk.DialogFlags.DESTROY_WITH_PARENT,
+						gtk.MessageType.WARNING, gtk.ButtonsType.YES_NO, "%s%s\n%s" % \
 						(_("Current active profile is: "),
 						_(profile[0]),
 						_("Set new created profile as current in tuned daemon?")))
 			ret = dialog.run()
 			dialog.destroy()
-			if ret == gtk.RESPONSE_YES:
+			if ret == gtk.ResponseType.YES:
 				self.setCurrentActiveProfile()
 				if self.currentActiveProfile()[0] != "tuna":
 					raise RuntimeError ("%s %s\n%s" % \
@@ -129,8 +130,8 @@ class Config:
 						_("Setting of new tuned profile failed! Check if tuned is installed and active")))
 					return False
 				else:
-					dialog = gtk.MessageDialog(None,gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-						gtk.MESSAGE_INFO, gtk.BUTTONS_OK, _("Tuna profile is now active in tuned daemon."))
+					dialog = gtk.MessageDialog(None,gtk.DialogFlags.MODAL | gtk.DialogFlags.DESTROY_WITH_PARENT,
+						gtk.MessageType.INFO, gtk.ButtonsType.OK, "Tuna profile is now active in tuned daemon.")
 					ret = dialog.run()
 					dialog.destroy()
 		return True

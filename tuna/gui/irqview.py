@@ -1,32 +1,35 @@
 # -*- python -*-
 # -*- coding: utf-8 -*-
 
-import pygtk
 from functools import reduce
-pygtk.require("2.0")
+
+import ethtool, os, procfs, schedutils, gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk as gtk
+from gi.repository import Gdk as gdk
+from gi.repository import GObject as gobject
 
 from tuna import tuna, gui
-import ethtool, gobject, gtk, os, procfs, schedutils
 
 class irq_druid:
 
-	def __init__(self, irqs, ps, irq, gladefile):
+	def __init__(self, irqs, ps, irq, wtree):
 		self.irqs = irqs
 		self.ps = ps
 		self.irq = irq
-		self.window = gtk.glade.XML(gladefile, "set_irq_attributes", "tuna")
-		self.dialog = self.window.get_widget("set_irq_attributes")
+		self.wtree = wtree
+		self.dialog = self.wtree.get_object("set_irq_attributes")
 		pixbuf = self.dialog.render_icon(gtk.STOCK_PREFERENCES,
-						 gtk.ICON_SIZE_SMALL_TOOLBAR)
+						 gtk.IconSize.SMALL_TOOLBAR)
 		self.dialog.set_icon(pixbuf)
-		event_handlers = { "on_irq_affinity_text_changed" : self.on_irq_affinity_text_changed,
-				   "on_sched_policy_combo_changed": self.on_sched_policy_combo_changed }
-		self.window.signal_autoconnect(event_handlers)
+		# event_handlers = { "on_irq_affinity_text_changed" : self.on_irq_affinity_text_changed,
+				   # "on_sched_policy_combo_changed": self.on_sched_policy_combo_changed }
+		# self.window.connect_signals(event_handlers)
 
-		self.sched_pri = self.window.get_widget("irq_pri_spinbutton")
-		self.sched_policy = self.window.get_widget("irq_policy_combobox")
-		self.affinity = self.window.get_widget("irq_affinity_text")
-		text = self.window.get_widget("irq_text")
+		self.sched_pri = self.dialog.get_object("irq_pri_spinbutton")
+		self.sched_policy = self.dialog.get_object("irq_policy_combobox")
+		self.affinity = self.dialog.get_object("irq_affinity_text")
+		text = self.dialog.get_object("irq_text")
 
 		users = tuna.get_irq_users(irqs, irq)
 		self.affinity_text = tuna.get_irq_affinity_text(irqs, irq)
@@ -77,7 +80,7 @@ class irq_druid:
 
 	def run(self):
 		changed = False
-		if self.dialog.run() == gtk.RESPONSE_OK:
+		if self.dialog.run() == gtk.ResponseType.OK:
 			new_policy = self.sched_policy.get_active()
 			new_prio = int(self.sched_pri.get_value())
 			new_affinity = self.affinity.get_text()
@@ -148,12 +151,12 @@ class irqview:
 
 		# Allow selecting multiple rows
 		selection = treeview.get_selection()
-		selection.set_mode(gtk.SELECTION_MULTIPLE)
+		selection.set_mode(gtk.SelectionMode.MULTIPLE)
 
 		# Allow enable drag and drop of rows
-		self.treeview.enable_model_drag_source(gtk.gdk.BUTTON1_MASK,
+		self.treeview.enable_model_drag_source(gdk.ModifierType.BUTTON1_MASK,
 						       gui.DND_TARGETS,
-						       gtk.gdk.ACTION_DEFAULT | gtk.gdk.ACTION_MOVE)
+						       gdk.DragAction.DEFAULT | gdk.DragAction.MOVE)
 		self.treeview.connect("drag_data_get", self.on_drag_data_get_data)
 		self.renderer = gtk.CellRendererText()
 
@@ -289,7 +292,7 @@ class irqview:
 			self.refresh()
 
 	def on_irqlist_button_press_event(self, treeview, event):
-		if event.type != gtk.gdk.BUTTON_PRESS or event.button != 3:
+		if event.type != gdk.EventType.BUTTON_PRESS or event.button != 3:
 			return
 
 		self.last_x = int(event.x)
@@ -297,11 +300,11 @@ class irqview:
 
 		menu = gtk.Menu()
 
-		setattr = gtk.MenuItem(_("_Set IRQ attributes"))
+		setattr = gtk.MenuItem(_("_Set IRQ attributes"), use_underline=True)
 		if self.refreshing:
-			refresh = gtk.MenuItem(_("Sto_p refreshing the IRQ list"))
+			refresh = gtk.MenuItem(_("Sto_p refreshing the IRQ list"), use_underline=True)
 		else:
-			refresh = gtk.MenuItem(_("_Refresh the IRQ list"))
+			refresh = gtk.MenuItem(_("_Refresh the IRQ list"), use_underline=True)
 
 		menu.add(setattr)
 		menu.add(refresh)
@@ -312,7 +315,7 @@ class irqview:
 		setattr.show()
 		refresh.show()
 
-		menu.popup(None, None, None, event.button, event.time)
+		menu.popup(None, None, None, None, event.button, event.time)
 
 	def toggle_mask_cpu(self, cpu, enabled):
 		if not enabled:
