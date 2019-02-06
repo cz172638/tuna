@@ -28,21 +28,21 @@ class process_druid:
 		pixbuf = self.dialog.render_icon(gtk.STOCK_PREFERENCES,
 						 gtk.IconSize.SMALL_TOOLBAR)
 		self.dialog.set_icon(pixbuf)
-		event_handlers = { "on_cmdline_regex_changed" : self.on_cmdline_regex_changed,
-				   "on_affinity_text_changed" : self.on_affinity_text_changed,
-				   "on_sched_policy_combo_changed" : self.on_sched_policy_combo_changed,
-				   "on_command_regex_clicked" : self.on_command_regex_clicked,
-				   "on_all_these_threads_clicked" : self.on_all_these_threads_clicked,
-				   "on_just_this_thread_clicked" : self.on_just_this_thread_clicked }
-		self.window.connect_signals(event_handlers)
+		# event_handlers = { "on_cmdline_regex_changed" : self.on_cmdline_regex_changed,
+				   #"on_affinity_text_changed" : self.on_affinity_text_changed,
+				   #"on_sched_policy_combo_changed" : self.on_sched_policy_combo_changed,
+				   #"on_command_regex_clicked" : self.on_command_regex_clicked,
+				   #"on_all_these_threads_clicked" : self.on_all_these_threads_clicked,
+				   #"on_just_this_thread_clicked" : self.on_just_this_thread_clicked }
+		# self.window.connect_signals(event_handlers)
 
-		self.sched_pri = self.window.get_object("sched_pri_spin")
-		self.sched_policy = self.window.get_object("sched_policy_combo")
-		self.regex_edit = self.window.get_object("cmdline_regex")
-		self.affinity = self.window.get_object("affinity_text")
-		self.just_this_thread = self.window.get_object("just_this_thread")
-		self.all_these_threads = self.window.get_object("all_these_threads")
-		processes = self.window.get_object("matching_process_list")
+		self.sched_pri = self.wtree.get_object("sched_pri_spin")
+		self.sched_policy = self.wtree.get_object("sched_policy_combo")
+		self.regex_edit = self.wtree.get_object("cmdline_regex")
+		self.affinity = self.wtree.get_object("affinity_text")
+		self.just_this_thread = self.wtree.get_object("just_this_thread")
+		self.all_these_threads = self.wtree.get_object("all_these_threads")
+		processes = self.wtree.get_object("matching_process_list")
 
 		self.sched_pri.set_value(int(pid_info["stat"]["rt_priority"]))
 		cmdline_regex = procfs.process_cmdline(pid_info)
@@ -195,7 +195,7 @@ class process_druid:
 									new_prio,
 									new_affinity)
 
-		self.dialog.destroy()
+		self.dialog.hide()
 		return changed
 
 class procview:

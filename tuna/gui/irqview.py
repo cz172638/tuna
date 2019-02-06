@@ -26,10 +26,10 @@ class irq_druid:
 				   # "on_sched_policy_combo_changed": self.on_sched_policy_combo_changed }
 		# self.window.connect_signals(event_handlers)
 
-		self.sched_pri = self.dialog.get_object("irq_pri_spinbutton")
-		self.sched_policy = self.dialog.get_object("irq_policy_combobox")
-		self.affinity = self.dialog.get_object("irq_affinity_text")
-		text = self.dialog.get_object("irq_text")
+		self.sched_pri = self.wtree.get_object("irq_pri_spinbutton")
+		self.sched_policy = self.wtree.get_object("irq_policy_combobox")
+		self.affinity = self.wtree.get_object("irq_affinity_text")
+		text = self.wtree.get_object("irq_text")
 
 		users = tuna.get_irq_users(irqs, irq)
 		self.affinity_text = tuna.get_irq_affinity_text(irqs, irq)
@@ -112,7 +112,7 @@ class irq_druid:
 									self.irqs.nr_cpus))
 				changed = True
 
-		self.dialog.destroy()
+		self.dialog.hide()
 		return changed
 
 class irqview:
